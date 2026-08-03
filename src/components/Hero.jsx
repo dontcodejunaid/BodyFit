@@ -108,16 +108,15 @@ export default function Hero() {
 
             {/* Two Main CTA Buttons with ShinyButton */}
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
-              <a href="#book-appointment" className="w-full sm:w-auto">
-                <ShinyButton className="w-full sm:w-auto bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-500 hover:to-amber-500 shadow-xl shadow-orange-600/30">
-                  <img src={logoImg} alt="Body Fit Logo" className="w-9 h-9 object-contain shrink-0 filter brightness-125 scale-125" />
+              <a href="#book-appointment" className="w-full sm:w-[290px] shrink-0">
+                <ShinyButton className="w-full h-16 bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-500 hover:to-amber-500 shadow-xl shadow-orange-600/30 px-4 whitespace-nowrap text-sm sm:text-base">
                   <span>Book a Free Trial</span>
                   <ChevronRight className="w-5 h-5 shrink-0" />
                 </ShinyButton>
               </a>
 
-              <a href="#about-us" className="w-full sm:w-auto">
-                <ShinyButton className="w-full sm:w-auto bg-slate-900/90 hover:bg-slate-800 border border-slate-700/80 text-slate-200">
+              <a href="#about-us" className="w-full sm:w-[290px] shrink-0">
+                <ShinyButton className="w-full h-16 bg-slate-900/90 hover:bg-slate-800 border border-slate-700/80 text-slate-200 px-4 whitespace-nowrap text-sm sm:text-base">
                   <span>View Membership Plans</span>
                   <ArrowDown className="w-4 h-4 text-orange-400 shrink-0" />
                 </ShinyButton>
