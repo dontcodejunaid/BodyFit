@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { 
   Target, HeartPulse, Trophy, CheckCircle2, ShieldCheck, Star, 
-  Sparkles, Award, Dumbbell, Activity, Users2, ArrowRight
+  Sparkles, Award, Dumbbell, Activity, Users2
 } from 'lucide-react';
 import ownerImg from '../assets/owner.png';
 
