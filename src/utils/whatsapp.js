@@ -1,13 +1,9 @@
 // WhatsApp Integration Helper for BodyFit
-// Note: Currently set to testing number (+91 9945505665).
-// Client production number (+91 92120 59586) will be swapped before final release.
+// Configure the destination number via VITE_WHATSAPP_NUMBER (digits only, including country code).
 
 export class WhatsAppConfig {
-  static TESTING_NUMBER = '919945505665';
-  static CLIENT_NUMBER = '919212059586';
-  
   static get ActiveNumber() {
-    return this.TESTING_NUMBER; // Active testing number
+    return import.meta.env.VITE_WHATSAPP_NUMBER ?? '';
   }
 }
 
