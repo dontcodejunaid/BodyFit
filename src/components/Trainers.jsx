@@ -1,0 +1,276 @@
+import React, { useState, useEffect } from 'react';
+import { 
+  Star, 
+  Award, 
+  CheckCircle2, 
+  Calendar, 
+  Share2, 
+  ChevronRight, 
+  Filter, 
+  X,
+  ShieldCheck,
+  Zap
+} from 'lucide-react';
+import { INITIAL_TRAINERS } from '../data/trainersAndScheduleData';
+
+export default function Trainers({ onSelectTrainer }) {
+  const [trainers, setTrainers] = useState([]);
+  const [activeFilter, setActiveFilter] = useState('All');
+  const [selectedTrainerModal, setSelectedTrainerModal] = useState(null);
+
+  // Load trainers from LocalStorage if available, fallback to seed data
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('bodyfit_trainers');
+      if (saved) {
+        setTrainers(JSON.parse(saved));
+      } else {
+        setTrainers(INITIAL_TRAINERS);
+        localStorage.setItem('bodyfit_trainers', JSON.stringify(INITIAL_TRAINERS));
+      }
+    } catch (e) {
+      console.warn('LocalStorage access issue, using default trainers list:', e);
+      setTrainers(INITIAL_TRAINERS);
+    }
+  }, []);
+
+  const filterCategories = [
+    'All',
+    'Strength',
+    'Yoga',
+    'Fat Loss',
+    'Zumba',
+    'CrossFit',
+  ];
+
+  const filteredTrainers = trainers.filter(trainer => {
+    if (activeFilter === 'All') return true;
+    return trainer.specialties.some(specialty => 
+      specialty.toLowerCase().includes(activeFilter.toLowerCase())
+    );
+  });
+
+  const handleBookSession = (trainer) => {
+    if (onSelectTrainer) {
+      onSelectTrainer(trainer);
+    }
+    // Scroll smoothly to book appointment section if present
+    const el = document.getElementById('book-appointment') || document.getElementById('booking');
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
+  return (
+    <section id="trainers" className="relative py-20 bg-slate-950 text-slate-100 overflow-hidden border-t border-slate-800/60">
+      {/* Ambient background blur glow */}
+      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-96 h-96 bg-orange-500/10 rounded-full blur-3xl pointer-events-none" />
+
+      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        
+        {/* Section Header */}
+        <div className="text-center max-w-3xl mx-auto mb-14 space-y-4">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-orange-500/10 border border-orange-500/20 text-orange-400 text-xs sm:text-sm font-semibold tracking-wide uppercase">
+            <ShieldCheck className="w-4 h-4 text-orange-500" />
+            Certified Expert Coaches
+          </div>
+
+          <h2 className="text-3xl sm:text-5xl font-extrabold text-white tracking-tight leading-tight">
+            Train With Delhi’s Premier <br />
+            <span className="bg-gradient-to-r from-orange-400 via-orange-500 to-amber-400 bg-clip-text text-transparent">
+              Fitness & Transformation Specialists
+            </span>
+          </h2>
+
+          <p className="text-slate-400 text-base sm:text-lg leading-relaxed">
+            Our certified personal trainers are committed to personalizing your workouts, correcting technique, and pushing your limits to ensure real, sustainable results.
+          </p>
+
+          {/* Filter Pills */}
+          <div className="pt-6 flex flex-wrap items-center justify-center gap-2 sm:gap-3">
+            <span className="text-xs text-slate-400 font-medium mr-1 flex items-center gap-1">
+              <Filter className="w-3.5 h-3.5 text-orange-500" /> Filter:
+            </span>
+            {filterCategories.map(cat => (
+              <button
+                key={cat}
+                onClick={() => setActiveFilter(cat)}
+                className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all duration-200 ${
+                  activeFilter === cat
+                    ? 'bg-orange-600 text-white shadow-lg shadow-orange-600/30'
+                    : 'bg-slate-900/90 text-slate-400 border border-slate-800 hover:border-slate-700 hover:text-slate-200'
+                }`}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Trainers Cards Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {filteredTrainers.map((trainer) => (
+            <div
+              key={trainer.id}
+              className="group relative rounded-2xl bg-slate-900/70 border border-slate-800/80 hover:border-orange-500/50 backdrop-blur-md overflow-hidden flex flex-col justify-between transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl hover:shadow-orange-500/10"
+            >
+              {/* Photo & Top Badges */}
+              <div className="relative h-72 w-full overflow-hidden bg-slate-950">
+                <img
+                  src={trainer.photo}
+                  alt={trainer.name}
+                  className="w-full h-full object-cover object-top transition-transform duration-700 ease-out group-hover:scale-105"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/40 to-transparent" />
+                
+                {/* Experience Badge */}
+                <div className="absolute top-4 left-4 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-950/80 border border-slate-800 backdrop-blur-md text-xs font-semibold text-orange-400">
+                  <Award className="w-3.5 h-3.5 text-orange-500" />
+                  {trainer.experience}
+                </div>
+
+                {/* Rating Badge */}
+                <div className="absolute top-4 right-4 inline-flex items-center gap-1 px-3 py-1 rounded-full bg-slate-950/80 border border-slate-800 backdrop-blur-md text-xs font-bold text-amber-400">
+                  <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+                  {trainer.rating}
+                  <span className="text-slate-400 font-normal">({trainer.reviewsCount})</span>
+                </div>
+
+                {/* Trainer Name Overlay */}
+                <div className="absolute bottom-3 left-4 right-4">
+                  <h3 className="text-2xl font-bold text-white tracking-tight group-hover:text-orange-400 transition-colors">
+                    {trainer.name}
+                  </h3>
+                  <p className="text-xs sm:text-sm font-medium text-orange-400/90">
+                    {trainer.role}
+                  </p>
+                </div>
+              </div>
+
+              {/* Card Body */}
+              <div className="p-6 flex-1 flex flex-col justify-between space-y-5">
+                
+                {/* Specialty Tags */}
+                <div className="flex flex-wrap gap-1.5">
+                  {trainer.specialties.map((spec, i) => (
+                    <span
+                      key={i}
+                      className="px-2.5 py-1 rounded-lg bg-slate-950/80 border border-slate-800 text-slate-300 text-xs font-medium"
+                    >
+                      {spec}
+                    </span>
+                  ))}
+                </div>
+
+                {/* Bio text */}
+                <p className="text-xs sm:text-sm text-slate-300 leading-relaxed line-clamp-3">
+                  {trainer.bio}
+                </p>
+
+                {/* Action Buttons */}
+                <div className="pt-2 space-y-2.5">
+                  <button
+                    onClick={() => handleBookSession(trainer)}
+                    className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-orange-600 hover:bg-orange-500 text-white font-bold text-sm shadow-md shadow-orange-600/20 transition-all duration-200 active:scale-[0.98]"
+                  >
+                    <Calendar className="w-4 h-4" />
+                    Book Session with {trainer.name.split(' ')[0]}
+                    <ChevronRight className="w-4 h-4 ml-auto" />
+                  </button>
+
+                  <button
+                    onClick={() => setSelectedTrainerModal(trainer)}
+                    className="w-full text-center text-xs text-slate-400 hover:text-slate-200 font-medium py-1.5 transition-colors"
+                  >
+                    View Certifications & Bio →
+                  </button>
+                </div>
+
+              </div>
+            </div>
+          ))}
+        </div>
+
+      </div>
+
+      {/* Trainer Detail Modal */}
+      {selectedTrainerModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-fadeIn">
+          <div className="relative w-full max-w-lg rounded-2xl bg-slate-900 border border-slate-800 p-6 sm:p-8 space-y-6 shadow-2xl text-slate-100 max-h-[90vh] overflow-y-auto">
+            
+            {/* Close Button */}
+            <button
+              onClick={() => setSelectedTrainerModal(null)}
+              className="absolute top-4 right-4 p-2 rounded-xl bg-slate-800 text-slate-400 hover:text-white transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            {/* Modal Header */}
+            <div className="flex items-center gap-4">
+              <img
+                src={selectedTrainerModal.photo}
+                alt={selectedTrainerModal.name}
+                className="w-20 h-20 rounded-2xl object-cover border border-slate-700 shadow-md"
+              />
+              <div>
+                <h3 className="text-xl font-bold text-white">{selectedTrainerModal.name}</h3>
+                <p className="text-xs text-orange-400 font-medium">{selectedTrainerModal.role}</p>
+                <div className="flex items-center gap-2 mt-1.5 text-xs text-amber-400">
+                  <Star className="w-3.5 h-3.5 fill-amber-400" />
+                  <span className="font-bold">{selectedTrainerModal.rating}</span>
+                  <span className="text-slate-400">({selectedTrainerModal.reviewsCount} reviews)</span>
+                  <span className="text-slate-600">•</span>
+                  <span className="text-slate-300 font-medium">{selectedTrainerModal.experience} Exp.</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Bio */}
+            <div>
+              <h4 className="text-xs font-semibold uppercase text-slate-400 tracking-wider mb-2">About Trainer</h4>
+              <p className="text-sm text-slate-300 leading-relaxed">{selectedTrainerModal.bio}</p>
+            </div>
+
+            {/* Certifications */}
+            <div>
+              <h4 className="text-xs font-semibold uppercase text-slate-400 tracking-wider mb-2">Certifications & Credentials</h4>
+              <ul className="space-y-2">
+                {selectedTrainerModal.certifications.map((cert, idx) => (
+                  <li key={idx} className="flex items-center gap-2 text-xs sm:text-sm text-slate-200">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+                    <span>{cert}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* Social */}
+            <div className="flex items-center justify-between text-xs text-slate-400 pt-2 border-t border-slate-800">
+              <span className="flex items-center gap-1.5">
+                <Share2 className="w-4 h-4 text-orange-400" />
+                {selectedTrainerModal.instagram}
+              </span>
+              <span className="text-emerald-400 font-semibold flex items-center gap-1">
+                <Zap className="w-3.5 h-3.5" /> Slot Available Today
+              </span>
+            </div>
+
+            {/* CTA */}
+            <button
+              onClick={() => {
+                const tr = selectedTrainerModal;
+                setSelectedTrainerModal(null);
+                handleBookSession(tr);
+              }}
+              className="w-full py-3.5 px-4 rounded-xl bg-orange-600 hover:bg-orange-500 text-white font-bold text-sm shadow-lg shadow-orange-600/30 transition-all flex items-center justify-center gap-2"
+            >
+              <Calendar className="w-4 h-4" />
+              Book Personal Training Session
+            </button>
+          </div>
+        </div>
+      )}
+    </section>
+  );
+}

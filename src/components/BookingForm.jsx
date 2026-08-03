@@ -5,7 +5,8 @@ import {
   Check, Flame, MessageSquare
 } from 'lucide-react';
 import { saveBooking, isSlotTaken } from '../utils/localStorage';
-import { sendWhatsAppBookingAlert } from '../utils/whatsapp';
+import { sendWhatsAppBookingAlert, WhatsAppConfig } from '../utils/whatsapp';
+import { INITIAL_TRAINERS } from '../data/trainersAndScheduleData';
 import Component from './ui/gradient-bars-background';
 
 export default function BookingForm() {
@@ -37,11 +38,21 @@ export default function BookingForm() {
   const morningSlots = ['06:00 AM', '07:00 AM', '08:00 AM', '09:00 AM', '10:00 AM', '11:00 AM', '12:00 PM'];
   const eveningSlots = ['05:00 PM', '06:00 PM', '07:00 PM', '08:00 PM', '09:00 PM'];
 
-  const trainers = [
-    { name: 'No Preference (Assign Any Available)', desc: 'Instant slot matching with any coach on duty' },
-    { name: 'Rahul Sharma', desc: 'Bodybuilding, Hypertrophy & Powerlifting' },
-    { name: 'Priya Singh', desc: 'Weight Loss, Functional Movement & Yoga' },
-    { name: 'Vikram Malhotra', desc: 'CrossFit, Athletic Performance & HIIT' },
+  const trainersOptions = [
+    {
+      name: 'No Preference (Assign Any Available)',
+      role: 'Instant Duty Coach Matching',
+      desc: 'Quick matching with any certified coach on duty',
+      photo: null,
+      specialties: ['Instant Matching', 'All Goals']
+    },
+    ...INITIAL_TRAINERS.map(t => ({
+      name: t.name,
+      role: t.role,
+      desc: t.bio,
+      photo: t.photo,
+      specialties: t.specialties
+    }))
   ];
 
   const handleInputChange = (field, value) => {
@@ -324,26 +335,51 @@ export default function BookingForm() {
                   <span className="text-xs text-slate-400 font-semibold">3 of 4 Steps</span>
                 </div>
 
-                <div className="space-y-3">
-                  {trainers.map((t) => (
-                    <div
-                      key={t.name}
-                      onClick={() => handleInputChange('trainer', t.name)}
-                      className={`p-4 sm:p-5 rounded-2xl border cursor-pointer transition-all duration-200 flex items-center justify-between ${
-                        formData.trainer === t.name
-                          ? 'border-orange-500 bg-orange-500/10 text-white shadow-lg shadow-orange-500/10'
-                          : 'border-slate-800 bg-slate-950/60 text-slate-300 hover:border-slate-700'
-                      }`}
-                    >
-                      <div className="space-y-1">
-                        <div className="font-bold text-white text-sm sm:text-base flex items-center gap-2">
-                          {t.name}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {trainersOptions.map((t) => {
+                    const isSelected = formData.trainer === t.name;
+                    return (
+                      <div
+                        key={t.name}
+                        onClick={() => handleInputChange('trainer', t.name)}
+                        className={`p-4 rounded-2xl border cursor-pointer transition-all duration-200 flex items-start gap-4 ${
+                          isSelected
+                            ? 'border-orange-500 bg-orange-500/10 text-white shadow-xl shadow-orange-500/10 ring-1 ring-orange-500/50'
+                            : 'border-slate-800 bg-slate-950/80 text-slate-300 hover:border-slate-700 hover:bg-slate-900/60'
+                        }`}
+                      >
+                        {t.photo ? (
+                          <img
+                            src={t.photo}
+                            alt={t.name}
+                            className="w-14 h-14 rounded-2xl object-cover object-top shrink-0 border border-slate-700 shadow-md"
+                          />
+                        ) : (
+                          <div className="w-14 h-14 rounded-2xl bg-orange-500/20 text-orange-400 border border-orange-500/30 flex items-center justify-center shrink-0">
+                            <User className="w-7 h-7" />
+                          </div>
+                        )}
+
+                        <div className="flex-1 min-w-0 space-y-1">
+                          <div className="flex items-center justify-between gap-1">
+                            <h4 className="font-bold text-white text-sm truncate">{t.name}</h4>
+                            {isSelected && <CheckCircle2 className="w-5 h-5 text-orange-500 shrink-0" />}
+                          </div>
+                          <p className="text-xs text-slate-400 font-medium truncate">{t.role || t.desc}</p>
+                          
+                          {t.specialties && (
+                            <div className="flex flex-wrap gap-1 pt-1">
+                              {t.specialties.slice(0, 2).map((spec, i) => (
+                                <span key={i} className="text-[10px] px-2 py-0.5 rounded-md bg-slate-900 text-slate-300 border border-slate-800 font-medium">
+                                  {spec}
+                                </span>
+                              ))}
+                            </div>
+                          )}
                         </div>
-                        <div className="text-xs text-slate-400">{t.desc}</div>
                       </div>
-                      {formData.trainer === t.name && <CheckCircle2 className="w-6 h-6 text-orange-500 shrink-0" />}
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
 
                 <div className="pt-4 flex items-center justify-between">
@@ -488,7 +524,7 @@ export default function BookingForm() {
                 <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-300 text-xs max-w-md mx-auto flex items-center gap-3">
                   <MessageSquare className="w-5 h-5 text-amber-400 shrink-0" />
                   <div className="text-left">
-                    Notification pushed to testing WhatsApp number <strong>(+91 9945505665)</strong>.
+                    Booking saved locally! WhatsApp chat launched for <strong>+{WhatsAppConfig.targetPhone}</strong>. Click <strong>Send</strong> in WhatsApp to complete sending.
                   </div>
                 </div>
 
@@ -498,7 +534,7 @@ export default function BookingForm() {
                     onClick={() => sendWhatsAppBookingAlert(confirmedBooking)}
                     className="w-full sm:w-auto px-7 py-4 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-2xl flex items-center justify-center gap-2 shadow-lg transition-all"
                   >
-                    <Send className="w-4 h-4" /> Send WhatsApp Confirmation Again
+                    <Send className="w-4 h-4" /> Open WhatsApp & Send Confirmation
                   </button>
                   <button
                     type="button"
