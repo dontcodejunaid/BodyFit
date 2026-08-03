@@ -480,7 +480,7 @@ export default function BookingForm() {
               <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-300 text-xs max-w-md mx-auto flex items-center gap-3">
                 <MessageSquare className="w-5 h-5 text-amber-400 shrink-0" />
                 <div className="text-left">
-                  Notification pushed to testing WhatsApp number <strong>(+91 9945505665)</strong>.
+                  Booking saved locally! WhatsApp chat launched for <strong>+91 9945505665</strong>. Click <strong>Send</strong> in WhatsApp to complete sending.
                 </div>
               </div>
 
@@ -490,7 +490,7 @@ export default function BookingForm() {
                   onClick={() => sendWhatsAppBookingAlert(confirmedBooking)}
                   className="w-full sm:w-auto px-7 py-4 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-2xl flex items-center justify-center gap-2 shadow-lg transition-all"
                 >
-                  <Send className="w-4 h-4" /> Send WhatsApp Confirmation Again
+                  <Send className="w-4 h-4" /> Open WhatsApp & Send Confirmation
                 </button>
                 <button
                   type="button"

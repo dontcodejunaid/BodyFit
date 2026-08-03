@@ -3,16 +3,39 @@
 
 export class WhatsAppConfig {
   static get ActiveNumber() {
-    return import.meta.env.VITE_WHATSAPP_NUMBER ?? '';
+    const envNum = import.meta.env.VITE_WHATSAPP_NUMBER;
+    if (envNum && envNum.trim()) {
+      return envNum.replace(/\D/g, '');
+    }
+    return '919945505665'; // Default fallback testing number
   }
 }
 
 /**
- * Formats booking details into a clean WhatsApp text message and opens wa.me link
- * @param {Object} bookingDetails 
+ * Formats a phone string into clean country-coded digits
+ * @param {string} phoneStr 
+ * @returns {string}
  */
-export function sendWhatsAppBookingAlert(bookingDetails) {
+export function formatWhatsAppNumber(phoneStr) {
+  if (!phoneStr) return WhatsAppConfig.ActiveNumber;
+  const digits = phoneStr.replace(/\D/g, '');
+  if (digits.length === 10) {
+    return '91' + digits; // Default to India country code (+91) for 10-digit mobile numbers
+  }
+  return digits || WhatsAppConfig.ActiveNumber;
+}
+
+/**
+ * Formats booking details into a clean WhatsApp text message and opens direct chat with phone number
+ * @param {Object} bookingDetails 
+ * @param {string|null} [targetPhone] Optional target phone number override
+ */
+export function sendWhatsAppBookingAlert(bookingDetails, targetPhone = null) {
   const { id, name, phone, service, date, time, trainer, status } = bookingDetails;
+
+  const destinationNumber = targetPhone 
+    ? formatWhatsAppNumber(targetPhone) 
+    : WhatsAppConfig.ActiveNumber;
 
   const textMessage = `🏋️ *NEW BODYFIT BOOKING REQUEST* 🏋️\n\n` +
     `📌 *Booking Ref:* #${id}\n` +
@@ -26,7 +49,12 @@ export function sendWhatsAppBookingAlert(bookingDetails) {
     `Please confirm slot availability. Thank you!`;
 
   const encodedMessage = encodeURIComponent(textMessage);
-  const whatsappUrl = `https://wa.me/${WhatsAppConfig.ActiveNumber}?text=${encodedMessage}`;
+  // Using api.whatsapp.com/send?phone=... guarantees direct chat opening with recipient
+  const whatsappUrl = `https://api.whatsapp.com/send?phone=${destinationNumber}&text=${encodedMessage}`;
   
-  window.open(whatsappUrl, '_blank');
+  if (typeof window !== 'undefined') {
+    window.open(whatsappUrl, '_blank');
+  }
+
+  return { whatsappUrl, destinationNumber };
 }
