@@ -8,7 +8,6 @@ import {
   ChevronRight, 
   Filter, 
   X,
-  Dumbbell,
   ShieldCheck,
   Zap
 } from 'lucide-react';

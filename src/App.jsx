@@ -5,8 +5,8 @@ import Trainers from './components/Trainers';
 import ClassSchedule from './components/ClassSchedule';
 
 function App() {
-  const [selectedTrainer, setSelectedTrainer] = useState(null);
-  const [selectedClass, setSelectedClass] = useState(null);
+  const [_selectedTrainer, setSelectedTrainer] = useState(null);
+  const [_selectedClass, setSelectedClass] = useState(null);
 
   const handleSelectTrainer = (trainer) => {
     setSelectedTrainer(trainer);

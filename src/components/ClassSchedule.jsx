@@ -2,14 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { 
   Calendar, 
   Clock, 
-  Users, 
   User, 
   MapPin, 
   ChevronRight, 
-  Sparkles, 
-  CheckCircle2, 
   Filter, 
-  Flame,
   LayoutGrid,
   List
 } from 'lucide-react';

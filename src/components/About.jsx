@@ -1,5 +1,5 @@
 import React from 'react';
-import { Target, HeartPulse, Trophy, CheckCircle2, Users, ShieldCheck, Star } from 'lucide-react';
+import { Target, HeartPulse, Trophy, CheckCircle2, ShieldCheck, Star } from 'lucide-react';
 import ownerImg from '../assets/owner.png';
 
 export default function About() {
