@@ -1,14 +1,41 @@
+import { useState } from 'react';
 import Navbar from './components/Navbar.jsx';
+import Hero from './components/Hero';
+import About from './components/About';
+import Facilities from './components/Facilities';
+import Trainers from './components/Trainers';
+import ClassSchedule from './components/ClassSchedule';
+import Gallery from './components/Gallery';
 import MembershipPlans from './components/MembershipPlans.jsx';
 import Testimonials from './components/Testimonials.jsx';
+import BookingForm from './components/BookingForm';
 
 function App() {
+  const [_selectedTrainer, setSelectedTrainer] = useState(null);
+  const [_selectedClass, setSelectedClass] = useState(null);
+
+  const handleSelectTrainer = (trainer) => {
+    setSelectedTrainer(trainer);
+    console.log('Selected Trainer for booking:', trainer);
+  };
+
+  const handleSelectClass = (classItem) => {
+    setSelectedClass(classItem);
+    console.log('Selected Class for booking:', classItem);
+  };
+
   return (
-    <div>
+    <div className="min-h-screen bg-slate-950 text-slate-100 font-sans selection:bg-orange-500 selection:text-white">
       <Navbar />
-      {/* Rest of your existing page components */}
+      <Hero />
+      <About />
+      <Facilities />
+      <Trainers onSelectTrainer={handleSelectTrainer} />
+      <ClassSchedule onSelectClass={handleSelectClass} />
+      <Gallery />
       <MembershipPlans />
       <Testimonials />
+      <BookingForm />
     </div>
   );
 }
