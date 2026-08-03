@@ -3,6 +3,7 @@ import {
   Clock, Dumbbell, ShieldCheck, Users, Award, ChevronRight, Zap, ArrowDown
 } from 'lucide-react';
 import dumbbellBg from '../assets/dumbbell-bg.png';
+import logoImg from '../assets/logo.png';
 import Component from './ui/gradient-bars-background';
 import { LayeredText } from './ui/layered-text';
 import { ShinyButton } from './ui/shiny-button';
@@ -109,7 +110,7 @@ export default function Hero() {
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
               <a href="#book-appointment" className="w-full sm:w-auto">
                 <ShinyButton className="w-full sm:w-auto bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-500 hover:to-amber-500 shadow-xl shadow-orange-600/30">
-                  <Zap className="w-5 h-5 fill-white text-white shrink-0" />
+                  <img src={logoImg} alt="Body Fit Logo" className="w-9 h-9 object-contain shrink-0 filter brightness-125 scale-125" />
                   <span>Book a Free Trial</span>
                   <ChevronRight className="w-5 h-5 shrink-0" />
                 </ShinyButton>
