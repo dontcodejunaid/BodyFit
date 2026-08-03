@@ -4,20 +4,20 @@ import React from "react";
 import { RandomLetterSwap } from "@/components/ui/random-letter-swap";
 import { Dumbbell, Sparkles } from "lucide-react";
 
-const links = ["Home", "About Us", "Trainers", "Classes", "Contact"];
+const links = ["Home", "About Us", "Facilities", "Gallery", "Contact"];
 
 const navTargetMap = {
   Home: "#hero",
   "About Us": "#about-us",
-  Trainers: "#trainers",
-  Classes: "#class-schedule",
+  Facilities: "#facilities",
+  Gallery: "#gallery",
   Contact: "#book-appointment",
 };
 
 export default function RandomLetterSwapNav() {
   const handleNavClick = (link) => {
     const target = navTargetMap[link] || "#hero";
-    const el = document.querySelector(target);
+    const el = document.querySelector(target) || document.querySelector("#about-us") || document.querySelector("#book-appointment");
     if (el) {
       el.scrollIntoView({ behavior: "smooth" });
     }
@@ -63,7 +63,7 @@ export default function RandomLetterSwapNav() {
             className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-500 hover:to-amber-500 text-white text-xs sm:text-sm font-bold shadow-lg shadow-orange-600/25 transition-all transform hover:-translate-y-0.5 active:translate-y-0"
           >
             <Sparkles className="w-4 h-4 text-amber-300" />
-            <span>Join Now</span>
+            <span>Book Now</span>
           </a>
         </div>
 

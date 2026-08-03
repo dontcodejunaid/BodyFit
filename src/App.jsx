@@ -5,6 +5,7 @@ import About from './components/About';
 import Trainers from './components/Trainers';
 import ClassSchedule from './components/ClassSchedule';
 import BookingForm from './components/BookingForm';
+import Footer from './components/Footer';
 
 function App() {
   const [_selectedTrainer, setSelectedTrainer] = useState(null);
@@ -28,6 +29,7 @@ function App() {
       <Trainers onSelectTrainer={handleSelectTrainer} />
       <ClassSchedule onSelectClass={handleSelectClass} />
       <BookingForm />
+      <Footer />
     </div>
   );
 }
