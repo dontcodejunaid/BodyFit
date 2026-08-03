@@ -123,6 +123,12 @@ export default function Footer() {
                 <li key={i}>
                   <a
                     href={link.href}
+                    onClick={(e) => {
+                      if (link.name === 'Home') {
+                        e.preventDefault();
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                      }
+                    }}
                     className="text-slate-400 hover:text-orange-400 flex items-center gap-1.5 transition-colors group"
                   >
                     <ChevronRight className="w-3.5 h-3.5 text-orange-500 opacity-60 group-hover:translate-x-1 transition-transform" />

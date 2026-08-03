@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import RandomLetterSwapNav from '@/components/ui/m-random-letter-swap-1';
 import Hero from './components/Hero';
 import About from './components/About';
+import Facilities from './components/Facilities';
 import Trainers from './components/Trainers';
 import ClassSchedule from './components/ClassSchedule';
 import BookingForm from './components/BookingForm';
@@ -26,6 +27,7 @@ function App() {
       <RandomLetterSwapNav />
       <Hero />
       <About />
+      <Facilities />
       <Trainers onSelectTrainer={handleSelectTrainer} />
       <ClassSchedule onSelectClass={handleSelectClass} />
       <BookingForm />
