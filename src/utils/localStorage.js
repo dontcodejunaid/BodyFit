@@ -26,6 +26,6 @@ export const setStorageItem = (key, value) => {
   try {
     localStorage.setItem(key, JSON.stringify(value));
   } catch (error) {
-    console.error(`Error saving ${key} to localStorage`, error);
+    console.error(`Error writing ${key} to localStorage`, error);
   }
 };

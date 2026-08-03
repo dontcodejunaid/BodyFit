@@ -1,0 +1,294 @@
+/*
+ * Every rule is scoped under .membership-section so nothing here can collide
+ * with styles another section adds later.
+ *
+ * Type scale, spacing and container width mirror the Hero/About sections on
+ * main (Tailwind: py-24, max-w-7xl, text-3xl/5xl/6xl font-black, text-base/lg,
+ * text-xs/sm) so this section reads at the same size as the ones above it.
+ * Sizes are in px, not rem, because index.css sets an 18px root here while
+ * Tailwind's scale assumes 16px — px keeps both renderings identical.
+ * Breakpoints are Tailwind's own: 640px (sm), 768px (md), 1024px (lg).
+ */
+.membership-section {
+  background-color: #121212;
+  color: #d1d1d1;
+  /* py-24 */
+  padding: 96px 0;
+  /* #root centres its text; this section lays itself out. */
+  text-align: left;
+  /* Clears the sticky two-row header when the nav links jump here. */
+  scroll-margin-top: 150px;
+}
+
+.membership-section *,
+.membership-section *::before,
+.membership-section *::after {
+  box-sizing: border-box;
+}
+
+/* max-w-7xl mx-auto px-4 */
+.membership-section .membership-container {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 16px;
+}
+
+/* text-center max-w-3xl mx-auto, then the space-y-20 gap to the grid */
+.membership-section .membership-header {
+  text-align: center;
+  max-width: 768px;
+  margin: 0 auto 80px;
+}
+
+/* Matches the orange eyebrow chip above: text-xs font-bold uppercase
+   tracking-wider on a 10%-opacity orange pill. */
+.membership-section .membership-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #ff6b00;
+  background-color: rgba(255, 107, 0, 0.1);
+  border: 1px solid rgba(255, 107, 0, 0.2);
+  border-radius: 6px;
+  padding: 4px 12px;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 16px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  margin: 0 0 16px;
+}
+
+/* text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight leading-tight */
+.membership-section .membership-title {
+  color: #ffffff;
+  font-size: 30px;
+  font-weight: 900;
+  line-height: 1.25;
+  letter-spacing: -0.025em;
+  margin: 0 0 16px;
+}
+
+/* text-base sm:text-lg leading-relaxed max-w-2xl mx-auto */
+.membership-section .membership-subtitle {
+  color: #9a9a9a;
+  font-size: 16px;
+  line-height: 1.625;
+  max-width: 672px;
+  margin: 0 auto;
+}
+
+/* Plan cards — grid-cols-1 md:grid-cols-3 gap-6 */
+.membership-section .plans-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 24px;
+  max-width: 460px;
+  margin: 0 auto;
+  align-items: stretch;
+}
+
+/* p-7 rounded-3xl, same card shell as the pillar cards above. */
+.membership-section .plan-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  background-color: #1a1a1a;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 24px;
+  padding: 28px;
+  transition:
+    transform 0.25s ease,
+    border-color 0.25s ease,
+    box-shadow 0.25s ease;
+}
+
+.membership-section .plan-card:hover {
+  transform: translateY(-6px);
+  border-color: rgba(255, 107, 0, 0.45);
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.45);
+}
+
+.membership-section .plan-card.featured {
+  border-color: #ff6b00;
+  background-color: #1f1611;
+  box-shadow: 0 14px 36px rgba(255, 107, 0, 0.14);
+}
+
+.membership-section .plan-badge {
+  position: absolute;
+  top: -14px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: #ff6b00;
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 16px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  padding: 5px 14px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.membership-section .plan-heading {
+  min-height: 0;
+}
+
+/* text-xl font-extrabold, like the pillar-card headings above. */
+.membership-section .plan-tier {
+  color: #ffffff;
+  font-size: 20px;
+  font-weight: 800;
+  line-height: 1.4;
+  margin: 0 0 6px;
+}
+
+.membership-section .plan-detail {
+  color: #9a9a9a;
+  font-size: 12px;
+  line-height: 1.625;
+  margin: 0;
+}
+
+.membership-section .plan-price {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  margin: 0;
+}
+
+/* text-4xl font-black tracking-tight — the stat-value treatment from Hero. */
+.membership-section .plan-amount {
+  color: #ffffff;
+  font-size: 36px;
+  font-weight: 900;
+  line-height: 1.1;
+  letter-spacing: -0.025em;
+}
+
+.membership-section .plan-period {
+  color: #9a9a9a;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.membership-section .plan-duration {
+  color: #7d7d7d;
+  font-size: 12px;
+  line-height: 1.625;
+  margin: 8px 0 0;
+}
+
+.membership-section .plan-features {
+  list-style: none;
+  margin: 28px 0 32px;
+  padding: 24px 0 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* text-xs sm:text-sm leading-relaxed — the body-copy size used above. */
+.membership-section .plan-features li {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  color: #c9c9c9;
+  font-size: 12px;
+  line-height: 1.625;
+}
+
+.membership-section .feature-tick {
+  color: #ff6b00;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+/* Same proportions as the primary CTA in Hero: px-8 py-4 rounded-2xl
+   font-extrabold text-base. margin-top pins every CTA to the same baseline
+   regardless of feature-list length. */
+.membership-section .plan-cta {
+  margin-top: auto;
+  width: 100%;
+  padding: 14px 20px;
+  background-color: #ff6b00;
+  color: #ffffff;
+  border: none;
+  border-radius: 16px;
+  font-weight: 800;
+  font-size: 16px;
+  line-height: 24px;
+  font-family: inherit;
+  cursor: pointer;
+  white-space: nowrap;
+  transition:
+    background-color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.membership-section .plan-cta:hover {
+  background-color: #e05e00;
+  transform: translateY(-1px);
+}
+
+.membership-section .plan-cta:focus-visible {
+  outline: 2px solid #ff6b00;
+  outline-offset: 3px;
+}
+
+/* sm — Tailwind's `sm:` step for the header and body copy. */
+@media (min-width: 640px) {
+  .membership-section .membership-container {
+    padding: 0 24px;
+  }
+
+  .membership-section .membership-title {
+    font-size: 48px;
+  }
+
+  .membership-section .membership-subtitle {
+    font-size: 18px;
+  }
+
+  .membership-section .plan-detail,
+  .membership-section .plan-duration,
+  .membership-section .plan-features li {
+    font-size: 14px;
+  }
+}
+
+/* md — three across, matching the md:grid-cols-3 pillar row above. */
+@media (min-width: 768px) {
+  .membership-section .plans-grid {
+    grid-template-columns: repeat(3, 1fr);
+    max-width: none;
+  }
+
+  .membership-section .plan-heading {
+    min-height: 68px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .membership-section .membership-container {
+    padding: 0 32px;
+  }
+
+  .membership-section .membership-title {
+    font-size: 60px;
+  }
+}
+
+/* Tighter vertical rhythm on phones (py-16). */
+@media (max-width: 639px) {
+  .membership-section {
+    padding: 64px 0;
+  }
+
+  .membership-section .membership-header {
+    margin-bottom: 48px;
+  }
+}
