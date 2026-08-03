@@ -3,6 +3,7 @@ import Hero from './components/Hero';
 import About from './components/About';
 import Trainers from './components/Trainers';
 import ClassSchedule from './components/ClassSchedule';
+import BookingForm from './components/BookingForm';
 
 function App() {
   const [_selectedTrainer, setSelectedTrainer] = useState(null);
@@ -24,6 +25,7 @@ function App() {
       <About />
       <Trainers onSelectTrainer={handleSelectTrainer} />
       <ClassSchedule onSelectClass={handleSelectClass} />
+      <BookingForm />
     </div>
   );
 }
