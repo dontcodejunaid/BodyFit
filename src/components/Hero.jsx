@@ -70,10 +70,10 @@ export default function Hero() {
         animationDuration={2}
         backgroundColor="transparent"
       >
-        <div className="relative z-10 w-full min-h-screen flex flex-col justify-between pt-16 sm:pt-20">
+        <div className="relative z-10 w-full min-h-screen flex flex-col justify-center pt-8 sm:pt-12">
 
           {/* Hero Content Area */}
-          <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 my-auto text-center space-y-8">
+          <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 my-auto text-center space-y-5">
 
             {/* Live Real-time Status Badge - Compact Positioned Fixed at Bottom Left Corner */}
             <div className="fixed bottom-4 left-4 z-50 inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-slate-950/90 border border-slate-800/90 backdrop-blur-2xl shadow-xl">
@@ -121,6 +121,26 @@ export default function Hero() {
                   <ArrowDown className="w-4 h-4 text-orange-400 shrink-0" />
                 </ShinyButton>
               </a>
+            </div>
+
+            {/* Quick Stats Strip - Placed Directly Below CTA Buttons */}
+            <div className="pt-3 max-w-5xl mx-auto">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
+                {stats.map((stat, idx) => {
+                  const Icon = stat.icon;
+                  return (
+                    <div key={idx} className="flex items-center justify-center gap-3 p-3 rounded-2xl bg-slate-950/40 border border-slate-800/50 backdrop-blur-md hover:bg-slate-900/60 transition-all shadow-lg">
+                      <div className="p-2 rounded-xl bg-gradient-to-br from-orange-500 to-amber-500 text-white shadow-md shrink-0">
+                        <Icon className="w-4 h-4 sm:w-5 sm:h-5" />
+                      </div>
+                      <div className="text-left min-w-0">
+                        <div className="text-lg sm:text-2xl font-black text-white tracking-tight leading-none">{stat.value}</div>
+                        <div className="text-[10px] sm:text-xs font-bold text-slate-300 mt-1 truncate">{stat.label}</div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
 
           </div>
