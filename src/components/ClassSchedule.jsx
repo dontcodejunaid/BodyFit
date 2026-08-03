@@ -67,7 +67,7 @@ export default function ClassSchedule({ onSelectClass }) {
   };
 
   return (
-    <section id="class-schedule" className="relative py-20 bg-slate-950 text-slate-100 border-t border-slate-800/60 overflow-hidden">
+    <section id="class-schedule" className="scroll-mt-20 relative py-20 bg-slate-950 text-slate-100 border-t border-slate-800/60 overflow-hidden">
       {/* Background ambient light */}
       <div className="absolute top-1/3 right-10 w-80 h-80 bg-purple-500/10 rounded-full blur-3xl pointer-events-none" />
 

@@ -62,7 +62,7 @@ export default function Trainers({ onSelectTrainer }) {
   };
 
   return (
-    <section id="trainers" className="relative py-20 bg-slate-950 text-slate-100 overflow-hidden border-t border-slate-800/60">
+    <section id="trainers" className="scroll-mt-20 relative py-20 bg-slate-950 text-slate-100 overflow-hidden border-t border-slate-800/60">
       {/* Ambient background blur glow */}
       <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-96 h-96 bg-orange-500/10 rounded-full blur-3xl pointer-events-none" />
 

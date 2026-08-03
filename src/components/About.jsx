@@ -82,7 +82,7 @@ export default function About() {
       animationDuration={2.2}
       backgroundColor="#0f172a"
     >
-      <section id="about-us" className="py-24 text-slate-100 relative overflow-hidden w-full">
+      <section id="about-us" className="scroll-mt-20 py-24 text-slate-100 relative overflow-hidden w-full">
         
         {/* Background Decorative Lighting Orbs */}
         <div className="absolute top-1/3 -left-32 w-[28rem] h-[28rem] bg-orange-600/10 rounded-full blur-[130px] pointer-events-none" />

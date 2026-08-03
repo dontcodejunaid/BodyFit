@@ -50,7 +50,7 @@ export default function Hero() {
   ];
 
   return (
-    <div className="relative min-h-screen w-full bg-slate-950 overflow-hidden">
+    <div id="home" className="relative min-h-screen w-full bg-slate-950 overflow-hidden scroll-mt-20">
 
       {/* Background Dumbbell Image positioned in top dark area */}
       <div className="absolute top-0 left-0 right-0 h-[65vh] z-0 overflow-hidden pointer-events-none">
