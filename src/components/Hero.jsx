@@ -98,7 +98,20 @@ export default function Hero() {
             </span>
           </div>
 
-            {/* Hero Content Area */}
+          {/* Refer & Earn pill — top-right of hero section, below navbar Book Now button */}
+          <a
+            href="#referral-program"
+            onClick={(e) => { e.preventDefault(); scrollToSection('referral-program', 80); }}
+            className="absolute top-[76px] right-4 sm:right-6 z-30 hidden sm:flex"
+          >
+            <ShinyButton className="h-9 px-4 bg-gradient-to-r from-orange-500 via-amber-500 to-orange-600 shadow-lg shadow-orange-500/40 text-[11px] font-extrabold tracking-wide border border-orange-400/40 rounded-xl">
+              <span className="flex items-center gap-1.5 whitespace-nowrap">
+                🎁 Refer &amp; Earn — 1 Month Free
+              </span>
+            </ShinyButton>
+          </a>
+
+
             <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 my-auto text-center space-y-4 sm:space-y-5">
 
               {/* Bold Layered Interactive Animated Headline */}

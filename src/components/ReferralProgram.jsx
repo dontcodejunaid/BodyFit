@@ -104,11 +104,11 @@ export default function ReferralProgram() {
                 <span className="text-2xl font-black text-orange-400 tracking-wider font-mono">{userCode}</span>
               </div>
 
-              <div className="flex items-center gap-3 w-full sm:w-auto shrink-0 justify-center">
+              <div className="flex items-stretch gap-3 w-full sm:w-auto shrink-0 justify-center">
                 <button
                   type="button"
                   onClick={handleCopy}
-                  className="h-11 px-5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-xs font-extrabold flex items-center justify-center gap-2 border border-slate-700 transition-all active:scale-95 shrink-0"
+                  className="flex-1 sm:flex-none h-11 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-xs font-extrabold flex items-center justify-center gap-2 border border-orange-500/40 hover:border-orange-500/70 transition-all active:scale-95"
                 >
                   {copied ? <Check className="w-4 h-4 text-emerald-400 shrink-0" /> : <Copy className="w-4 h-4 text-orange-400 shrink-0" />}
                   <span className="whitespace-nowrap">{copied ? 'Copied!' : 'Copy Code'}</span>
@@ -118,7 +118,7 @@ export default function ReferralProgram() {
                   href={whatsappUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="h-11 px-5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-extrabold flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/20 transition-all active:scale-95 shrink-0"
+                  className="flex-1 sm:flex-none h-11 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-extrabold flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/25 transition-all active:scale-95"
                 >
                   <Share2 className="w-4 h-4 shrink-0" />
                   <span className="whitespace-nowrap">Share WhatsApp</span>
