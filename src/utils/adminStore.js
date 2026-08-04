@@ -8,7 +8,7 @@
 //   bodyfit_memberships <- managed here only (no public section renders it yet)
 
 import { INITIAL_TRAINERS, INITIAL_SCHEDULE } from '../data/trainersAndScheduleData';
-import { initialMemberships } from '../data/seedData';
+import { DEFAULT_MEMBERSHIP_PLANS } from '../data/membershipPlans';
 
 export const STORE_KEYS = {
   BOOKINGS: 'bodyfit_bookings',
@@ -88,7 +88,24 @@ export const saveTrainers = (list) => write(STORE_KEYS.TRAINERS, list);
 export const getClasses = () => readSeeded(STORE_KEYS.CLASSES, INITIAL_SCHEDULE);
 export const saveClasses = (list) => write(STORE_KEYS.CLASSES, list);
 
-export const getMemberships = () => readSeeded(STORE_KEYS.MEMBERSHIPS, initialMemberships);
+/**
+ * Membership plans, shared by the public pricing section and the admin editor.
+ * An earlier build seeded a flatter shape ({name, price, duration}); anything
+ * missing priceMonthly predates the current schema and is replaced with the
+ * defaults rather than rendered as a broken card.
+ */
+export function getMemberships() {
+  const stored = readSeeded(STORE_KEYS.MEMBERSHIPS, DEFAULT_MEMBERSHIP_PLANS);
+
+  const isCurrentSchema =
+    Array.isArray(stored) &&
+    stored.length > 0 &&
+    stored.every((plan) => typeof plan?.priceMonthly === 'string');
+
+  if (!isCurrentSchema) return write(STORE_KEYS.MEMBERSHIPS, DEFAULT_MEMBERSHIP_PLANS);
+  return stored;
+}
+
 export const saveMemberships = (list) => write(STORE_KEYS.MEMBERSHIPS, list);
 
 export const newId = (prefix) => `${prefix}-${Date.now().toString(36)}`;

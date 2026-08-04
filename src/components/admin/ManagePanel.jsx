@@ -5,6 +5,7 @@ import {
   getMemberships, saveMemberships, newId,
 } from '../../utils/adminStore';
 import { CLASS_CATEGORIES, DAYS_OF_WEEK } from '../../data/trainersAndScheduleData';
+import { PLAN_GRADIENTS } from '../../data/membershipPlans';
 
 // Each collection declares its own fields, so one editor renders all three.
 // `list` fields are stored as arrays but edited as comma-separated text.
@@ -14,13 +15,22 @@ const COLLECTIONS = {
     idPrefix: 'mem',
     read: getMemberships,
     write: saveMemberships,
-    note: 'Managed here only — no public section renders plans yet.',
+    note: 'Changes appear on the public Membership Plans section after a refresh.',
     primary: 'name',
     fields: [
       { key: 'name', label: 'Plan name', type: 'text' },
-      { key: 'price', label: 'Price', type: 'text', placeholder: '₹1,500/mo' },
-      { key: 'duration', label: 'Duration', type: 'text', placeholder: '1 Month' },
+      { key: 'tier', label: 'Tier (used on the button)', type: 'text', placeholder: 'Basic' },
+      { key: 'description', label: 'Short description', type: 'text', wide: true },
+      { key: 'priceMonthly', label: 'Monthly price', type: 'text', placeholder: '₹1,500' },
+      { key: 'priceYearly', label: 'Yearly price (per month)', type: 'text', placeholder: '₹1,200' },
+      { key: 'yearlyTotal', label: 'Yearly total', type: 'text', placeholder: '₹14,400/yr' },
+      { key: 'badgeText', label: 'Badge text', type: 'text', placeholder: 'Most Popular ⭐' },
+      { key: 'badgeColor', label: 'Badge colour (hex)', type: 'text', placeholder: '#FF5733' },
+      { key: 'gradient', label: 'Card gradient', type: 'select', options: PLAN_GRADIENTS },
+      { key: 'discountTag', label: 'Discount tag', type: 'text', wide: true },
+      { key: 'imageUrl', label: 'Image URL', type: 'text', wide: true },
       { key: 'features', label: 'Features (comma separated)', type: 'list', wide: true },
+      { key: 'isFeatured', label: 'Highlight as featured plan', type: 'boolean' },
     ],
   },
   trainers: {
