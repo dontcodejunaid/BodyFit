@@ -36,6 +36,21 @@ export default function BookingForm({ selectedPlan = null, onClearPlan = null })
     }
   }, [selectedPlan]);
 
+  // Auto-reset trainer selection if selected trainer is off-duty for the chosen time slot
+  useEffect(() => {
+    if (formData.trainer && formData.trainer !== 'No Preference (Assign Any Available)') {
+      const selectedTrainerObj = INITIAL_TRAINERS.find(t => t.name === formData.trainer);
+      if (selectedTrainerObj && selectedTrainerObj.availableSlots) {
+        if (!selectedTrainerObj.availableSlots.includes(formData.time)) {
+          setFormData(prev => ({
+            ...prev,
+            trainer: 'No Preference (Assign Any Available)'
+          }));
+        }
+      }
+    }
+  }, [formData.time]);
+
   const [confirmedBooking, setConfirmedBooking] = useState(null);
   const [errors, setErrors] = useState({});
   const [notifyResult, setNotifyResult] = useState(null);
@@ -531,7 +546,7 @@ export default function BookingForm({ selectedPlan = null, onClearPlan = null })
               </div>
             )}
 
-            {/* STEP 3: Choose Trainer (Real-Time Shift Availability Filter) */}
+            {/* STEP 3: Choose Trainer (Real-Time Shift Availability Filter & Hard Selection Lock) */}
             {step === 3 && (
               <div className="space-y-6">
                 <div className="flex items-center justify-between border-b border-slate-800 pb-4">
@@ -567,20 +582,24 @@ export default function BookingForm({ selectedPlan = null, onClearPlan = null })
                     return (
                       <div
                         key={t.name}
-                        onClick={() => handleInputChange('trainer', t.name)}
-                        className={`p-4 rounded-2xl border cursor-pointer transition-all duration-200 flex items-start gap-4 relative overflow-hidden ${
-                          isSelected
-                            ? 'border-orange-500 bg-orange-500/10 text-white shadow-xl shadow-orange-500/10 ring-1 ring-orange-500/50'
-                            : isOnDuty
-                            ? 'border-slate-800 bg-slate-950/80 text-slate-300 hover:border-slate-700 hover:bg-slate-900/60'
-                            : 'border-slate-900 bg-slate-950/40 text-slate-400 hover:border-slate-800 opacity-80'
+                        onClick={() => {
+                          if (isOnDuty) {
+                            handleInputChange('trainer', t.name);
+                          }
+                        }}
+                        className={`p-4 rounded-2xl border transition-all duration-200 flex items-start gap-4 relative overflow-hidden ${
+                          !isOnDuty
+                            ? 'border-slate-900/60 bg-slate-950/30 text-slate-500 opacity-40 cursor-not-allowed grayscale-[40%] select-none'
+                            : isSelected
+                            ? 'border-orange-500 bg-orange-500/10 text-white shadow-xl shadow-orange-500/10 ring-1 ring-orange-500/50 cursor-pointer'
+                            : 'border-slate-800 bg-slate-950/80 text-slate-300 hover:border-slate-700 hover:bg-slate-900/60 cursor-pointer'
                         }`}
                       >
                         {t.photo ? (
                           <img
                             src={t.photo}
                             alt={t.name}
-                            className="w-14 h-14 rounded-2xl object-cover object-top shrink-0 border border-slate-700 shadow-md"
+                            className={`w-14 h-14 rounded-2xl object-cover object-top shrink-0 border border-slate-700 shadow-md ${!isOnDuty ? 'opacity-50' : ''}`}
                           />
                         ) : (
                           <div className="w-14 h-14 rounded-2xl bg-orange-500/20 text-orange-400 border border-orange-500/30 flex items-center justify-center shrink-0">
@@ -590,8 +609,8 @@ export default function BookingForm({ selectedPlan = null, onClearPlan = null })
 
                         <div className="flex-1 min-w-0 space-y-1">
                           <div className="flex items-center justify-between gap-1">
-                            <h4 className="font-bold text-white text-sm truncate">{t.name}</h4>
-                            {isSelected && <CheckCircle2 className="w-5 h-5 text-orange-500 shrink-0" />}
+                            <h4 className={`font-bold text-sm truncate ${isOnDuty ? 'text-white' : 'text-slate-500'}`}>{t.name}</h4>
+                            {isSelected && isOnDuty && <CheckCircle2 className="w-5 h-5 text-orange-500 shrink-0" />}
                           </div>
 
                           {/* Duty Shift Status Badge */}
@@ -602,9 +621,9 @@ export default function BookingForm({ selectedPlan = null, onClearPlan = null })
                                 Available ({formData.time})
                               </span>
                             ) : (
-                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-500/15 border border-amber-500/30 text-amber-300 text-[10px] font-bold">
-                                <XCircle className="w-3 h-3 text-amber-400" />
-                                Off Shift ({t.shiftHours})
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-slate-900 border border-slate-800 text-slate-500 text-[10px] font-bold">
+                                <XCircle className="w-3 h-3 text-slate-500" />
+                                Off Shift - Unavailable
                               </span>
                             )}
                           </div>
@@ -614,7 +633,7 @@ export default function BookingForm({ selectedPlan = null, onClearPlan = null })
                           {t.specialties && (
                             <div className="flex flex-wrap gap-1 pt-1">
                               {t.specialties.slice(0, 2).map((spec, i) => (
-                                <span key={i} className="text-[10px] px-2 py-0.5 rounded-md bg-slate-900 text-slate-300 border border-slate-800 font-medium">
+                                <span key={i} className="text-[10px] px-2 py-0.5 rounded-md bg-slate-900 text-slate-400 border border-slate-800 font-medium">
                                   {spec}
                                 </span>
                               ))}
