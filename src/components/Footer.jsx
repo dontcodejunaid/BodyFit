@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
-import { MapPin, Phone, Clock, Send, CheckCircle2 } from 'lucide-react';
+import { MapPin, Phone, Clock, Send, CheckCircle2, Lock } from 'lucide-react';
 import logoImg from '../assets/logo.png';
 import { WhatsAppConfig } from '../utils/whatsapp';
 import { InstagramIcon, FacebookIcon, YoutubeIcon } from './ui/social-icons';
+import { ADMIN_HASH } from './admin/AdminPortal';
+import { ShinySheenButton } from './ui/shiny-button-sheen';
 
 const quickLinks = [
   { label: 'Home', href: '#home' },
@@ -39,7 +41,7 @@ export default function Footer() {
 
   const goTo = (event, href) => {
     event.preventDefault();
-    document.querySelector(href)?.scrollIntoView({ behavior: 'smooth' });
+    document.querySelector(href)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
   const handleSubscribe = (event) => {
@@ -200,6 +202,19 @@ export default function Footer() {
           <p>
             Designed for <span className="font-semibold text-slate-400">Body Fit Fitness Centre</span>
           </p>
+          <div className="flex flex-col items-center gap-1.5 sm:items-end">
+            <ShinySheenButton
+              as="a"
+              className="rounded-lg border border-orange-500/25 px-5 py-2.5"
+              href={ADMIN_HASH}
+            >
+              <span className="flex items-center gap-2 font-bold tracking-wider">
+                <Lock className="h-3.5 w-3.5" />
+                Admin
+              </span>
+            </ShinySheenButton>
+            <span className="text-[11px] text-slate-600">Owner access only</span>
+          </div>
         </div>
       </div>
     </footer>

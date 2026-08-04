@@ -1,8 +1,14 @@
 import * as React from "react";
-import { cva, type VariantProps } from "class-variance-authority";
+import { cva } from "class-variance-authority";
 import { motion } from "framer-motion";
 import { ArrowRight } from "lucide-react";
 import { cn } from "../../lib/utils";
+
+// Converted from gradient-card.tsx — this project is JavaScript, with no
+// typescript dependency and no tsconfig, so the .tsx file compiled with its
+// types stripped and never type-checked. Keeping it as .jsx matches every
+// other component here. The VariantProps/GradientCardProps types are dropped;
+// the props themselves are unchanged.
 
 // Compact variant with sleek orange glow for desktop viewports
 const cardVariants = cva(
@@ -22,21 +28,9 @@ const cardVariants = cva(
   }
 );
 
-export interface GradientCardProps extends React.HTMLAttributes<HTMLDivElement>, VariantProps<typeof cardVariants> {
-  badgeText: string;
-  badgeColor: string;
-  title: string;
-  description: string;
-  ctaText?: string;
-  ctaHref?: string;
-  onCtaClick?: () => void;
-  imageUrl?: string;
-  children?: React.ReactNode;
-}
-
-const GradientCard = React.forwardRef<HTMLDivElement, GradientCardProps>(
+const GradientCard = React.forwardRef(
   ({ className, gradient, badgeText, badgeColor, title, description, ctaText, ctaHref, onCtaClick, imageUrl, children, ...props }, ref) => {
-    
+
     const cardAnimation = {
       rest: { scale: 1, y: 0 },
       hover: { scale: 1.02, y: -3 },
@@ -64,10 +58,11 @@ const GradientCard = React.forwardRef<HTMLDivElement, GradientCardProps>(
           {imageUrl && (
             <motion.img
               src={imageUrl}
-              alt={`${title} background graphic`}
+              alt=""
+              aria-hidden="true"
               variants={imageAnimation}
               transition={{ type: "spring", stiffness: 400, damping: 15 }}
-              className="absolute -right-1/4 -bottom-1/4 w-3/4 opacity-20 pointer-events-none dark:opacity-15 mix-blend-luminosity"
+              className="absolute -right-1/4 -bottom-1/4 w-3/4 opacity-20 pointer-events-none mix-blend-luminosity"
             />
           )}
 
@@ -76,8 +71,8 @@ const GradientCard = React.forwardRef<HTMLDivElement, GradientCardProps>(
             <div>
               {/* Badge */}
               <div className="mb-3 inline-flex items-center gap-1.5 rounded-full bg-slate-950/80 border border-slate-700/60 px-2.5 py-0.5 text-[11px] font-bold text-slate-200 backdrop-blur-md w-fit shadow-sm">
-                <span 
-                  className="h-2 w-2 rounded-full shadow-[0_0_8px_currentColor]" 
+                <span
+                  className="h-2 w-2 rounded-full shadow-[0_0_8px_currentColor]"
                   style={{ backgroundColor: badgeColor }}
                 />
                 {badgeText}
@@ -91,7 +86,7 @@ const GradientCard = React.forwardRef<HTMLDivElement, GradientCardProps>(
 
               {children}
             </div>
-            
+
             {/* Call to Action Button */}
             {(ctaText || ctaHref) && (
               <div className="mt-4 pt-3 border-t border-slate-800/60">

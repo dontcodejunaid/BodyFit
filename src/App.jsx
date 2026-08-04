@@ -12,6 +12,8 @@ import Gallery from './components/Gallery';
 import Testimonials from './components/Testimonials';
 import BookingForm from './components/BookingForm';
 import Footer from './components/Footer';
+import AdminPortal from './components/admin/AdminPortal';
+import FloatingActions from './components/ui/floating-actions';
 
 // Modals
 import PaymentModal from './components/PaymentModal';
@@ -128,6 +130,9 @@ function App() {
           <BarChart3 className="w-4 h-4" />
         </button>
       </div>
+
+      <FloatingActions />
+      <AdminPortal />
 
       {/* Modals */}
       {/* 6.4 Feature 1: Modular Razorpay/UPI Ready Payment Modal (5% GST) */}

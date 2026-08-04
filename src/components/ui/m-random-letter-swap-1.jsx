@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Menu, X, Phone } from "lucide-react";
 import { RandomLetterSwap } from "./random-letter-swap";
 import { WhatsAppIcon } from "./social-icons";
+import { LiquidMetalButton } from "./liquid-metal-button";
 import { cn } from "../../lib/utils";
 import { WhatsAppConfig } from "../../utils/whatsapp";
 import logoImg from "../../assets/logo.png";
@@ -56,7 +57,7 @@ export default function RandomLetterSwapNav() {
     setActiveSection(href);
     const element = document.querySelector(href);
     if (element) {
-      element.scrollIntoView({ behavior: "smooth", block: "center" });
+      element.scrollIntoView({ behavior: "smooth", block: "start" });
     }
   };
 
@@ -75,8 +76,8 @@ export default function RandomLetterSwapNav() {
           href="#home"
           onClick={(event) => goTo(event, "#home")}
         >
-          <img alt="Body Fit" className="h-12 sm:h-14 w-auto transition-transform duration-300 hover:scale-105" src={logoImg} />
-          <span className="font-teko text-3xl sm:text-4xl leading-none tracking-wide text-white">
+          <img alt="Body Fit" className="h-20 sm:h-24 w-auto transition-transform duration-300 hover:scale-105" src={logoImg} />
+          <span className="font-teko text-4xl sm:text-5xl leading-none tracking-wide text-white">
             BODY<span className="text-orange-500">FIT</span>
           </span>
         </a>
@@ -126,13 +127,15 @@ export default function RandomLetterSwapNav() {
             <WhatsAppIcon className="h-[18px] w-[18px]" />
           </a>
 
-          <a
-            className="hidden rounded-xl bg-gradient-to-br from-orange-500 to-amber-500 px-5 py-2.5 text-sm font-black uppercase tracking-wider text-white shadow-md transition-all hover:shadow-[0_0_25px_rgba(251,146,60,0.45)] active:scale-95 sm:inline-flex"
-            href="#book-appointment"
-            onClick={(event) => goTo(event, "#book-appointment")}
-          >
-            Book Now
-          </a>
+          {/* Desktop CTA — WebGL liquid metal button. The mobile menu keeps the
+              plain gradient link, since this one is a fixed 142px wide. */}
+          <div className="hidden sm:block">
+            <LiquidMetalButton
+              label="BOOK NOW"
+              labelColor="#e2e8f0"
+              onClick={(event) => goTo(event, "#book-appointment")}
+            />
+          </div>
 
           <button
             aria-expanded={menuOpen}
