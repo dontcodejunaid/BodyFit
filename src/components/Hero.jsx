@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import {
-  Clock, Dumbbell, ShieldCheck, Users, Award, ChevronRight, Zap, Lightbulb
+  Clock, Dumbbell, ShieldCheck, Users, Award, ChevronRight, Zap, Lightbulb, Gift
 } from 'lucide-react';
 import dumbbellBg from '../assets/dumbbell-bg.png';
 import Component from './ui/gradient-bars-background';
@@ -77,6 +77,24 @@ export default function Hero() {
           </ShinyButton>
         </div>
 
+        {/* Absolute Top Right Corner REFER Button */}
+        <div className="absolute top-3 right-4 sm:top-5 sm:right-8 z-30">
+          <a
+            href="#referral-program"
+            onClick={(e) => {
+              e.preventDefault();
+              scrollToSection('referral-program', 80);
+            }}
+          >
+            <ShinyButton
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gradient-to-r from-orange-600 via-amber-500 to-yellow-500 hover:from-orange-500 hover:to-amber-400 text-white font-black text-xs uppercase tracking-wider shadow-xl shadow-orange-600/40 backdrop-blur-xl transition-all duration-300 transform hover:scale-105 active:scale-95 cursor-pointer border border-orange-400/50"
+            >
+              <Gift className="w-4 h-4 text-white fill-white" />
+              <span className="font-black tracking-widest text-[11px] text-white">REFER</span>
+            </ShinyButton>
+          </a>
+        </div>
+
         {/* Gradient Bars Theme Background Container */}
         <Component
           numBars={18}
@@ -97,20 +115,6 @@ export default function Hero() {
               {nextStatusText}
             </span>
           </div>
-
-          {/* Refer & Earn pill — top-right of hero section, below navbar Book Now button */}
-          <a
-            href="#referral-program"
-            onClick={(e) => { e.preventDefault(); scrollToSection('referral-program', 80); }}
-            className="absolute top-[76px] right-4 sm:right-6 z-30 hidden sm:flex"
-          >
-            <ShinyButton className="h-9 px-4 bg-gradient-to-r from-orange-500 via-amber-500 to-orange-600 shadow-lg shadow-orange-500/40 text-[11px] font-extrabold tracking-wide border border-orange-400/40 rounded-xl">
-              <span className="flex items-center gap-1.5 whitespace-nowrap">
-                🎁 Refer &amp; Earn — 1 Month Free
-              </span>
-            </ShinyButton>
-          </a>
-
 
             <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 my-auto text-center space-y-4 sm:space-y-5">
 
