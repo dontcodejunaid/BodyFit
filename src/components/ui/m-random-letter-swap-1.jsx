@@ -127,12 +127,11 @@ export default function RandomLetterSwapNav() {
             <WhatsAppIcon className="h-[18px] w-[18px]" />
           </a>
 
-          {/* Desktop CTA — WebGL liquid metal button. The mobile menu keeps the
-              plain gradient link, since this one is a fixed 142px wide. */}
+          {/* Desktop CTA — WebGL liquid metal button in theme orange */}
           <div className="hidden sm:block">
             <LiquidMetalButton
               label="BOOK NOW"
-              labelColor="#e2e8f0"
+              labelColor="#ffffff"
               onClick={(event) => goTo(event, "#book-appointment")}
             />
           </div>
