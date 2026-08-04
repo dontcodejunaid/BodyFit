@@ -84,7 +84,7 @@ export default function Facilities() {
   return (
     <section
       id="facilities"
-      className="relative pt-6 pb-12 sm:pt-8 sm:pb-16 bg-slate-950 text-slate-100 overflow-hidden border-t border-slate-800/60 scroll-mt-48"
+      className="relative pt-12 pb-16 sm:pt-16 sm:pb-20 bg-slate-950 text-slate-100 overflow-hidden border-t border-slate-800/60 scroll-mt-20"
     >
       {/* Background Decorative Lighting Orbs */}
       <div className="absolute top-24 -right-32 w-[28rem] h-[28rem] bg-orange-600/10 rounded-full blur-[130px] pointer-events-none" />
