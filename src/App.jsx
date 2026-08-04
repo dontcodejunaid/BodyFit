@@ -3,6 +3,7 @@ import RandomLetterSwapNav from './components/ui/m-random-letter-swap-1';
 import OffersBanner from './components/OffersBanner';
 import Hero from './components/Hero';
 import About from './components/About';
+import BMICalculator from './components/BMICalculator';
 import Trainers from './components/Trainers';
 import ClassSchedule from './components/ClassSchedule';
 import Facilities from './components/Facilities';
@@ -89,18 +90,19 @@ function App() {
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 font-sans selection:bg-orange-500 selection:text-white">
-      {/* 6.4 Business Feature: Offers & Seasonal Discount Banner */}
+      {/* Offers & Seasonal Discount Banner */}
       <OffersBanner onClaimOffer={handleClaimOffer} />
 
       <RandomLetterSwapNav />
       <Hero />
       <About />
+      <BMICalculator />
       <Trainers onSelectTrainer={handleSelectTrainer} />
       <ClassSchedule onSelectClass={handleSelectClass} />
       <Facilities />
       <MembershipPlans onSelectPlan={handleSelectPlan} />
       
-      {/* 6.4 Business Feature: Google Reviews & Instagram Live Feed */}
+      {/* Google Reviews & Instagram Live Feed */}
       <SocialProofFeed />
 
       <Gallery />
@@ -117,7 +119,6 @@ function App() {
       <AdminPortal />
 
       {/* Modals */}
-      {/* 6.4 Feature 1: Modular Razorpay/UPI Ready Payment Modal (5% GST) */}
       <PaymentModal
         plan={selectedPlan}
         discountPercent={appliedDiscount}
@@ -126,14 +127,12 @@ function App() {
         onPaymentSuccess={handlePaymentSuccess}
       />
 
-      {/* 6.4 Feature 2: Digital Entry Pass & QR Check-In Modal */}
       <DigitalMemberCardModal
         memberData={activeMemberPass}
         isOpen={isPassModalOpen}
         onClose={() => setIsPassModalOpen(false)}
       />
 
-      {/* 6.4 Feature 5: Conversion Analytics Dashboard Modal */}
       <AnalyticsDashboardModal
         isOpen={isAnalyticsOpen}
         onClose={() => setIsAnalyticsOpen(false)}
