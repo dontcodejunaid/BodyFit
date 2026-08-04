@@ -9,7 +9,7 @@ export default function Testimonials() {
   return (
     <section
       id="testimonials"
-      className="relative overflow-hidden bg-slate-950 py-14 lg:py-20"
+      className="relative overflow-hidden border-t border-orange-500/20 bg-slate-950/95 py-14 lg:py-20"
     >
       {/* Background Glow */}
       <div
