@@ -18,6 +18,8 @@ export const INITIAL_TRAINERS = [
     bio: 'Former national powerlifter specializing in progressive overload, muscle hypertrophy, and custom athletic prep.',
     certifications: ['ACE Certified Personal Trainer', 'CSCS Strength Coach'],
     available: true,
+    shiftHours: 'Morning (6 AM - 12 PM) & Evening (5 PM - 9 PM)',
+    availableSlots: ['06:00 AM', '07:00 AM', '08:00 AM', '09:00 AM', '10:00 AM', '11:00 AM', '12:00 PM', '05:00 PM', '06:00 PM', '07:00 PM', '08:00 PM', '09:00 PM'],
     instagram: '@vikram_bodyfit',
   },
   {
@@ -32,6 +34,8 @@ export const INITIAL_TRAINERS = [
     bio: 'Dedicated to body alignment, mindfulness, and functional flexibility to alleviate posture issues and build core strength.',
     certifications: ['RYT 500 Yoga Alliance', 'Mat Pilates Specialist'],
     available: true,
+    shiftHours: 'Morning (6 AM - 11 AM) & Evening (5 PM - 9 PM)',
+    availableSlots: ['06:00 AM', '07:00 AM', '08:00 AM', '09:00 AM', '10:00 AM', '05:00 PM', '06:00 PM', '07:00 PM', '08:00 PM'],
     instagram: '@priya_yoga_fit',
   },
   {
@@ -46,6 +50,8 @@ export const INITIAL_TRAINERS = [
     bio: 'High-energy transformation coach focused on rapid calorie burning, agility, and sustainable lifestyle changes.',
     certifications: ['ISSA Certified Trainer', 'TRX Suspension Master'],
     available: true,
+    shiftHours: 'Morning Shift (6 AM - 1 PM)',
+    availableSlots: ['06:00 AM', '07:00 AM', '08:00 AM', '09:00 AM', '10:00 AM', '11:00 AM', '12:00 PM'],
     instagram: '@rahul_hiit_fit',
   },
   {
@@ -60,6 +66,8 @@ export const INITIAL_TRAINERS = [
     bio: 'Licensed Zumba instructor making workouts fun, dynamic, and effective for all fitness levels.',
     certifications: ['ZIN™ Licensed Instructor', 'Group Fitness Cert'],
     available: true,
+    shiftHours: 'Morning (6:30 AM - 11 AM) & Evening (5 PM - 8 PM)',
+    availableSlots: ['06:00 AM', '07:00 AM', '08:00 AM', '05:00 PM', '06:00 PM', '07:00 PM', '08:00 PM'],
     instagram: '@ananya_zumba',
   },
   {
@@ -74,6 +82,8 @@ export const INITIAL_TRAINERS = [
     bio: 'CrossFit Level-2 coach focusing on explosive power, stamina, mobility, and high-intensity workout routines.',
     certifications: ['CrossFit L2 Trainer', 'USA Weightlifting L1'],
     available: true,
+    shiftHours: 'Evening Shift (12 PM - 9 PM)',
+    availableSlots: ['12:00 PM', '05:00 PM', '06:00 PM', '07:00 PM', '08:00 PM', '09:00 PM'],
     instagram: '@karan_crossfit',
   },
   {
@@ -88,6 +98,8 @@ export const INITIAL_TRAINERS = [
     bio: 'Combines corrective exercise therapy with customized macronutrient nutrition plans for recovery and strength.',
     certifications: ['M.Sc. Sports Nutrition', 'NASM Corrective Exercise'],
     available: true,
+    shiftHours: 'Morning (7 AM - 1 PM) & Evening (5:30 PM - 9:30 PM)',
+    availableSlots: ['07:00 AM', '08:00 AM', '09:00 AM', '10:00 AM', '11:00 AM', '12:00 PM', '05:00 PM', '06:00 PM', '07:00 PM', '08:00 PM', '09:00 PM'],
     instagram: '@neha_fitnutri',
   },
 ];
@@ -199,7 +211,7 @@ export const INITIAL_SCHEDULE = [
   {
     id: 'sch-7',
     className: 'Zumba Fiesta',
-    category: 'Zumba',
+    category: 'Wednesday',
     day: 'Wednesday',
     time: '06:30 AM - 07:30 AM',
     trainer: 'Ananya Roy',
