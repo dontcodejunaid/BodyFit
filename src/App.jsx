@@ -17,6 +17,7 @@ import BookingForm from './components/BookingForm';
 import Footer from './components/Footer';
 import AdminPortal from './components/admin/AdminPortal';
 import FloatingActions from './components/ui/floating-actions';
+import SplashIntroScreen from './components/SplashIntroScreen';
 
 // Modals
 import PaymentModal from './components/PaymentModal';
@@ -64,7 +65,7 @@ function App() {
     setIsPaymentModalOpen(true);
   };
 
-  const handleClaimOffer = (_code, discountPercent) => {
+  const handleClaimOffer = (code, discountPercent) => {
     setAppliedDiscount(discountPercent);
     const el = document.getElementById('membership');
     if (el) el.scrollIntoView({ behavior: 'smooth' });
@@ -84,37 +85,29 @@ function App() {
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 font-sans selection:bg-orange-500 selection:text-white">
+      {/* Splash Opening Landing Screen on Reload */}
+      <SplashIntroScreen />
 
+      {/* Offers & Seasonal Discount Banner */}
       <OffersBanner onClaimOffer={handleClaimOffer} />
 
       <RandomLetterSwapNav />
-
       <Hero />
-
       <About />
-
       <BMICalculator />
-
       <Trainers onSelectTrainer={handleSelectTrainer} />
-
       <ClassSchedule onSelectClass={handleSelectClass} />
-
       <Facilities />
-
+      <ReferralProgram />
       <MembershipPlans onSelectPlan={handleSelectPlan} />
-
+      
+      {/* Google Reviews & Instagram Live Feed */}
       <SocialProofFeed />
 
       <Gallery />
-
       <Testimonials />
-
       <ProgressTracker />
-
       <BookingForm selectedPlan={selectedPlan} onClearPlan={() => setSelectedPlan(null)} />
-
-      <ReferralProgram />
-
       <Footer />
 
       {/* Integrated Floating Action Stack */}

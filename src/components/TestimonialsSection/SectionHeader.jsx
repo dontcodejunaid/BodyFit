@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { HiMiniSparkles, HiOutlineShieldCheck } from "react-icons/hi2";
+import { Sparkles as HiMiniSparkles, ShieldCheck as HiOutlineShieldCheck } from "lucide-react";
 
 const trustFeatures = ["Certified Trainers", "Modern Equipment", "Personal Coaching"];
 
@@ -26,100 +26,48 @@ export default function SectionHeader() {
         py-1.5
         text-xs
         font-semibold
+        uppercase
+        tracking-widest
         text-orange-400
-        backdrop-blur-xl
-        "
+        backdrop-blur-md
+      "
       >
-        <HiOutlineShieldCheck className="text-base" aria-hidden="true" />
-        Trusted by 15,000+ Members
-        <HiMiniSparkles className="text-sm" aria-hidden="true" />
+        <HiMiniSparkles className="h-4 w-4" />
+        <span>Real Stories, Real Results</span>
       </div>
 
-      {/* Small Title */}
-      <p
-        className="
-        mt-4
-        uppercase
-        tracking-[0.35em]
-        text-orange-500
-        font-bold
-        text-xs
-        "
-      >
-        Testimonials
-      </p>
-
-      {/* Main Heading */}
+      {/* Main Title */}
       <h2
         className="
-        mt-3
-        text-3xl
-        sm:text-4xl
-        lg:text-5xl
+        mt-6
+        text-4xl
         font-black
-        leading-tight
         tracking-tight
         text-white
-        "
+        sm:text-5xl
+        lg:text-6xl
+      "
       >
-        Real People.
-        <span
-          className="
-          block
-          bg-gradient-to-r
-          from-orange-400
-          via-orange-500
-          to-orange-600
-          bg-clip-text
-          text-transparent
-          "
-        >
-          Real Results.
-        </span>
+        WHAT OUR <span className="text-orange-500">MEMBERS SAY</span>
       </h2>
 
-      {/* Description */}
-      <p
-        className="
-        mx-auto
-        mt-4
-        max-w-2xl
-        text-sm
-        leading-7
-        text-zinc-400
-        md:text-base
-        "
-      >
-        Every transformation starts with a single step. Discover how BodyFit has helped
-        members build strength, lose weight, boost confidence, and create healthier
-        lifestyles through expert coaching and consistent support.
+      {/* Subtitle */}
+      <p className="mt-4 text-base text-slate-400 sm:text-lg">
+        Join over 1,200+ members who transformed their lives at Body Fit Gym. Here is what they have to say about their journey.
       </p>
 
-      {/* Trust Features */}
-      <ul className="mt-6 flex flex-wrap items-center justify-center gap-3" aria-label="Why members trust BodyFit">
-        {trustFeatures.map((item) => (
-          <li
-            key={item}
-            className="
-            rounded-full
-            border
-            border-zinc-800
-            bg-zinc-900/60
-            px-4
-            py-2
-            text-xs
-            text-zinc-300
-            backdrop-blur-md
-            transition-all
-            duration-300
-            hover:border-orange-500/30
-            hover:text-orange-400
-            "
+      {/* Trust Badges Bar */}
+      <div className="mt-6 flex flex-wrap justify-center gap-3">
+        {trustFeatures.map((feature, idx) => (
+          <div
+            key={idx}
+            className="flex items-center gap-1.5 rounded-lg border border-slate-800 bg-slate-900/40 px-3 py-1 text-xs text-slate-300 backdrop-blur-sm"
           >
-            {item}
-          </li>
+            <HiOutlineShieldCheck className="h-3.5 w-3.5 text-orange-400" />
+            <span>{feature}</span>
+          </div>
         ))}
-      </ul>
+      </div>
     </motion.div>
   );
 }
