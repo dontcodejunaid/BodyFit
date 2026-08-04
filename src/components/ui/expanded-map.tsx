@@ -163,7 +163,7 @@ export function LocationMap({
   return (
     <motion.div
       ref={containerRef}
-      className={cn("relative cursor-pointer select-none mt-4", className)}
+      className={cn("relative cursor-pointer select-none mt-4 w-full max-w-[290px]", className)}
       style={{
         perspective: 1000,
       }}
@@ -174,7 +174,7 @@ export function LocationMap({
     >
       <motion.div
         className={cn(
-          "relative overflow-hidden rounded-2xl border transition-colors duration-300 shadow-2xl",
+          "relative overflow-hidden rounded-2xl border transition-colors duration-300 shadow-2xl max-w-full",
           isExpanded
             ? "border-orange-500/80 bg-white shadow-orange-500/20"
             : "border-slate-800 bg-slate-900"
@@ -185,7 +185,7 @@ export function LocationMap({
           transformStyle: "preserve-3d",
         }}
         animate={{
-          width: isExpanded ? 290 : 220,
+          width: isExpanded ? 280 : 220,
           height: isExpanded ? 190 : 110,
         }}
         transition={{
@@ -315,7 +315,7 @@ export function LocationMap({
         {/* Content */}
         <div className="relative z-20 flex h-full flex-col justify-between p-3.5">
           {/* Top section */}
-          <div className="flex items-start justify-between">
+          <div className="flex items-start justify-between gap-2">
             <div className="relative">
               <motion.div
                 className="relative"
@@ -350,7 +350,7 @@ export function LocationMap({
             </div>
             <span
               className={cn(
-                "text-[10px] font-bold px-2 py-0.5 rounded-full transition-colors shadow-sm",
+                "text-[10px] font-bold px-2 py-0.5 rounded-full transition-colors shadow-sm shrink-0",
                 isExpanded
                   ? "bg-orange-500 text-white animate-pulse"
                   : "bg-orange-500/10 text-orange-400 border border-orange-500/20"
@@ -364,7 +364,7 @@ export function LocationMap({
           <div className="space-y-0.5">
             <motion.h3
               className={cn(
-                "font-bold text-xs tracking-tight transition-colors",
+                "font-bold text-xs tracking-tight transition-colors truncate",
                 isExpanded ? "text-white drop-shadow-md" : "text-white"
               )}
               animate={{
@@ -378,7 +378,7 @@ export function LocationMap({
             <AnimatePresence>
               {isExpanded && (
                 <motion.p
-                  className="font-mono text-slate-200 text-[10px] drop-shadow-sm font-semibold"
+                  className="font-mono text-slate-200 text-[10px] drop-shadow-sm font-semibold truncate"
                   initial={{ opacity: 0, y: -5, height: 0 }}
                   animate={{ opacity: 1, y: 0, height: "auto" }}
                   exit={{ opacity: 0, y: -5, height: 0 }}
