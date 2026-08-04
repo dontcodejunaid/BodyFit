@@ -43,10 +43,10 @@ export default function Hero() {
   }, []);
 
   const stats = [
-    { label: 'Years Active', value: '10+', icon: Award },
-    { label: 'Members Trained', value: '2,500+', icon: Users },
-    { label: 'Certified Trainers', value: '8+', icon: ShieldCheck },
-    { label: 'Modern Equipment', value: '50+', icon: Dumbbell },
+    { label: 'Years Active', value: '5', icon: Award },
+    { label: 'Members Trained', value: '1,200+', icon: Users },
+    { label: 'Certified Trainers', value: '8', icon: ShieldCheck },
+    { label: 'Pieces of Equipment', value: '50+', icon: Dumbbell },
   ];
 
   return (
@@ -73,19 +73,19 @@ export default function Hero() {
       >
         <div className="relative z-10 w-full min-h-screen flex flex-col justify-center pt-8 sm:pt-12">
 
+          {/* Live Real-time Status Badge - True Bottom Left Corner of Hero */}
+          <div className="absolute bottom-4 left-6 z-20 hidden sm:inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-slate-950/90 border border-slate-800/90 backdrop-blur-2xl shadow-xl">
+            <span className="relative flex h-2.5 w-2.5">
+              <span className={`animate-ping absolute inline-flex h-full w-full rounded-full ${isOpen ? 'bg-emerald-400' : 'bg-amber-400'} opacity-75`}></span>
+              <span className={`relative inline-flex rounded-full h-2.5 w-2.5 ${isOpen ? 'bg-emerald-500' : 'bg-amber-500'}`}></span>
+            </span>
+            <span className={`text-[10px] sm:text-xs font-bold tracking-wider uppercase ${isOpen ? 'text-emerald-400' : 'text-amber-400'}`}>
+              {nextStatusText}
+            </span>
+          </div>
+
           {/* Hero Content Area */}
           <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 my-auto text-center space-y-5">
-
-            {/* Live Real-time Status Badge - Compact Positioned Fixed at Bottom Left Corner */}
-            <div className="fixed bottom-4 left-4 z-50 inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-slate-950/90 border border-slate-800/90 backdrop-blur-2xl shadow-xl">
-              <span className="relative flex h-2.5 w-2.5">
-                <span className={`animate-ping absolute inline-flex h-full w-full rounded-full ${isOpen ? 'bg-emerald-400' : 'bg-amber-400'} opacity-75`}></span>
-                <span className={`relative inline-flex rounded-full h-2.5 w-2.5 ${isOpen ? 'bg-emerald-500' : 'bg-amber-500'}`}></span>
-              </span>
-              <span className={`text-[10px] sm:text-xs font-bold tracking-wider uppercase ${isOpen ? 'text-emerald-400' : 'text-amber-400'}`}>
-                {nextStatusText}
-              </span>
-            </div>
 
             {/* Bold Layered Interactive Animated Headline */}
             <div className="space-y-2 max-w-4xl mx-auto">

@@ -56,7 +56,7 @@ export default function RandomLetterSwapNav() {
     setActiveSection(href);
     const element = document.querySelector(href);
     if (element) {
-      element.scrollIntoView({ behavior: "smooth", block: "center" });
+      element.scrollIntoView({ behavior: "smooth", block: "start" });
     }
   };
 
@@ -75,8 +75,8 @@ export default function RandomLetterSwapNav() {
           href="#home"
           onClick={(event) => goTo(event, "#home")}
         >
-          <img alt="Body Fit" className="h-14 sm:h-16 w-auto transition-transform duration-300 hover:scale-105" src={logoImg} />
-          <span className="font-teko text-3xl sm:text-4xl leading-none tracking-wide text-white">
+          <img alt="Body Fit" className="h-20 sm:h-24 w-auto transition-transform duration-300 hover:scale-105" src={logoImg} />
+          <span className="font-teko text-4xl sm:text-5xl leading-none tracking-wide text-white">
             BODY<span className="text-orange-500">FIT</span>
           </span>
         </a>
