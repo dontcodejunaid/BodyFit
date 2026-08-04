@@ -129,8 +129,8 @@ export default function BookingForm({ selectedPlan = null, onClearPlan = null })
     e.preventDefault();
     if (!validateStep4()) return;
 
-    if (isSlotTaken(formData.date, formData.time)) {
-      setErrors({ slot: 'This time slot is already taken. Please select another time slot.' });
+    if (isSlotTaken(formData.date, formData.time, formData.trainer)) {
+      setErrors({ slot: 'This time slot or trainer is already booked for this time. Please select another slot or trainer.' });
       setStep(2);
       return;
     }

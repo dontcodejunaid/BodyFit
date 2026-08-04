@@ -87,18 +87,31 @@ export default function Hero() {
         >
           <div className="relative z-10 w-full min-h-[calc(100vh-80px)] sm:min-h-[calc(100vh-88px)] flex flex-col justify-between pt-14 sm:pt-20 pb-6 overflow-hidden">
 
-            {/* Live Real-time Status Badge - True Bottom Left Corner of Hero */}
-            <div className="absolute bottom-3 left-4 sm:left-6 z-20 hidden sm:inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-950/90 border border-slate-800/90 backdrop-blur-2xl shadow-xl">
-              <span className="relative flex h-2 w-2">
-                <span className={`animate-ping absolute inline-flex h-full w-full rounded-full ${isOpen ? 'bg-emerald-400' : 'bg-amber-400'} opacity-75`}></span>
-                <span className={`relative inline-flex rounded-full h-2 w-2 ${isOpen ? 'bg-emerald-500' : 'bg-amber-500'}`}></span>
-              </span>
-              <span className={`text-[10px] font-bold tracking-wider uppercase ${isOpen ? 'text-emerald-400' : 'text-amber-400'}`}>
-                {nextStatusText}
-              </span>
-            </div>
+          {/* Live Real-time Status Badge - True Bottom Left Corner of Hero */}
+          <div className="absolute bottom-3 left-4 sm:left-6 z-20 hidden sm:inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-950/90 border border-slate-800/90 backdrop-blur-2xl shadow-xl">
+            <span className="relative flex h-2 w-2">
+              <span className={`animate-ping absolute inline-flex h-full w-full rounded-full ${isOpen ? 'bg-emerald-400' : 'bg-amber-400'} opacity-75`}></span>
+              <span className={`relative inline-flex rounded-full h-2 w-2 ${isOpen ? 'bg-emerald-500' : 'bg-amber-500'}`}></span>
+            </span>
+            <span className={`text-[10px] font-bold tracking-wider uppercase ${isOpen ? 'text-emerald-400' : 'text-amber-400'}`}>
+              {nextStatusText}
+            </span>
+          </div>
 
-            {/* Hero Content Area */}
+          {/* Refer & Earn pill — top-right of hero section, below navbar Book Now button */}
+          <a
+            href="#referral-program"
+            onClick={(e) => { e.preventDefault(); scrollToSection('referral-program', 80); }}
+            className="absolute top-[76px] right-4 sm:right-6 z-30 hidden sm:flex"
+          >
+            <ShinyButton className="h-9 px-4 bg-gradient-to-r from-orange-500 via-amber-500 to-orange-600 shadow-lg shadow-orange-500/40 text-[11px] font-extrabold tracking-wide border border-orange-400/40 rounded-xl">
+              <span className="flex items-center gap-1.5 whitespace-nowrap">
+                🎁 Refer &amp; Earn — 1 Month Free
+              </span>
+            </ShinyButton>
+          </a>
+
+
             <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 my-auto text-center space-y-4 sm:space-y-5">
 
               {/* Bold Layered Interactive Animated Headline */}
@@ -120,20 +133,20 @@ export default function Hero() {
                 </p>
               </div>
 
-              {/* Two Main CTA Buttons with ShinyButton */}
-              <div className="flex flex-col sm:flex-row items-center justify-center gap-4 py-3 sm:py-4">
-                <a
-                  href="#book-appointment"
-                  className="w-full sm:w-[270px] shrink-0"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    scrollToSection('book-appointment', 80);
-                  }}
-                >
-                  <ShinyButton className="w-full sm:w-[270px] h-12 bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-500 hover:to-amber-500 shadow-xl shadow-orange-600/30 text-xs sm:text-sm px-4 justify-center text-center whitespace-nowrap">
-                    <span>Book a Free Trial</span>
-                  </ShinyButton>
-                </a>
+            {/* Two Main CTA Buttons with ShinyButton */}
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 py-3 sm:py-4">
+              <a
+                href="#book-appointment"
+                className="w-full sm:w-[270px] shrink-0"
+                onClick={(e) => {
+                  e.preventDefault();
+                  scrollToSection('book-appointment', 80);
+                }}
+              >
+                <ShinyButton className="w-full sm:w-[270px] h-12 bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-500 hover:to-amber-500 shadow-xl shadow-orange-600/30 text-xs sm:text-sm px-4 justify-center text-center whitespace-nowrap">
+                  <span>Book a Free Trial</span>
+                </ShinyButton>
+              </a>
 
                 <a
                   href="#membership"

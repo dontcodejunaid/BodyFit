@@ -1,27 +1,29 @@
-import React, { useState, useEffect } from "react";
-import RandomLetterSwapNav from "./components/ui/m-random-letter-swap-1";
-import OffersBanner from "./components/OffersBanner";
-import Hero from "./components/Hero";
-import About from "./components/About";
-import BMICalculator from "./components/BMICalculator";
-import Trainers from "./components/Trainers";
-import ClassSchedule from "./components/ClassSchedule";
-import Facilities from "./components/Facilities";
-import MembershipPlans from "./components/MembershipPlans";
-import SocialProofFeed from "./components/SocialProofFeed";
-import Gallery from "./components/Gallery";
-import Testimonials from "./components/TestimonialsSection";
-import BookingForm from "./components/BookingForm";
-import Footer from "./components/Footer";
-import AdminPortal from "./components/admin/AdminPortal";
-import FloatingActions from "./components/ui/floating-actions";
+import React, { useState, useEffect } from 'react';
+import RandomLetterSwapNav from './components/ui/m-random-letter-swap-1';
+import OffersBanner from './components/OffersBanner';
+import Hero from './components/Hero';
+import About from './components/About';
+import BMICalculator from './components/BMICalculator';
+import Trainers from './components/Trainers';
+import ClassSchedule from './components/ClassSchedule';
+import Facilities from './components/Facilities';
+import ReferralProgram from './components/ReferralProgram';
+import MembershipPlans from './components/MembershipPlans';
+import SocialProofFeed from './components/SocialProofFeed';
+import Gallery from './components/Gallery';
+import Testimonials from './components/TestimonialsSection';
+import ProgressTracker from './components/ProgressTracker';
+import BookingForm from './components/BookingForm';
+import Footer from './components/Footer';
+import AdminPortal from './components/admin/AdminPortal';
+import FloatingActions from './components/ui/floating-actions';
 
 // Modals
-import PaymentModal from "./components/PaymentModal";
-import DigitalMemberCardModal from "./components/DigitalMemberCardModal";
-import AnalyticsDashboardModal from "./components/AnalyticsDashboardModal";
+import PaymentModal from './components/PaymentModal';
+import DigitalMemberCardModal from './components/DigitalMemberCardModal';
+import AnalyticsDashboardModal from './components/AnalyticsDashboardModal';
 
-import { trackEvent } from "./utils/analytics";
+import { trackEvent } from './utils/analytics';
 
 function App() {
   const [_selectedTrainer, setSelectedTrainer] = useState(null);
@@ -37,15 +39,15 @@ function App() {
   const [isAnalyticsOpen, setIsAnalyticsOpen] = useState(false);
 
   useEffect(() => {
-    trackEvent("PAGE_VIEW");
+    trackEvent('PAGE_VIEW');
 
     try {
-      const savedPass = localStorage.getItem("bodyfit_member_pass");
+      const savedPass = localStorage.getItem('bodyfit_member_pass');
       if (savedPass) {
         setActiveMemberPass(JSON.parse(savedPass));
       }
     } catch (e) {
-      console.error("Failed to parse stored pass:", e);
+      console.error('Failed to parse stored pass:', e);
     }
   }, []);
 
@@ -64,11 +66,8 @@ function App() {
 
   const handleClaimOffer = (_code, discountPercent) => {
     setAppliedDiscount(discountPercent);
-
-    const el = document.getElementById("membership");
-    if (el) {
-      el.scrollIntoView({ behavior: "smooth" });
-    }
+    const el = document.getElementById('membership');
+    if (el) el.scrollIntoView({ behavior: 'smooth' });
   };
 
   const handlePaymentSuccess = (memberData) => {
@@ -77,12 +76,9 @@ function App() {
     setIsPassModalOpen(true);
 
     try {
-      localStorage.setItem(
-        "bodyfit_member_pass",
-        JSON.stringify(memberData)
-      );
+      localStorage.setItem('bodyfit_member_pass', JSON.stringify(memberData));
     } catch (e) {
-      console.error("Failed to save member pass:", e);
+      console.error('Failed to save member pass:', e);
     }
   };
 
@@ -113,13 +109,15 @@ function App() {
 
       <Testimonials />
 
-      <BookingForm
-        selectedPlan={selectedPlan}
-        onClearPlan={() => setSelectedPlan(null)}
-      />
+      <ProgressTracker />
+
+      <BookingForm selectedPlan={selectedPlan} onClearPlan={() => setSelectedPlan(null)} />
+
+      <ReferralProgram />
 
       <Footer />
 
+      {/* Integrated Floating Action Stack */}
       <FloatingActions
         activeMemberPass={activeMemberPass}
         onOpenPass={() => setIsPassModalOpen(true)}
@@ -127,6 +125,7 @@ function App() {
 
       <AdminPortal />
 
+      {/* Modals */}
       <PaymentModal
         plan={selectedPlan}
         discountPercent={appliedDiscount}
