@@ -5,6 +5,8 @@ import {
 } from 'lucide-react';
 import ownerImg from '../assets/owner.png';
 import Component from './ui/gradient-bars-background';
+import { TextReveal } from './ui/cascade-text';
+import { ShinyButton } from './ui/shiny-button';
 
 const INITIAL_ABOUT_DATA = {
   header: {
@@ -24,12 +26,12 @@ const INITIAL_ABOUT_DATA = {
       ]
     },
     equipment: {
-      title: '2. Community First',
-      quote: 'Members train together, motivate each other, and celebrate wins together in an ego-free space.',
+      title: '2. Commercial Grade Equipment',
+      quote: 'We invest in biomechanically engineered machinery for optimal muscle activation and maximum joint safety.',
       bullets: [
-        'Positive and inspiring training atmosphere',
-        'Supportive member network & shared milestones',
-        'State-of-the-art machinery and dedicated functional zones'
+        'Bio-mechanically correct plate-loaded & pin-selected machines',
+        'Imported rubberized dumbbells (2.5kg to 50kg) & Olympic turf',
+        'Dedicated cardio zone with treadmills, spin bikes & ellipticals'
       ]
     },
     coaching: {
@@ -127,22 +129,23 @@ export default function About() {
 
   return (
     <Component
-      numBars={15}
-      gradientFrom="rgba(255, 60, 0, 0.35)"
-      gradientTo="transparent"
-      animationDuration={2.2}
-      backgroundColor="#0f172a"
+      numBars={20}
+      gradientFrom="rgba(249, 115, 22, 0.45)"
+      gradientTo="rgba(15, 23, 42, 0.95)"
+      animationDuration={2.8}
+      backgroundColor="#020617"
     >
-      <section id="about-us" className="scroll-mt-20 py-24 text-slate-100 relative overflow-hidden w-full">
+      <section id="about-us" className="scroll-mt-20 py-14 sm:py-16 text-slate-100 relative overflow-hidden w-full bg-transparent">
 
-        <div className="absolute top-1/3 -left-32 w-[28rem] h-[28rem] bg-orange-600/10 rounded-full blur-[130px] pointer-events-none" />
-        <div className="absolute bottom-10 -right-20 w-[30rem] h-[30rem] bg-amber-500/10 rounded-full blur-[140px] pointer-events-none" />
+        {/* Ambient Glowing Background Lighting Orbs */}
+        <div className="absolute top-1/4 -left-32 w-[32rem] h-[32rem] bg-gradient-to-r from-orange-600/20 to-amber-500/10 rounded-full blur-[140px] pointer-events-none animate-pulse" />
+        <div className="absolute bottom-10 -right-24 w-[36rem] h-[36rem] bg-gradient-to-l from-amber-500/20 to-orange-600/15 rounded-full blur-[160px] pointer-events-none animate-pulse" />
 
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 space-y-20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 space-y-10 sm:space-y-12">
 
           <div className="text-center max-w-3xl mx-auto space-y-4">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-orange-500/10 border border-orange-500/20 text-orange-400 text-xs font-bold uppercase tracking-wider">
-              <Trophy className="w-4 h-4 text-orange-500" />
+            <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-md bg-orange-500/10 border border-orange-500/20 text-orange-400 text-xs font-bold uppercase tracking-wider">
+              <Trophy className="w-4 h-4 text-orange-500 shrink-0" />
               {isEditing ? (
                 <input
                   type="text"
@@ -154,7 +157,7 @@ export default function About() {
                   className="bg-slate-900 border border-orange-500/50 rounded px-2 py-0.5 text-xs text-white focus:outline-none"
                 />
               ) : (
-                data.header.badge
+                <TextReveal text={data.header.badge} hoverColor="#f97316" color="#fb923c" staggerDelay={20} />
               )}
             </div>
 
@@ -181,12 +184,16 @@ export default function About() {
                   />
                 </div>
               ) : (
-                <>
-                  More Than a Gym <span className="inline-block w-2.5 h-[3px] bg-white align-middle mx-1.5 rounded-full"></span> A Community <br />
-                  <span className="bg-gradient-to-r from-orange-400 via-amber-400 to-yellow-400 bg-clip-text text-transparent">
-                    {data.header.titleSub}
-                  </span>
-                </>
+                <div className="flex flex-col items-center justify-center gap-1">
+                  <div className="flex items-center justify-center flex-wrap gap-x-2">
+                    <TextReveal text="More Than a Gym" hoverColor="#f97316" color="#ffffff" staggerDelay={25} />
+                    <span className="inline-block w-2.5 h-[3px] bg-white align-middle mx-1 rounded-full"></span>
+                    <TextReveal text="A Community" hoverColor="#f97316" color="#ffffff" staggerDelay={25} />
+                  </div>
+                  <div className="bg-gradient-to-r from-orange-400 via-amber-400 to-yellow-400 bg-clip-text text-transparent">
+                    <TextReveal text={data.header.titleSub} hoverColor="#fbbf24" color="#f59e0b" staggerDelay={20} />
+                  </div>
+                </div>
               )}
             </h2>
 
@@ -207,8 +214,8 @@ export default function About() {
             )}
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-stretch">
-            <div className="lg:col-span-6 space-y-6 flex flex-col justify-between">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
+            <div className="lg:col-span-6 space-y-6 flex flex-col justify-start">
               {/* 21st.dev Inspired Interactive Animated Segmented Tabs */}
               <div className="p-2 rounded-2xl bg-slate-950/80 backdrop-blur-2xl border border-slate-800/80 grid grid-cols-3 gap-2 shadow-2xl relative">
                 {[
@@ -222,25 +229,25 @@ export default function About() {
                     <button
                       key={tab.id}
                       onClick={() => setActiveTab(tab.id)}
-                      className={`relative py-3.5 px-4 rounded-xl text-xs sm:text-sm font-extrabold flex items-center justify-center gap-2.5 transition-all duration-300 z-10 ${
+                      className={`relative py-3.5 px-2 sm:px-4 rounded-xl text-xs sm:text-sm font-extrabold flex items-center justify-center gap-2 transition-all duration-300 z-10 cursor-pointer ${
                         isActive
                           ? 'text-white shadow-lg'
                           : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900/50'
                       }`}
                     >
                       {isActive && (
-                        <div className="absolute inset-0 bg-gradient-to-r from-orange-600 via-amber-600 to-orange-500 rounded-xl shadow-lg shadow-orange-600/30 transition-all duration-300 -z-10 animate-pulse" />
+                        <ShinyButton className="absolute inset-0 !p-0 bg-gradient-to-r from-orange-600 via-amber-600 to-orange-500 rounded-xl shadow-lg shadow-orange-600/30 transition-all duration-300 -z-10 overflow-hidden border-none pointer-events-none w-full h-full" />
                       )}
-                      <Icon className={`w-4 h-4 ${isActive ? 'text-white animate-bounce' : 'text-orange-400'}`} />
-                      <span>{tab.label}</span>
+                      <Icon className={`w-4 h-4 ${isActive ? 'text-white' : 'text-orange-400'}`} />
+                      <span className="truncate">{tab.label}</span>
                     </button>
                   );
                 })}
               </div>
 
-              {/* 21st.dev Style Glowing Glass Content Card */}
-              <div className="relative group rounded-3xl p-[1px] bg-gradient-to-b from-orange-500/30 via-slate-800/50 to-slate-950/80 shadow-2xl flex-1 flex flex-col">
-                <div className="p-6 sm:p-8 rounded-[23px] bg-slate-950/95 backdrop-blur-2xl space-y-6 flex-1 flex flex-col justify-between border border-slate-800/80">
+              {/* 21st.dev Style Glowing Glass Content Card with Shiny Sheen */}
+              <ShinyButton className="relative group rounded-3xl p-[1px] bg-gradient-to-b from-orange-500/30 via-slate-800/50 to-slate-950/80 shadow-2xl flex flex-col w-full text-left justify-start cursor-default">
+                <div className="p-6 sm:p-8 rounded-[23px] bg-slate-950/95 backdrop-blur-2xl space-y-6 flex flex-col justify-between border border-slate-800/80 w-full">
                   <div className="space-y-5">
                     <div className="inline-flex items-center gap-2 px-3 py-1 rounded-lg bg-orange-500/10 border border-orange-500/20 text-orange-400 text-xs font-black uppercase tracking-wider">
                       <Sparkles className="w-3.5 h-3.5 text-orange-400 animate-spin" />
@@ -314,12 +321,12 @@ export default function About() {
                       ) : (
                         <div className="grid grid-cols-1 gap-2.5">
                           {data.tabContents[activeTab].bullets.map((b, i) => (
-                            <div key={i} className="flex items-center gap-3 text-xs sm:text-sm text-slate-200 p-3 rounded-2xl bg-slate-900/50 border border-slate-800/80 hover:border-orange-500/40 hover:bg-slate-900 transition-all duration-300 shadow-sm">
+                            <ShinyButton key={i} className="flex items-center gap-3 text-xs sm:text-sm text-slate-200 p-3 rounded-2xl bg-slate-900/50 border border-slate-800/80 hover:border-orange-500/40 hover:bg-slate-900 transition-all duration-300 shadow-sm text-left justify-start cursor-default">
                               <div className="p-1.5 rounded-xl bg-orange-500/20 border border-orange-500/30 text-orange-400 shrink-0">
                                 <CheckCircle2 className="w-4 h-4" />
                               </div>
                               <span className="font-semibold">{b}</span>
-                            </div>
+                            </ShinyButton>
                           ))}
                         </div>
                       )}
@@ -337,12 +344,12 @@ export default function About() {
                     </span>
                   </div>
                 </div>
-              </div>
+              </ShinyButton>
             </div>
 
             <div className="lg:col-span-6">
-              <div className="relative group rounded-3xl p-1 bg-gradient-to-b from-orange-500/40 via-slate-800 to-slate-950 shadow-2xl h-full flex flex-col">
-                <div className="bg-slate-950/90 backdrop-blur-xl rounded-[22px] p-6 sm:p-8 space-y-6 flex-1 flex flex-col justify-between">
+              <ShinyButton className="relative group rounded-3xl p-1 bg-gradient-to-b from-orange-500/40 via-slate-800 to-slate-950 shadow-2xl h-full flex flex-col w-full text-left justify-start cursor-default">
+                <div className="bg-slate-950/90 backdrop-blur-xl rounded-[22px] p-6 sm:p-8 space-y-6 flex-1 flex flex-col justify-between w-full">
 
                   <div className="relative overflow-hidden rounded-2xl aspect-[16/10] border border-slate-800">
                     <img
@@ -458,24 +465,24 @@ export default function About() {
                     ))}
                   </div>
                 </div>
-              </div>
+              </ShinyButton>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch">
             {(isEditing ? editForm.highlights : data.highlights).map((item, idx) => {
               const Icon = iconsMap[item.id] || ShieldCheck;
               return (
-                <div
+                <ShinyButton
                   key={idx}
-                  className="p-7 rounded-3xl bg-slate-950/90 backdrop-blur-xl border border-slate-800/90 hover:border-orange-500/50 hover:bg-slate-950 transition-all duration-300 space-y-4 group shadow-xl"
+                  className="!p-5 rounded-2xl bg-slate-950/90 backdrop-blur-xl border border-slate-800/90 hover:border-orange-500/50 hover:bg-slate-950 transition-all duration-300 group shadow-xl text-left flex items-center gap-4 cursor-default h-full w-full justify-start"
                 >
-                  <div className={`p-4 rounded-2xl bg-gradient-to-br ${item.color} text-white w-fit shadow-lg group-hover:scale-110 transition-transform`}>
-                    <Icon className="w-6 h-6" />
+                  <div className={`p-3 rounded-xl bg-gradient-to-br ${item.color} text-white shrink-0 shadow-md group-hover:scale-105 transition-transform`}>
+                    <Icon className="w-5 h-5" />
                   </div>
 
                   {isEditing ? (
-                    <div className="space-y-2">
+                    <div className="w-full">
                       <input
                         type="text"
                         value={item.title}
@@ -486,24 +493,11 @@ export default function About() {
                         }}
                         className="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-sm font-bold text-white"
                       />
-                      <textarea
-                        value={item.description}
-                        onChange={(e) => {
-                          const newHighlights = [...editForm.highlights];
-                          newHighlights[idx].description = e.target.value;
-                          setEditForm({ ...editForm, highlights: newHighlights });
-                        }}
-                        rows={3}
-                        className="w-full bg-slate-900 border border-slate-700 rounded p-2 text-xs text-slate-300"
-                      />
                     </div>
                   ) : (
-                    <>
-                      <h4 className="text-xl font-extrabold text-white group-hover:text-orange-400 transition-colors">{item.title}</h4>
-                      <p className="text-slate-300 text-xs sm:text-sm leading-relaxed">{item.description}</p>
-                    </>
+                    <h4 className="text-base sm:text-lg font-extrabold text-white group-hover:text-orange-400 transition-colors leading-tight">{item.title}</h4>
                   )}
-                </div>
+                </ShinyButton>
               );
             })}
           </div>
@@ -517,7 +511,7 @@ export default function About() {
               {(isEditing ? editForm.badges : data.badges).map((badge, idx) => {
                 const Icon = badgeIconsMap[idx % badgeIconsMap.length];
                 return (
-                  <div
+                  <ShinyButton
                     key={badge.id || idx}
                     className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-slate-900 border border-slate-800/80 text-xs sm:text-sm font-semibold text-slate-200 hover:border-orange-500/40 transition-colors"
                   >
@@ -536,7 +530,7 @@ export default function About() {
                     ) : (
                       badge.text
                     )}
-                  </div>
+                  </ShinyButton>
                 );
               })}
             </div>

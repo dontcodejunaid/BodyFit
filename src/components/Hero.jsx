@@ -98,25 +98,23 @@ export default function Hero() {
               </p>
             </div>
 
-            {/* Two Main CTA Buttons with ShinyButton - Perfectly centered between Tagline & Stats */}
+            {/* Two Main CTA Buttons with ShinyButton - Single line text with matching width */}
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 py-4 sm:py-6">
-              <a href="#book-appointment" className="w-full sm:w-auto">
-                <ShinyButton className="w-full sm:w-auto bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-500 hover:to-amber-500 shadow-xl shadow-orange-600/30 text-xs sm:text-sm py-3 px-6">
-                  <Zap className="w-4 h-4 fill-white text-white shrink-0" />
+              <a href="#book-appointment" className="w-full sm:w-[270px] shrink-0">
+                <ShinyButton className="w-full sm:w-[270px] h-12 bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-500 hover:to-amber-500 shadow-xl shadow-orange-600/30 text-xs sm:text-sm px-4 justify-center text-center whitespace-nowrap">
                   <span>Book a Free Trial</span>
-                  <ChevronRight className="w-4 h-4 shrink-0" />
                 </ShinyButton>
               </a>
 
               <a
                 href="#membership"
-                className="w-full sm:w-auto"
+                className="w-full sm:w-[270px] shrink-0"
                 onClick={(e) => {
                   e.preventDefault();
                   scrollToSection('membership', 80);
                 }}
               >
-                <ShinyButton className="w-full sm:w-auto bg-slate-900/90 hover:bg-slate-800 border border-slate-700/80 text-slate-200 text-xs sm:text-sm py-3 px-6">
+                <ShinyButton className="w-full sm:w-[270px] h-12 bg-slate-900/90 hover:bg-slate-800 border border-slate-700/80 text-slate-200 text-xs sm:text-sm px-4 justify-center whitespace-nowrap">
                   <span>View Membership Plans</span>
                   <ArrowDown className="w-3.5 h-3.5 text-orange-400 shrink-0" />
                 </ShinyButton>
