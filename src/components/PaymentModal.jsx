@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  ShieldCheck, CheckCircle2, Lock, X, QrCode, CreditCard, 
+import {
+  ShieldCheck, CheckCircle2, Lock, X, QrCode, CreditCard,
   Sparkles, AlertCircle, ArrowRight, Loader2, RefreshCw
 } from 'lucide-react';
-import { 
-  calculatePricing, 
-  initiatePayment, 
-  PAYMENT_STATUS, 
-  PAYMENT_PROVIDERS, 
-  createPaymentSessionToken 
+import {
+  calculatePricing,
+  initiatePayment,
+  PAYMENT_STATUS,
+  PAYMENT_PROVIDERS,
+  createPaymentSessionToken
 } from '../utils/payment';
 import { trackEvent } from '../utils/analytics';
 
@@ -94,7 +94,7 @@ export default function PaymentModal({ plan, discountPercent = 0, isOpen, onClos
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md overflow-y-auto">
       <div className="relative w-full max-w-xl bg-slate-900 border border-slate-800 rounded-3xl shadow-2xl overflow-hidden my-8">
-        
+
         {/* Header */}
         <div className="px-6 py-5 border-b border-slate-800/80 flex items-center justify-between bg-slate-950/50">
           <div className="flex items-center gap-3">
@@ -174,7 +174,7 @@ export default function PaymentModal({ plan, discountPercent = 0, isOpen, onClos
         ) : (
           /* Payment IDLE / INITIAL STATE */
           <form onSubmit={handleStartCheckout} className="p-6 space-y-6">
-            
+
             {/* Plan Breakdown */}
             <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 space-y-3">
               <div className="flex items-center justify-between border-b border-slate-800/80 pb-3">
@@ -261,11 +261,10 @@ export default function PaymentModal({ plan, discountPercent = 0, isOpen, onClos
                 <button
                   type="button"
                   onClick={() => setSelectedProvider(PAYMENT_PROVIDERS.RAZORPAY)}
-                  className={`p-3 rounded-xl border text-xs font-bold flex flex-col items-center justify-center gap-1.5 transition-all ${
-                    selectedProvider === PAYMENT_PROVIDERS.RAZORPAY
+                  className={`p-3 rounded-xl border text-xs font-bold flex flex-col items-center justify-center gap-1.5 transition-all ${selectedProvider === PAYMENT_PROVIDERS.RAZORPAY
                       ? 'bg-orange-500/10 border-orange-500 text-white shadow-md'
                       : 'bg-slate-950 border-slate-800 text-slate-400 hover:border-slate-700'
-                  }`}
+                    }`}
                 >
                   <CreditCard className="w-5 h-5 text-orange-400" />
                   <span>Razorpay / Cards</span>
@@ -274,11 +273,10 @@ export default function PaymentModal({ plan, discountPercent = 0, isOpen, onClos
                 <button
                   type="button"
                   onClick={() => setSelectedProvider(PAYMENT_PROVIDERS.UPI_QR)}
-                  className={`p-3 rounded-xl border text-xs font-bold flex flex-col items-center justify-center gap-1.5 transition-all ${
-                    selectedProvider === PAYMENT_PROVIDERS.UPI_QR
+                  className={`p-3 rounded-xl border text-xs font-bold flex flex-col items-center justify-center gap-1.5 transition-all ${selectedProvider === PAYMENT_PROVIDERS.UPI_QR
                       ? 'bg-orange-500/10 border-orange-500 text-white shadow-md'
                       : 'bg-slate-950 border-slate-800 text-slate-400 hover:border-slate-700'
-                  }`}
+                    }`}
                 >
                   <QrCode className="w-5 h-5 text-amber-400" />
                   <span>UPI / GPay / QR</span>
@@ -287,11 +285,10 @@ export default function PaymentModal({ plan, discountPercent = 0, isOpen, onClos
                 <button
                   type="button"
                   onClick={() => setSelectedProvider(PAYMENT_PROVIDERS.MOCK)}
-                  className={`p-3 rounded-xl border text-xs font-bold flex flex-col items-center justify-center gap-1.5 transition-all ${
-                    selectedProvider === PAYMENT_PROVIDERS.MOCK
+                  className={`p-3 rounded-xl border text-xs font-bold flex flex-col items-center justify-center gap-1.5 transition-all ${selectedProvider === PAYMENT_PROVIDERS.MOCK
                       ? 'bg-orange-500/10 border-orange-500 text-white shadow-md'
                       : 'bg-slate-950 border-slate-800 text-slate-400 hover:border-slate-700'
-                  }`}
+                    }`}
                 >
                   <Sparkles className="w-5 h-5 text-purple-400" />
                   <span>Instant Test Checkout</span>
