@@ -12,7 +12,7 @@ const links = [
   { label: "Facilities", href: "#facilities" },
   { label: "Gallery", href: "#gallery" },
   { label: "Testimonials", href: "#testimonials" },
-  { label: "Contact", href: "#book-appointment" },
+  { label: "Contact", href: "#footer" },
 ];
 
 export default function RandomLetterSwapNav() {
