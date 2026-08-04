@@ -45,12 +45,41 @@ export function saveBooking(bookingData) {
 }
 
 /**
- * Check if a date & time slot is already booked for double-booking protection
+ * Check if a date, time slot & optional trainer is already booked for double-booking protection
  * @param {string} date 
  * @param {string} time 
- * @returns {boolean} True if slot is booked
+ * @param {string} trainer Optional trainer name
+ * @returns {boolean} True if slot is booked/conflict detected
  */
-export function isSlotTaken(date, time) {
+export function isSlotTaken(date, time, trainer = null) {
   const bookings = getBookings();
-  return bookings.some(b => b.date === date && b.time === time && b.status !== 'Cancelled');
+  return bookings.some(b => {
+    if (b.status === 'Cancelled') return false;
+    const sameSlot = b.date === date && b.time === time;
+    if (!sameSlot) return false;
+
+    // If specific trainer specified, check trainer collision
+    if (trainer && trainer !== 'No Preference (Assign Any Available)') {
+      return b.trainer === trainer || b.trainer === 'No Preference (Assign Any Available)';
+    }
+
+    return true;
+  });
+}
+
+/**
+ * Update booking lifecycle status
+ * @param {string} id Booking reference ID
+ * @param {string} newStatus 'Pending' | 'Confirmed' | 'Completed' | 'Cancelled'
+ * @returns {Array} Updated list of bookings
+ */
+export function updateBookingStatus(id, newStatus) {
+  const bookings = getBookings();
+  const updated = bookings.map(b => b.id === id ? { ...b, status: newStatus } : b);
+  try {
+    localStorage.setItem(BOOKINGS_KEY, JSON.stringify(updated));
+  } catch (error) {
+    console.error('Error updating booking status:', error);
+  }
+  return updated;
 }
