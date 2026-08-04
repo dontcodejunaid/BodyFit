@@ -7,7 +7,7 @@ import ClassSchedule from "./components/ClassSchedule";
 import Facilities from "./components/Facilities";
 import MembershipPlans from "./components/MembershipPlans";
 import Gallery from "./components/Gallery";
-import Testimonials from "./components/Testimonials";
+import Testimonials from "./components/TestimonialsSection";
 import BookingForm from "./components/BookingForm";
 import Footer from "./components/Footer";
 
@@ -45,11 +45,11 @@ function App() {
       <Facilities />
       <MembershipPlans onSelectPlan={handleSelectPlan} />
       <Gallery />
-      <Testimonials />
       <BookingForm
         selectedPlan={selectedPlan}
         onClearPlan={handleClearPlan}
       />
+      <Testimonials />
       <Footer />
     </div>
   );

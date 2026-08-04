@@ -7,7 +7,13 @@ import { featuredTestimonial, supportingTestimonials } from "./testimonialsData"
 
 export default function Testimonials() {
   return (
-    <section id="testimonials" className="relative overflow-hidden bg-[#090909] py-14 lg:py-20">
+    <section
+  id="testimonials"
+  className="relative overflow-hidden bg-oran-600 py-14 lg:py-20"
+>
+  <h1 className="text-6xl text-white text-center">
+    TESTIMONIALS IS RENDERING
+  </h1>
       {/* Background Glow */}
       <div
         aria-hidden="true"
