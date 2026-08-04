@@ -229,14 +229,23 @@ export default function About() {
                     <button
                       key={tab.id}
                       onClick={() => setActiveTab(tab.id)}
-                      className={`relative py-3.5 px-2 sm:px-4 rounded-xl text-xs sm:text-sm font-extrabold flex items-center justify-center gap-2 transition-all duration-300 z-10 cursor-pointer ${
+                      className={`relative py-3.5 px-2 sm:px-4 rounded-xl text-xs sm:text-sm font-extrabold flex items-center justify-center gap-2 transition-all duration-300 z-10 cursor-pointer overflow-hidden ${
                         isActive
                           ? 'text-white shadow-lg'
                           : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900/50'
                       }`}
                     >
                       {isActive && (
-                        <ShinyButton className="absolute inset-0 !p-0 bg-gradient-to-r from-orange-600 via-amber-600 to-orange-500 rounded-xl shadow-lg shadow-orange-600/30 transition-all duration-300 -z-10 overflow-hidden border-none pointer-events-none w-full h-full" />
+                        <div className="absolute inset-0 bg-gradient-to-r from-orange-600 via-amber-600 to-orange-500 rounded-xl shadow-lg shadow-orange-600/30 transition-all duration-300 -z-10 overflow-hidden border-none pointer-events-none w-full h-full">
+                          <span
+                            aria-hidden="true"
+                            className="absolute inset-0 z-10 block pointer-events-none animate-pulse"
+                            style={{
+                              background: "linear-gradient(-75deg, transparent 20%, rgba(255,255,255,0.7) 50%, transparent 80%)",
+                              mixBlendMode: "overlay",
+                            }}
+                          />
+                        </div>
                       )}
                       <Icon className={`w-4 h-4 ${isActive ? 'text-white' : 'text-orange-400'}`} />
                       <span className="truncate">{tab.label}</span>
