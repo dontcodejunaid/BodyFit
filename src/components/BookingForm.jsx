@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { 
   Calendar, Clock, User, Phone, Dumbbell, CheckCircle2, 
   AlertCircle, Send, ArrowRight, ArrowLeft, ShieldCheck, Sparkles, 
-  Check, Flame, MessageSquare, CalendarPlus, ChevronLeft, ChevronRight
+  Check, Flame, MessageSquare, CalendarPlus, ChevronLeft, ChevronRight, XCircle
 } from 'lucide-react';
 import { saveBooking, isSlotTaken } from '../utils/localStorage';
 import { sendWhatsAppBookingAlert, WhatsAppConfig } from '../utils/whatsapp';
@@ -59,14 +59,18 @@ export default function BookingForm({ selectedPlan = null, onClearPlan = null })
       role: 'Instant Duty Coach Matching',
       desc: 'Quick matching with any certified coach on duty',
       photo: null,
-      specialties: ['Instant Matching', 'All Goals']
+      specialties: ['Instant Matching', 'All Goals'],
+      shiftHours: 'Always On Duty',
+      availableSlots: null,
     },
     ...INITIAL_TRAINERS.map(t => ({
       name: t.name,
       role: t.role,
       desc: t.bio,
       photo: t.photo,
-      specialties: t.specialties
+      specialties: t.specialties,
+      shiftHours: t.shiftHours,
+      availableSlots: t.availableSlots
     }))
   ];
 
@@ -123,9 +127,7 @@ export default function BookingForm({ selectedPlan = null, onClearPlan = null })
     // Auto-trigger WhatsApp notification to active testing number
     sendWhatsAppBookingAlert(newBooking);
 
-    // Email/SMS run only if their env vars are configured; the browser reminder
-    // only survives while this tab stays open. Neither can block the booking,
-    // which is already saved above.
+    // Email/SMS run only if their env vars are configured
     sendAllConfirmations(newBooking).then(setNotifyResult);
     scheduleBrowserReminder(newBooking).then(setReminderResult);
   };
@@ -156,7 +158,7 @@ export default function BookingForm({ selectedPlan = null, onClearPlan = null })
               Reserve Your <span className="bg-gradient-to-r from-orange-400 via-amber-400 to-yellow-400 bg-clip-text text-transparent">Free Trial Session</span>
             </h2>
             <p className="text-slate-300 text-base max-w-xl mx-auto">
-              Pick your preferred service and time slot. Get instant booking reference & automated WhatsApp notification!
+              Pick your preferred service, time slot, and on-duty trainer. Get instant booking reference & automated WhatsApp notification!
             </p>
           </div>
 
@@ -529,7 +531,7 @@ export default function BookingForm({ selectedPlan = null, onClearPlan = null })
               </div>
             )}
 
-            {/* STEP 3: Choose Trainer */}
+            {/* STEP 3: Choose Trainer (Real-Time Shift Availability Filter) */}
             {step === 3 && (
               <div className="space-y-6">
                 <div className="flex items-center justify-between border-b border-slate-800 pb-4">
@@ -540,17 +542,38 @@ export default function BookingForm({ selectedPlan = null, onClearPlan = null })
                   <span className="text-xs text-slate-400 font-semibold">3 of 4 Steps</span>
                 </div>
 
+                {/* Trainer Duty & Time Slot Banner */}
+                <div className="p-3.5 rounded-2xl bg-orange-500/10 border border-orange-500/30 flex items-center justify-between gap-3 text-xs text-orange-300 font-semibold">
+                  <div className="flex items-center gap-2">
+                    <Clock className="w-4 h-4 text-orange-400 shrink-0" />
+                    <span>
+                      Trainer Duty Roster for <strong className="text-white">{formData.time}</strong> on <strong className="text-white">{formData.date}</strong>
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setStep(2)}
+                    className="text-[11px] text-orange-400 hover:text-white underline font-bold"
+                  >
+                    Change Slot
+                  </button>
+                </div>
+
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {trainersOptions.map((t) => {
                     const isSelected = formData.trainer === t.name;
+                    const isOnDuty = !t.availableSlots || t.availableSlots.includes(formData.time);
+
                     return (
                       <div
                         key={t.name}
                         onClick={() => handleInputChange('trainer', t.name)}
-                        className={`p-4 rounded-2xl border cursor-pointer transition-all duration-200 flex items-start gap-4 ${
+                        className={`p-4 rounded-2xl border cursor-pointer transition-all duration-200 flex items-start gap-4 relative overflow-hidden ${
                           isSelected
                             ? 'border-orange-500 bg-orange-500/10 text-white shadow-xl shadow-orange-500/10 ring-1 ring-orange-500/50'
-                            : 'border-slate-800 bg-slate-950/80 text-slate-300 hover:border-slate-700 hover:bg-slate-900/60'
+                            : isOnDuty
+                            ? 'border-slate-800 bg-slate-950/80 text-slate-300 hover:border-slate-700 hover:bg-slate-900/60'
+                            : 'border-slate-900 bg-slate-950/40 text-slate-400 hover:border-slate-800 opacity-80'
                         }`}
                       >
                         {t.photo ? (
@@ -570,7 +593,23 @@ export default function BookingForm({ selectedPlan = null, onClearPlan = null })
                             <h4 className="font-bold text-white text-sm truncate">{t.name}</h4>
                             {isSelected && <CheckCircle2 className="w-5 h-5 text-orange-500 shrink-0" />}
                           </div>
-                          <p className="text-xs text-slate-400 font-medium truncate">{t.role || t.desc}</p>
+
+                          {/* Duty Shift Status Badge */}
+                          <div className="pt-0.5">
+                            {isOnDuty ? (
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-[10px] font-extrabold tracking-wider uppercase">
+                                <Check className="w-3 h-3 text-emerald-400" />
+                                Available ({formData.time})
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-500/15 border border-amber-500/30 text-amber-300 text-[10px] font-bold">
+                                <XCircle className="w-3 h-3 text-amber-400" />
+                                Off Shift ({t.shiftHours})
+                              </span>
+                            )}
+                          </div>
+
+                          <p className="text-xs text-slate-400 font-medium truncate pt-1">{t.role || t.desc}</p>
                           
                           {t.specialties && (
                             <div className="flex flex-wrap gap-1 pt-1">
@@ -799,15 +838,24 @@ export default function BookingForm({ selectedPlan = null, onClearPlan = null })
                     onClick={() => sendWhatsAppBookingAlert(confirmedBooking)}
                     className="w-full sm:w-auto px-7 py-4 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-2xl flex items-center justify-center gap-2 shadow-lg transition-all"
                   >
-                    <Send className="w-4 h-4" /> Open WhatsApp & Send Confirmation
+                    <Send className="w-4 h-4" /> Re-open WhatsApp Confirmation
                   </button>
                   <button
                     type="button"
                     onClick={() => {
-                      setStep(1);
                       setConfirmedBooking(null);
+                      setStep(1);
+                      setFormData({
+                        service: 'Gym Session',
+                        date: new Date().toISOString().split('T')[0],
+                        time: '07:00 AM',
+                        trainer: 'No Preference (Assign Any Available)',
+                        name: '',
+                        phone: '',
+                        email: '',
+                      });
                     }}
-                    className="w-full sm:w-auto px-6 py-4 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-2xl transition-all"
+                    className="w-full sm:w-auto px-7 py-4 bg-slate-800 hover:bg-slate-700 text-white font-bold rounded-2xl transition-all"
                   >
                     Book Another Session
                   </button>
@@ -816,7 +864,9 @@ export default function BookingForm({ selectedPlan = null, onClearPlan = null })
             )}
 
           </div>
+
         </div>
+
       </section>
     </Component>
   );
