@@ -3,6 +3,7 @@ import RandomLetterSwapNav from "./components/ui/m-random-letter-swap-1";
 import OffersBanner from "./components/OffersBanner";
 import Hero from "./components/Hero";
 import About from "./components/About";
+import BMICalculator from "./components/BMICalculator";
 import Trainers from "./components/Trainers";
 import ClassSchedule from "./components/ClassSchedule";
 import Facilities from "./components/Facilities";
@@ -26,16 +27,13 @@ function App() {
   const [_selectedTrainer, setSelectedTrainer] = useState(null);
   const [_selectedClass, setSelectedClass] = useState(null);
 
-  // Checkout & Modals State
   const [selectedPlan, setSelectedPlan] = useState(null);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [appliedDiscount, setAppliedDiscount] = useState(0);
 
-  // Digital Pass State
   const [activeMemberPass, setActiveMemberPass] = useState(null);
   const [isPassModalOpen, setIsPassModalOpen] = useState(false);
 
-  // Analytics Dashboard Modal
   const [isAnalyticsOpen, setIsAnalyticsOpen] = useState(false);
 
   useEffect(() => {
@@ -90,6 +88,7 @@ function App() {
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 font-sans selection:bg-orange-500 selection:text-white">
+
       <OffersBanner onClaimOffer={handleClaimOffer} />
 
       <RandomLetterSwapNav />
@@ -97,6 +96,8 @@ function App() {
       <Hero />
 
       <About />
+
+      <BMICalculator />
 
       <Trainers onSelectTrainer={handleSelectTrainer} />
 
