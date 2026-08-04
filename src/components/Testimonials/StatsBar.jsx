@@ -1,8 +1,12 @@
 import { useRef } from "react";
 import { motion, useInView } from "framer-motion";
-import { HiOutlineUsers, HiOutlineTrophy } from "react-icons/hi2";
+import {
+  HiOutlineUsers,
+  HiOutlineTrophy,
+} from "react-icons/hi2";
 import { IoBarbellOutline } from "react-icons/io5";
 import { FaStar } from "react-icons/fa";
+
 import useCountUp from "../hooks/useCountUp";
 import { stats } from "./testimonialsData";
 
@@ -13,103 +17,175 @@ const iconMap = {
   star: FaStar,
 };
 
-function StatCard({ item, index }) {
+function Metric({ item, index }) {
   const ref = useRef(null);
-  const isInView = useInView(ref, { once: true, amount: 0.6 });
+
+  const isInView = useInView(ref, {
+    once: true,
+    amount: 0.6,
+  });
+
   const animatedValue = useCountUp(item.value, isInView);
+
   const Icon = iconMap[item.icon];
 
   return (
     <motion.div
       ref={ref}
-      initial={{ opacity: 0, y: 45 }}
+      initial={{ opacity: 0, y: 16 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
-      transition={{ duration: 0.6, delay: index * 0.12 }}
-      whileHover={{ y: -8 }}
+      transition={{
+        duration: 0.45,
+        delay: index * 0.06,
+      }}
+      whileHover={{
+        y: -2,
+      }}
       className="
-      group
       relative
-      overflow-hidden
-      rounded-3xl
-      border
-      border-orange-500/15
-      bg-zinc-900/70
-      backdrop-blur-xl
-      p-7
-      transition-all
-      duration-500
-      hover:border-orange-500
-      hover:shadow-[0_0_40px_rgba(249,115,22,.25)]
+      flex
+      flex-1
+      items-center
+      justify-center
+      gap-3
+      px-4
+      py-3.5
       "
     >
+      {/* Icon */}
       <div
-        aria-hidden="true"
         className="
-        absolute
-        inset-0
-        opacity-0
-        group-hover:opacity-100
-        transition-opacity
-        duration-500
-        bg-gradient-to-br
-        from-orange-500/10
-        via-transparent
-        to-transparent
+        flex
+        h-9
+        w-9
+        shrink-0
+        items-center
+        justify-center
+        rounded-xl
+        bg-orange-500/10
+        text-orange-500
+        text-base
         "
-      />
+      >
+        <Icon aria-hidden="true" />
+      </div>
 
-      <div className="relative z-10">
-        <div
-          className="
-          w-16
-          h-16
-          rounded-2xl
-          bg-gradient-to-br
-          from-orange-500
-          to-orange-600
-          flex
-          items-center
-          justify-center
-          text-white
-          text-3xl
-          shadow-lg
-          shadow-orange-500/30
-          "
-        >
-          <Icon aria-hidden="true" />
-        </div>
-
+      <div className="flex flex-col items-start leading-none">
+        {/* Number */}
         <h3
           className="
-          mt-6
-          text-3xl
-          md:text-4xl
-          font-extrabold
-          text-white
+          text-lg
+          sm:text-xl
+          font-black
           tracking-tight
+          text-white
           tabular-nums
           "
         >
           {animatedValue}
         </h3>
 
-        <p className="mt-2 text-sm md:text-base text-zinc-400 leading-relaxed">
+        {/* Label */}
+        <p
+          className="
+          mt-1
+          text-[10px]
+          sm:text-xs
+          uppercase
+          tracking-[0.14em]
+          text-zinc-400
+          whitespace-nowrap
+          "
+        >
           {item.label}
         </p>
       </div>
+
+      {/* Divider */}
+      {index !== stats.length - 1 && (
+        <div
+          className="
+          hidden
+          sm:block
+          absolute
+          right-0
+          top-1/2
+          h-8
+          w-px
+          -translate-y-1/2
+          bg-gradient-to-b
+          from-transparent
+          via-orange-500/25
+          to-transparent
+          "
+        />
+      )}
     </motion.div>
   );
 }
 
 export default function StatsBar() {
   return (
-    <section className="w-full" aria-label="BodyFit membership statistics">
-      <div className="grid grid-cols-2 xl:grid-cols-4 gap-5">
-        {stats.map((item, index) => (
-          <StatCard key={item.id} item={item} index={index} />
-        ))}
-      </div>
+    <section
+      aria-label="BodyFit Community Statistics"
+      className="w-full"
+    >
+      <motion.div
+        initial={{ opacity: 0 }}
+        whileInView={{ opacity: 1 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.5 }}
+        className="
+        relative
+        overflow-hidden
+        rounded-2xl
+        border
+        border-orange-500/10
+        bg-gradient-to-r
+        from-zinc-900/40
+        via-zinc-900/20
+        to-zinc-900/40
+        backdrop-blur-xl
+        "
+      >
+        {/* Ambient Glow */}
+        <div
+          aria-hidden="true"
+          className="
+          absolute
+          inset-0
+          bg-gradient-to-r
+          from-orange-500/5
+          via-transparent
+          to-orange-500/5
+          "
+        />
+
+        {/* Metrics */}
+        <div
+          className="
+          relative
+          z-10
+          grid
+          grid-cols-2
+          divide-y
+          divide-orange-500/10
+
+          sm:flex
+          sm:flex-nowrap
+          sm:divide-y-0
+          "
+        >
+          {stats.map((item, index) => (
+            <Metric
+              key={item.id}
+              item={item}
+              index={index}
+            />
+          ))}
+        </div>
+      </motion.div>
     </section>
   );
 }

@@ -15,22 +15,22 @@ export default function TestimonialCard({ name, role, review, result, duration, 
 
   return (
     <motion.article
-      whileHover={{ y: -10 }}
+      whileHover={{ y: -6 }}
       className="
       group
       relative
       h-full
       overflow-hidden
-      rounded-3xl
+      rounded-2xl
       border
       border-orange-500/15
       bg-zinc-900/70
       backdrop-blur-xl
-      p-7
+      p-5
       transition-all
       duration-500
       hover:border-orange-500
-      hover:shadow-[0_0_45px_rgba(249,115,22,.30)]
+      hover:shadow-[0_0_30px_rgba(249,115,22,.25)]
       "
     >
       {/* Hover Glow */}
@@ -54,51 +54,51 @@ export default function TestimonialCard({ name, role, review, result, duration, 
         <div
           aria-hidden="true"
           className="
-          w-14
-          h-14
-          rounded-2xl
+          w-10
+          h-10
+          rounded-xl
           flex
           items-center
           justify-center
           bg-orange-500/15
           text-orange-500
-          text-3xl
+          text-xl
           "
         >
           <BsQuote />
         </div>
 
-        <div className="flex gap-1 text-amber-400" role="img" aria-label={label}>
+        <div className="flex gap-0.5 text-amber-400" role="img" aria-label={label}>
           {stars.map((type, index) => {
             const StarIcon = starIconMap[type];
-            return <StarIcon key={index} className="text-sm" aria-hidden="true" />;
+            return <StarIcon key={index} className="text-xs" aria-hidden="true" />;
           })}
         </div>
       </div>
 
       {/* Review */}
-      <p className="relative z-10 mt-7 text-zinc-300 leading-8 text-[15px] md:text-base">
+      <p className="relative z-10 mt-4 line-clamp-4 text-zinc-300 leading-6 text-sm">
         &ldquo;{review}&rdquo;
       </p>
 
       {/* Divider */}
-      <div className="relative z-10 my-7 border-t border-zinc-800" />
+      <div className="relative z-10 my-4 border-t border-zinc-800" />
 
       {/* Identity */}
-      <div className="relative z-10 flex items-center gap-4">
+      <div className="relative z-10 flex items-center gap-3">
         <div
           aria-hidden="true"
           className={`
           flex
-          h-12
-          w-12
+          h-10
+          w-10
           shrink-0
           items-center
           justify-center
           rounded-full
           bg-gradient-to-br
           ${accent || "from-orange-500 to-orange-600"}
-          text-sm
+          text-xs
           font-bold
           text-white
           `}
@@ -107,32 +107,32 @@ export default function TestimonialCard({ name, role, review, result, duration, 
         </div>
 
         <div>
-          <h3 className="text-white text-lg font-bold tracking-wide">{name}</h3>
-          <p className="mt-0.5 text-zinc-400 text-sm">{role}</p>
+          <h3 className="text-white text-sm font-bold tracking-wide">{name}</h3>
+          <p className="mt-0.5 text-zinc-400 text-xs">{role}</p>
         </div>
       </div>
 
       {/* Achievement */}
-      <div className="relative z-10 mt-7 flex flex-wrap gap-3">
+      <div className="relative z-10 mt-4 flex flex-wrap gap-2">
         <span
           className="
           inline-flex
           items-center
-          gap-2
+          gap-1.5
           rounded-full
           bg-orange-500/15
-          px-4
-          py-2
-          text-sm
+          px-3
+          py-1.5
+          text-xs
           font-semibold
           text-orange-400
           "
         >
-          <HiMiniSparkles aria-hidden="true" />
+          <HiMiniSparkles className="text-[11px]" aria-hidden="true" />
           {result}
         </span>
 
-        <span className="rounded-full border border-zinc-700 px-4 py-2 text-sm text-zinc-400">
+        <span className="rounded-full border border-zinc-700 px-3 py-1.5 text-xs text-zinc-400">
           {duration}
         </span>
       </div>
@@ -142,13 +142,13 @@ export default function TestimonialCard({ name, role, review, result, duration, 
         aria-hidden="true"
         className="
         absolute
-        -right-12
-        -bottom-12
-        h-40
-        w-40
+        -right-10
+        -bottom-10
+        h-28
+        w-28
         rounded-full
         bg-orange-500/10
-        blur-3xl
+        blur-2xl
         transition-all
         duration-500
         group-hover:bg-orange-500/20

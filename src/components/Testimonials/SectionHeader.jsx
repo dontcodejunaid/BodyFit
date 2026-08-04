@@ -6,10 +6,10 @@ const trustFeatures = ["Certified Trainers", "Modern Equipment", "Personal Coach
 export default function SectionHeader() {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 45 }}
+      initial={{ opacity: 0, y: 30 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
-      transition={{ duration: 0.7 }}
+      transition={{ duration: 0.6 }}
       className="mx-auto max-w-3xl text-center"
     >
       {/* Premium Badge */}
@@ -22,28 +22,28 @@ export default function SectionHeader() {
         border
         border-orange-500/20
         bg-orange-500/10
-        px-5
-        py-2
-        text-sm
+        px-4
+        py-1.5
+        text-xs
         font-semibold
         text-orange-400
         backdrop-blur-xl
         "
       >
-        <HiOutlineShieldCheck className="text-lg" aria-hidden="true" />
+        <HiOutlineShieldCheck className="text-base" aria-hidden="true" />
         Trusted by 15,000+ Members
-        <HiMiniSparkles className="text-base" aria-hidden="true" />
+        <HiMiniSparkles className="text-sm" aria-hidden="true" />
       </div>
 
       {/* Small Title */}
       <p
         className="
-        mt-8
+        mt-4
         uppercase
         tracking-[0.35em]
         text-orange-500
         font-bold
-        text-sm
+        text-xs
         "
       >
         Testimonials
@@ -52,10 +52,10 @@ export default function SectionHeader() {
       {/* Main Heading */}
       <h2
         className="
-        mt-5
-        text-4xl
-        sm:text-5xl
-        lg:text-6xl
+        mt-3
+        text-3xl
+        sm:text-4xl
+        lg:text-5xl
         font-black
         leading-tight
         tracking-tight
@@ -82,12 +82,12 @@ export default function SectionHeader() {
       <p
         className="
         mx-auto
-        mt-8
+        mt-4
         max-w-2xl
-        text-base
-        leading-8
+        text-sm
+        leading-7
         text-zinc-400
-        md:text-lg
+        md:text-base
         "
       >
         Every transformation starts with a single step. Discover how BodyFit has helped
@@ -96,7 +96,7 @@ export default function SectionHeader() {
       </p>
 
       {/* Trust Features */}
-      <ul className="mt-10 flex flex-wrap items-center justify-center gap-4" aria-label="Why members trust BodyFit">
+      <ul className="mt-6 flex flex-wrap items-center justify-center gap-3" aria-label="Why members trust BodyFit">
         {trustFeatures.map((item) => (
           <li
             key={item}
@@ -105,9 +105,9 @@ export default function SectionHeader() {
             border
             border-zinc-800
             bg-zinc-900/60
-            px-5
-            py-3
-            text-sm
+            px-4
+            py-2
+            text-xs
             text-zinc-300
             backdrop-blur-md
             transition-all

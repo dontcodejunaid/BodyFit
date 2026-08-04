@@ -15,14 +15,14 @@ export default function FeaturedTestimonial({ name, role, review, result, durati
 
   return (
     <motion.article
-      initial={{ opacity: 0, y: 50 }}
+      initial={{ opacity: 0, y: 40 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, amount: 0.3 }}
-      transition={{ duration: 0.7 }}
+      transition={{ duration: 0.6 }}
       className="
       relative
       overflow-hidden
-      rounded-[36px]
+      rounded-[28px]
       border
       border-orange-500/25
       bg-gradient-to-br
@@ -30,23 +30,23 @@ export default function FeaturedTestimonial({ name, role, review, result, durati
       via-zinc-900/70
       to-zinc-950/90
       backdrop-blur-2xl
-      p-8
-      sm:p-12
-      lg:p-16
-      shadow-[0_30px_90px_rgba(0,0,0,.55)]
+      p-5
+      sm:p-6
+      lg:p-8
+      shadow-[0_20px_60px_rgba(0,0,0,.5)]
       "
     >
       {/* Ambient glow */}
       <div
         aria-hidden="true"
-        className="absolute -top-24 -left-16 h-72 w-72 rounded-full bg-orange-500/20 blur-[130px]"
+        className="absolute -top-20 -left-14 h-56 w-56 rounded-full bg-orange-500/20 blur-[110px]"
       />
       <div
         aria-hidden="true"
-        className="absolute -bottom-24 -right-10 h-64 w-64 rounded-full bg-orange-600/10 blur-[120px]"
+        className="absolute -bottom-20 -right-8 h-48 w-48 rounded-full bg-orange-600/10 blur-[100px]"
       />
 
-      <div className="relative z-10 grid gap-12 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
+      <div className="relative z-10 grid gap-6 lg:grid-cols-[1.3fr_0.7fr] lg:items-center">
         {/* Left: Quote */}
         <div>
           <span
@@ -58,9 +58,9 @@ export default function FeaturedTestimonial({ name, role, review, result, durati
             border
             border-orange-500/30
             bg-orange-500/10
-            px-5
-            py-2
-            text-sm
+            px-4
+            py-1.5
+            text-xs
             font-semibold
             text-orange-400
             "
@@ -71,15 +71,15 @@ export default function FeaturedTestimonial({ name, role, review, result, durati
 
           <BsQuote
             aria-hidden="true"
-            className="mt-8 text-6xl text-orange-500/25"
+            className="mt-3 text-3xl opacity-20 text-orange-500/20"
           />
 
           <p
             className="
-            mt-4
-            text-2xl
-            sm:text-3xl
-            lg:text-[2.15rem]
+            mt-3
+            text-xl
+            sm:text-2xl
+            lg:text-[1.55rem]
             font-semibold
             leading-[1.4]
             tracking-tight
@@ -89,20 +89,20 @@ export default function FeaturedTestimonial({ name, role, review, result, durati
             &ldquo;{review}&rdquo;
           </p>
 
-          <div className="mt-10 flex items-center gap-4">
+          <div className="mt-5 flex items-center gap-4">
             <div
               aria-hidden="true"
               className={`
               flex
-              h-16
-              w-16
+              h-11
+              w-11
               shrink-0
               items-center
               justify-center
               rounded-full
               bg-gradient-to-br
               ${accent || "from-orange-500 to-orange-600"}
-              text-lg
+              text-sm
               font-bold
               text-white
               ring-4
@@ -113,8 +113,8 @@ export default function FeaturedTestimonial({ name, role, review, result, durati
             </div>
 
             <div>
-              <h3 className="text-white text-xl font-bold tracking-wide">{name}</h3>
-              <p className="mt-1 text-zinc-400 text-sm">{role}</p>
+              <h3 className="text-white text-lg font-bold tracking-wide">{name}</h3>
+              <p className="mt-0.5 text-zinc-400 text-xs">{role}</p>
             </div>
 
             <div
@@ -124,7 +124,7 @@ export default function FeaturedTestimonial({ name, role, review, result, durati
             >
               {stars.map((type, index) => {
                 const StarIcon = starIconMap[type];
-                return <StarIcon key={index} aria-hidden="true" />;
+                return <StarIcon key={index} className="text-sm" aria-hidden="true" />;
               })}
             </div>
           </div>
@@ -135,13 +135,13 @@ export default function FeaturedTestimonial({ name, role, review, result, durati
           className="
           relative
           overflow-hidden
-          rounded-3xl
+          rounded-2xl
           border
           border-orange-500/20
           bg-black/40
-          p-8
+          p-5
           text-center
-          lg:p-10
+          lg:p-6
           "
         >
           <div
@@ -150,33 +150,33 @@ export default function FeaturedTestimonial({ name, role, review, result, durati
           />
 
           <div className="relative z-10">
-            <p className="text-sm font-semibold uppercase tracking-[0.3em] text-orange-500">
+            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-orange-500">
               The Result
             </p>
 
             <p
               className="
-              mt-6
+              mt-3
               bg-gradient-to-r
               from-orange-400
               via-orange-500
               to-orange-600
               bg-clip-text
-              text-5xl
+              text-3xl
               font-black
               leading-none
               text-transparent
-              sm:text-6xl
+              sm:text-4xl
               "
             >
               {result}
             </p>
 
-            <p className="mt-4 text-zinc-400">
+            <p className="mt-3 text-sm text-zinc-400">
               in just <span className="font-semibold text-white">{duration}</span>
             </p>
 
-            <div className="mt-8 flex sm:hidden justify-center gap-1 text-amber-400" role="img" aria-label={label}>
+            <div className="mt-5 flex sm:hidden justify-center gap-1 text-amber-400" role="img" aria-label={label}>
               {stars.map((type, index) => {
                 const StarIcon = starIconMap[type];
                 return <StarIcon key={index} aria-hidden="true" />;

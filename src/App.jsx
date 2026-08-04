@@ -9,8 +9,8 @@ function App() {
     <div className="min-h-screen bg-slate-950 text-slate-100">
       <Hero />
       <About />
-      <Testimonials />
       <BookingForm />
+      <Testimonials />
     </div>
   )
 }
