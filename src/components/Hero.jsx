@@ -3,10 +3,10 @@ import {
   Clock, Dumbbell, ShieldCheck, Users, Award, ChevronRight, Zap, ArrowDown
 } from 'lucide-react';
 import dumbbellBg from '../assets/dumbbell-bg.png';
-import logoImg from '../assets/logo.png';
 import Component from './ui/gradient-bars-background';
 import { LayeredText } from './ui/layered-text';
 import { ShinyButton } from './ui/shiny-button';
+import { scrollToSection } from '../lib/scrollToSection';
 
 export default function Hero() {
   const [isOpen, setIsOpen] = useState(false);
@@ -43,14 +43,14 @@ export default function Hero() {
   }, []);
 
   const stats = [
-    { label: 'Years Active', value: '10+', icon: Award },
-    { label: 'Members Trained', value: '2,500+', icon: Users },
-    { label: 'Certified Trainers', value: '8+', icon: ShieldCheck },
-    { label: 'Modern Equipment', value: '50+', icon: Dumbbell },
+    { label: 'Years Active', value: '5', icon: Award },
+    { label: 'Members Trained', value: '1,200+', icon: Users },
+    { label: 'Certified Trainers', value: '8', icon: ShieldCheck },
+    { label: 'Pieces of Equipment', value: '50+', icon: Dumbbell },
   ];
 
   return (
-    <div id="home" className="relative min-h-screen w-full bg-slate-950 overflow-hidden scroll-mt-20">
+    <div id="home" className="relative min-h-screen w-full bg-slate-950 overflow-hidden">
 
       {/* Background Dumbbell Image positioned in top dark area */}
       <div className="absolute top-0 left-0 right-0 h-[65vh] z-0 overflow-hidden pointer-events-none">
@@ -71,10 +71,10 @@ export default function Hero() {
         animationDuration={2}
         backgroundColor="transparent"
       >
-        <div className="relative z-10 w-full min-h-screen flex flex-col justify-center pt-8 sm:pt-12">
+        <div className="relative z-10 w-full min-h-screen flex flex-col justify-between pt-16 sm:pt-20 pb-10">
 
           {/* Hero Content Area */}
-          <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 my-auto text-center space-y-5">
+          <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 my-auto text-center space-y-8">
 
             {/* Live Real-time Status Badge - Compact Positioned Fixed at Bottom Left Corner */}
             <div className="fixed bottom-4 left-4 z-50 inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-slate-950/90 border border-slate-800/90 backdrop-blur-2xl shadow-xl">
@@ -107,40 +107,49 @@ export default function Hero() {
             </div>
 
             {/* Two Main CTA Buttons with ShinyButton */}
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
-              <a href="#book-appointment" className="w-full sm:w-[290px] shrink-0">
-                <ShinyButton className="w-full h-16 bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-500 hover:to-amber-500 shadow-xl shadow-orange-600/30 px-4 whitespace-nowrap text-sm sm:text-base">
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-2">
+              <a href="#book-appointment" className="w-full sm:w-auto">
+                <ShinyButton className="w-full sm:w-auto bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-500 hover:to-amber-500 shadow-xl shadow-orange-600/30">
+                  <Zap className="w-5 h-5 fill-white text-white shrink-0" />
                   <span>Book a Free Trial</span>
                   <ChevronRight className="w-5 h-5 shrink-0" />
                 </ShinyButton>
               </a>
 
-              <a href="#about-us" className="w-full sm:w-[290px] shrink-0">
-                <ShinyButton className="w-full h-16 bg-slate-900/90 hover:bg-slate-800 border border-slate-700/80 text-slate-200 px-4 whitespace-nowrap text-sm sm:text-base">
+              <a
+                href="#membership"
+                className="w-full sm:w-auto"
+                onClick={(e) => {
+                  e.preventDefault();
+                  scrollToSection('membership', 80);
+                }}
+              >
+                <ShinyButton className="w-full sm:w-auto bg-slate-900/90 hover:bg-slate-800 border border-slate-700/80 text-slate-200">
                   <span>View Membership Plans</span>
                   <ArrowDown className="w-4 h-4 text-orange-400 shrink-0" />
                 </ShinyButton>
               </a>
             </div>
 
-            {/* Quick Stats Strip - Placed Directly Below CTA Buttons */}
-            <div className="pt-3 max-w-5xl mx-auto">
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
-                {stats.map((stat, idx) => {
-                  const Icon = stat.icon;
-                  return (
-                    <div key={idx} className="flex items-center justify-center gap-3 p-3 rounded-2xl bg-slate-950/40 border border-slate-800/50 backdrop-blur-md hover:bg-slate-900/60 transition-all shadow-lg">
-                      <div className="p-2 rounded-xl bg-gradient-to-br from-orange-500 to-amber-500 text-white shadow-md shrink-0">
-                        <Icon className="w-4 h-4 sm:w-5 sm:h-5" />
-                      </div>
-                      <div className="text-left min-w-0">
-                        <div className="text-lg sm:text-2xl font-black text-white tracking-tight leading-none">{stat.value}</div>
-                        <div className="text-[10px] sm:text-xs font-bold text-slate-300 mt-1 truncate">{stat.label}</div>
-                      </div>
+            {/* Stats Banner Grid (Restored) */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 max-w-5xl mx-auto pt-6">
+              {stats.map((stat, index) => {
+                const Icon = stat.icon;
+                return (
+                  <div
+                    key={index}
+                    className="p-3.5 sm:p-4 rounded-2xl bg-slate-900/80 border border-slate-800/80 backdrop-blur-xl flex items-center gap-3.5 shadow-xl hover:border-orange-500/30 transition-all"
+                  >
+                    <div className="p-3 rounded-xl bg-gradient-to-br from-orange-500 to-amber-500 text-white shadow-md shrink-0">
+                      <Icon className="w-5 h-5" />
                     </div>
-                  );
-                })}
-              </div>
+                    <div className="text-left">
+                      <div className="text-xl sm:text-2xl font-black text-white leading-tight">{stat.value}</div>
+                      <div className="text-xs font-bold text-slate-300 leading-tight">{stat.label}</div>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
 
           </div>
