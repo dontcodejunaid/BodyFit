@@ -7,10 +7,12 @@ import BMICalculator from './components/BMICalculator';
 import Trainers from './components/Trainers';
 import ClassSchedule from './components/ClassSchedule';
 import Facilities from './components/Facilities';
+import ReferralProgram from './components/ReferralProgram';
 import MembershipPlans from './components/MembershipPlans';
 import SocialProofFeed from './components/SocialProofFeed';
 import Gallery from './components/Gallery';
 import Testimonials from './components/Testimonials';
+import ProgressTracker from './components/ProgressTracker';
 import BookingForm from './components/BookingForm';
 import Footer from './components/Footer';
 import AdminPortal from './components/admin/AdminPortal';
@@ -98,16 +100,14 @@ function App() {
       <About />
       <BMICalculator />
       <Trainers onSelectTrainer={handleSelectTrainer} />
-      <ClassSchedule onSelectClass={handleSelectClass} />
       <Facilities />
       <MembershipPlans onSelectPlan={handleSelectPlan} />
-      
-      {/* Google Reviews & Instagram Live Feed */}
       <SocialProofFeed />
-
       <Gallery />
       <Testimonials />
+      <ProgressTracker />
       <BookingForm selectedPlan={selectedPlan} onClearPlan={() => setSelectedPlan(null)} />
+      <ReferralProgram />
       <Footer />
 
       {/* Integrated Floating Action Stack: My Pass, Ask Us Chatbot & WhatsApp */}
