@@ -107,7 +107,7 @@ export default function BookingForm({ selectedPlan = null, onClearPlan = null })
       animationDuration={2}
       backgroundColor="#020617"
     >
-      <section id="book-appointment" className="py-24 text-slate-100 relative overflow-hidden w-full">
+      <section id="book-appointment" className="scroll-mt-20 py-24 text-slate-100 relative overflow-hidden w-full">
         
         {/* Background Lighting Glow */}
         <div className="absolute top-1/4 left-10 w-96 h-96 bg-orange-600/10 rounded-full blur-[130px] pointer-events-none" />
