@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Menu, X, Phone } from "lucide-react";
 import { RandomLetterSwap } from "./random-letter-swap";
 import { WhatsAppIcon } from "./social-icons";
+import { LiquidMetalButton } from "./liquid-metal-button";
 import { cn } from "../../lib/utils";
 import { WhatsAppConfig } from "../../utils/whatsapp";
 import logoImg from "../../assets/logo.png";
@@ -12,7 +13,7 @@ const links = [
   { label: "Facilities", href: "#facilities" },
   { label: "Gallery", href: "#gallery" },
   { label: "Testimonials", href: "#testimonials" },
-  { label: "Contact", href: "#book-appointment" },
+  { label: "Contact", href: "#footer" },
 ];
 
 export default function RandomLetterSwapNav() {
@@ -26,7 +27,7 @@ export default function RandomLetterSwapNav() {
 
   useEffect(() => {
     const onScroll = () => {
-      setScrolled(window.scrollY > 24);
+      setScrolled(window.scrollY > 40);
 
       // Section scroll tracking using bounding rect
       const navHeight = 100;
@@ -56,17 +57,17 @@ export default function RandomLetterSwapNav() {
     setActiveSection(href);
     const element = document.querySelector(href);
     if (element) {
-      element.scrollIntoView({ behavior: "smooth", block: "center" });
+      element.scrollIntoView({ behavior: "smooth", block: "start" });
     }
   };
 
   return (
     <header
       className={cn(
-        "fixed top-0 left-0 right-0 z-50 transition-all duration-300",
+        "z-50 transition-all duration-300 w-full",
         scrolled
-          ? "bg-slate-950/85 backdrop-blur-xl border-b border-slate-800/70 shadow-lg shadow-black/30 py-2"
-          : "bg-transparent border-b border-transparent py-3"
+          ? "fixed top-0 left-0 right-0 bg-slate-950/90 backdrop-blur-xl border-b border-slate-800/80 shadow-xl shadow-black/40 py-2.5"
+          : "relative bg-slate-950/60 backdrop-blur-md border-b border-slate-800/50 py-3"
       )}
     >
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-6 px-6">
@@ -75,8 +76,8 @@ export default function RandomLetterSwapNav() {
           href="#home"
           onClick={(event) => goTo(event, "#home")}
         >
-          <img alt="Body Fit" className="h-14 sm:h-16 w-auto transition-transform duration-300 hover:scale-105" src={logoImg} />
-          <span className="font-teko text-3xl sm:text-4xl leading-none tracking-wide text-white">
+          <img alt="Body Fit" className="h-20 sm:h-24 w-auto transition-transform duration-300 hover:scale-105" src={logoImg} />
+          <span className="font-teko text-4xl sm:text-5xl leading-none tracking-wide text-white">
             BODY<span className="text-orange-500">FIT</span>
           </span>
         </a>
@@ -106,10 +107,10 @@ export default function RandomLetterSwapNav() {
         </nav>
 
         <div className="flex items-center gap-3">
-          {/* Caller Button left of WhatsApp button */}
+          {/* Caller Button */}
           <a
             aria-label="Call Bodyfit Gym"
-            className="flex h-10 w-10 items-center justify-center rounded-xl border border-slate-800 bg-slate-900/60 text-slate-300 transition-all duration-300 hover:border-orange-500/50 hover:bg-orange-500 hover:text-white hover:shadow-[0_0_20px_rgba(249,115,22,0.6)] active:scale-95 active:shadow-[0_0_25px_rgba(249,115,22,0.8)]"
+            className="flex h-10 w-10 items-center justify-center rounded-xl border border-slate-800 bg-slate-900/60 text-slate-300 transition-all duration-300 hover:border-orange-500/50 hover:bg-orange-500 hover:text-white hover:shadow-[0_0_20px_rgba(249,115,22,0.6)] active:scale-95"
             href="tel:+919945505665"
           >
             <Phone className="h-[18px] w-[18px]" />
@@ -126,13 +127,14 @@ export default function RandomLetterSwapNav() {
             <WhatsAppIcon className="h-[18px] w-[18px]" />
           </a>
 
-          <a
-            className="hidden rounded-xl bg-gradient-to-br from-orange-500 to-amber-500 px-5 py-2.5 text-sm font-black uppercase tracking-wider text-white shadow-md transition-all hover:shadow-[0_0_25px_rgba(251,146,60,0.45)] active:scale-95 sm:inline-flex"
-            href="#book-appointment"
-            onClick={(event) => goTo(event, "#book-appointment")}
-          >
-            Book Now
-          </a>
+          {/* Desktop CTA — WebGL liquid metal button in theme orange */}
+          <div className="hidden sm:block">
+            <LiquidMetalButton
+              label="BOOK NOW"
+              labelColor="#ffffff"
+              onClick={(event) => goTo(event, "#book-appointment")}
+            />
+          </div>
 
           <button
             aria-expanded={menuOpen}
@@ -184,4 +186,3 @@ export default function RandomLetterSwapNav() {
     </header>
   );
 }
-

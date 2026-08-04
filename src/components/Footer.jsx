@@ -1,12 +1,16 @@
 import React, { useState } from 'react';
-import { MapPin, Phone, Clock, Send, CheckCircle2 } from 'lucide-react';
+import { MapPin, Phone, Clock, Send, CheckCircle2, Lock } from 'lucide-react';
 import logoImg from '../assets/logo.png';
 import { WhatsAppConfig } from '../utils/whatsapp';
 import { InstagramIcon, FacebookIcon, YoutubeIcon } from './ui/social-icons';
+import { ADMIN_HASH } from './admin/AdminPortal';
+import { ShinySheenButton } from './ui/shiny-button-sheen';
+import LocationMap from './ui/expanded-map';
 
 const quickLinks = [
   { label: 'Home', href: '#home' },
   { label: 'About Us', href: '#about-us' },
+  { label: 'Facilities', href: '#facilities' },
   { label: 'Our Trainers', href: '#trainers' },
   { label: 'Class Schedule', href: '#class-schedule' },
   { label: 'Book a Session', href: '#book-appointment' },
@@ -19,7 +23,6 @@ const socials = [
     Icon: InstagramIcon,
     hover: 'hover:bg-gradient-to-br hover:from-fuchsia-600 hover:to-amber-500 hover:border-transparent',
   },
-  // TODO: replace with the gym's real page URLs once available.
   { label: 'Facebook', href: '#', Icon: FacebookIcon, hover: 'hover:bg-[#1877F2] hover:border-transparent' },
   { label: 'YouTube', href: '#', Icon: YoutubeIcon, hover: 'hover:bg-[#FF0000] hover:border-transparent' },
 ];
@@ -39,7 +42,7 @@ export default function Footer() {
 
   const goTo = (event, href) => {
     event.preventDefault();
-    document.querySelector(href)?.scrollIntoView({ behavior: 'smooth' });
+    document.querySelector(href)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
   const handleSubscribe = (event) => {
@@ -50,7 +53,7 @@ export default function Footer() {
   };
 
   return (
-    <footer className="relative bg-slate-950 text-slate-300 border-t border-slate-800/60 overflow-hidden">
+    <footer id="footer" className="relative bg-slate-950 text-slate-300 border-t border-slate-800/60 overflow-hidden scroll-mt-20">
       {/* Ambient orange glow to echo the hero treatment */}
       <div
         aria-hidden="true"
@@ -107,7 +110,7 @@ export default function Footer() {
             </ul>
           </div>
 
-          {/* Visit us */}
+          {/* Visit us with Expanded Map */}
           <div className="lg:col-span-3">
             <h3 className="font-teko text-xl uppercase tracking-wider text-white">Visit Us</h3>
             <ul className="mt-5 space-y-4 text-sm">
@@ -147,6 +150,9 @@ export default function Footer() {
                 </div>
               </li>
             </ul>
+
+            {/* Expanded Location Map just below Visit Us section */}
+            <LocationMap location="BodyFit, Amrit Nagar, New Delhi" latitude={28.5684} longitude={77.2241} />
           </div>
 
           {/* Newsletter */}
@@ -200,6 +206,19 @@ export default function Footer() {
           <p>
             Designed for <span className="font-semibold text-slate-400">Body Fit Fitness Centre</span>
           </p>
+          <div className="flex flex-col items-center gap-1.5 sm:items-end">
+            <ShinySheenButton
+              as="a"
+              className="rounded-lg border border-orange-500/25 px-5 py-2.5"
+              href={ADMIN_HASH}
+            >
+              <span className="flex items-center gap-2 font-bold tracking-wider">
+                <Lock className="h-3.5 w-3.5" />
+                Admin
+              </span>
+            </ShinySheenButton>
+            <span className="text-[11px] text-slate-600">Owner access only</span>
+          </div>
         </div>
       </div>
     </footer>
