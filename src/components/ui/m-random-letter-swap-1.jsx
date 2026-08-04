@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Menu, X, Phone } from "lucide-react";
+import { Menu, X, Phone, Calculator } from "lucide-react";
 import { RandomLetterSwap } from "./random-letter-swap";
 import { WhatsAppIcon } from "./social-icons";
 import { LiquidMetalButton } from "./liquid-metal-button";
@@ -14,6 +14,16 @@ const links = [
   { label: "Gallery", href: "#gallery" },
   { label: "Testimonials", href: "#testimonials" },
   { label: "Contact", href: "#footer" },
+];
+
+const trackedSections = [
+  "#home",
+  "#about-us",
+  "#bmi-calculator",
+  "#facilities",
+  "#gallery",
+  "#testimonials",
+  "#footer"
 ];
 
 export default function RandomLetterSwapNav() {
@@ -33,12 +43,12 @@ export default function RandomLetterSwapNav() {
       const navHeight = 100;
       let currentActive = "#home";
 
-      for (const link of links) {
-        const section = document.querySelector(link.href);
+      for (const href of trackedSections) {
+        const section = document.querySelector(href);
         if (section) {
           const rect = section.getBoundingClientRect();
-          if (rect.top <= navHeight + 50 && rect.bottom >= navHeight) {
-            currentActive = link.href;
+          if (rect.top <= navHeight + 150 && rect.bottom >= navHeight) {
+            currentActive = href;
           }
         }
       }
@@ -57,7 +67,8 @@ export default function RandomLetterSwapNav() {
     setActiveSection(href);
     const element = document.querySelector(href);
     if (element) {
-      element.scrollIntoView({ behavior: "smooth", block: "start" });
+      const block = href === "#bmi-calculator" ? "center" : "start";
+      element.scrollIntoView({ behavior: "smooth", block });
     }
   };
 
@@ -107,6 +118,22 @@ export default function RandomLetterSwapNav() {
         </nav>
 
         <div className="flex items-center gap-3">
+          {/* BMI Calculator Quick Access Icon Button */}
+          <a
+            aria-label="BMI & Calorie Calculator"
+            title="BMI & Calorie Calculator"
+            className={cn(
+              "flex h-10 w-10 items-center justify-center rounded-xl border transition-all duration-300 active:scale-95",
+              activeSection === "#bmi-calculator"
+                ? "border-orange-500 bg-orange-500 text-slate-950 shadow-[0_0_20px_rgba(249,115,22,0.6)] font-bold scale-105"
+                : "border-slate-800 bg-slate-900/60 text-slate-300 hover:border-orange-500/50 hover:bg-orange-500/20 hover:text-white"
+            )}
+            href="#bmi-calculator"
+            onClick={(event) => goTo(event, "#bmi-calculator")}
+          >
+            <Calculator className="h-[18px] w-[18px]" />
+          </a>
+
           {/* Caller Button */}
           <a
             aria-label="Call Bodyfit Gym"
