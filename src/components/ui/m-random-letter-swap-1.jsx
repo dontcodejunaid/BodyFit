@@ -27,7 +27,7 @@ export default function RandomLetterSwapNav() {
 
   useEffect(() => {
     const onScroll = () => {
-      setScrolled(window.scrollY > 24);
+      setScrolled(window.scrollY > 40);
 
       // Section scroll tracking using bounding rect
       const navHeight = 100;
@@ -64,10 +64,10 @@ export default function RandomLetterSwapNav() {
   return (
     <header
       className={cn(
-        "fixed top-0 left-0 right-0 z-50 transition-all duration-300",
+        "z-50 transition-all duration-300 w-full",
         scrolled
-          ? "bg-slate-950/85 backdrop-blur-xl border-b border-slate-800/70 shadow-lg shadow-black/30 py-2"
-          : "bg-transparent border-b border-transparent py-3"
+          ? "fixed top-0 left-0 right-0 bg-slate-950/90 backdrop-blur-xl border-b border-slate-800/80 shadow-xl shadow-black/40 py-2.5"
+          : "relative bg-slate-950/60 backdrop-blur-md border-b border-slate-800/50 py-3"
       )}
     >
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-6 px-6">
@@ -107,10 +107,10 @@ export default function RandomLetterSwapNav() {
         </nav>
 
         <div className="flex items-center gap-3">
-          {/* Caller Button left of WhatsApp button */}
+          {/* Caller Button */}
           <a
             aria-label="Call Bodyfit Gym"
-            className="flex h-10 w-10 items-center justify-center rounded-xl border border-slate-800 bg-slate-900/60 text-slate-300 transition-all duration-300 hover:border-orange-500/50 hover:bg-orange-500 hover:text-white hover:shadow-[0_0_20px_rgba(249,115,22,0.6)] active:scale-95 active:shadow-[0_0_25px_rgba(249,115,22,0.8)]"
+            className="flex h-10 w-10 items-center justify-center rounded-xl border border-slate-800 bg-slate-900/60 text-slate-300 transition-all duration-300 hover:border-orange-500/50 hover:bg-orange-500 hover:text-white hover:shadow-[0_0_20px_rgba(249,115,22,0.6)] active:scale-95"
             href="tel:+919945505665"
           >
             <Phone className="h-[18px] w-[18px]" />
@@ -187,4 +187,3 @@ export default function RandomLetterSwapNav() {
     </header>
   );
 }
-
