@@ -10,6 +10,7 @@ import LocationMap from './ui/expanded-map';
 const quickLinks = [
   { label: 'Home', href: '#home' },
   { label: 'About Us', href: '#about-us' },
+  { label: 'Facilities', href: '#facilities' },
   { label: 'Our Trainers', href: '#trainers' },
   { label: 'Class Schedule', href: '#class-schedule' },
   { label: 'Book a Session', href: '#book-appointment' },
