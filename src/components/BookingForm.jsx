@@ -2,10 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { 
   Calendar, Clock, User, Phone, Dumbbell, CheckCircle2, 
   AlertCircle, Send, ArrowRight, ArrowLeft, ShieldCheck, Sparkles, 
-  Check, Flame, MessageSquare
+  Check, Flame, MessageSquare, CalendarPlus
 } from 'lucide-react';
 import { saveBooking, isSlotTaken } from '../utils/localStorage';
 import { sendWhatsAppBookingAlert, WhatsAppConfig } from '../utils/whatsapp';
+import {
+  sendAllConfirmations, scheduleBrowserReminder, downloadCalendarInvite,
+  emailConfigured, smsConfigured,
+} from '../utils/bookingNotifications';
 import { INITIAL_TRAINERS } from '../data/trainersAndScheduleData';
 import Component from './ui/gradient-bars-background';
 
@@ -34,6 +38,8 @@ export default function BookingForm({ selectedPlan = null, onClearPlan = null })
 
   const [confirmedBooking, setConfirmedBooking] = useState(null);
   const [errors, setErrors] = useState({});
+  const [notifyResult, setNotifyResult] = useState(null);
+  const [reminderResult, setReminderResult] = useState(null);
 
   // Services Grid
   const services = [
@@ -97,6 +103,12 @@ export default function BookingForm({ selectedPlan = null, onClearPlan = null })
 
     // Auto-trigger WhatsApp notification to active testing number
     sendWhatsAppBookingAlert(newBooking);
+
+    // Email/SMS run only if their env vars are configured; the browser reminder
+    // only survives while this tab stays open. Neither can block the booking,
+    // which is already saved above.
+    sendAllConfirmations(newBooking).then(setNotifyResult);
+    scheduleBrowserReminder(newBooking).then(setReminderResult);
   };
 
   return (
@@ -569,6 +581,57 @@ export default function BookingForm({ selectedPlan = null, onClearPlan = null })
                   <div className="text-left">
                     Booking saved locally! WhatsApp chat launched for <strong>+{WhatsAppConfig.targetPhone}</strong>. Click <strong>Send</strong> in WhatsApp to complete sending.
                   </div>
+                </div>
+
+                {/* Confirmation channels & 1-hour reminder */}
+                <div className="max-w-md mx-auto p-4 rounded-2xl bg-slate-900/60 border border-slate-800 space-y-3">
+                  <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400 text-left">
+                    Confirmations & Reminder
+                  </div>
+
+                  <ul className="space-y-2 text-left text-xs">
+                    <li className="flex items-start gap-2 text-slate-400">
+                      <span className="text-emerald-400 shrink-0">✓</span>
+                      WhatsApp confirmation opened
+                    </li>
+                    <li className="flex items-start gap-2 text-slate-400">
+                      <span className={notifyResult?.email?.sent ? 'text-emerald-400 shrink-0' : 'text-slate-600 shrink-0'}>
+                        {notifyResult?.email?.sent ? '✓' : '–'}
+                      </span>
+                      {notifyResult?.email?.sent
+                        ? `Email sent to ${confirmedBooking.email}`
+                        : emailConfigured
+                          ? 'Email could not be sent right now'
+                          : 'Email not configured yet (needs VITE_EMAILJS_* keys)'}
+                    </li>
+                    <li className="flex items-start gap-2 text-slate-400">
+                      <span className={notifyResult?.sms?.sent ? 'text-emerald-400 shrink-0' : 'text-slate-600 shrink-0'}>
+                        {notifyResult?.sms?.sent ? '✓' : '–'}
+                      </span>
+                      {notifyResult?.sms?.sent
+                        ? `SMS sent to ${confirmedBooking.phone}`
+                        : smsConfigured
+                          ? 'SMS could not be sent right now'
+                          : 'SMS needs a server endpoint (VITE_SMS_ENDPOINT)'}
+                    </li>
+                    <li className="flex items-start gap-2 text-slate-400">
+                      <span className={reminderResult?.scheduled ? 'text-emerald-400 shrink-0' : 'text-slate-600 shrink-0'}>
+                        {reminderResult?.scheduled ? '✓' : '–'}
+                      </span>
+                      {reminderResult?.scheduled
+                        ? 'Reminder set for 1 hour before — only while this tab stays open'
+                        : 'Add the calendar invite below for a reliable 1-hour reminder'}
+                    </li>
+                  </ul>
+
+                  <button
+                    type="button"
+                    onClick={() => downloadCalendarInvite(confirmedBooking)}
+                    className="w-full px-4 py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs transition-all flex items-center justify-center gap-2"
+                  >
+                    <CalendarPlus className="w-4 h-4 text-orange-400" />
+                    Add to Calendar (reminds you 1 hour before)
+                  </button>
                 </div>
 
                 <div className="pt-4 flex flex-col sm:flex-row items-center justify-center gap-4">

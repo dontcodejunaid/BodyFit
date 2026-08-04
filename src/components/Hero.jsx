@@ -3,6 +3,7 @@ import {
   Clock, Dumbbell, ShieldCheck, Users, Award, ChevronRight, Zap, ArrowDown
 } from 'lucide-react';
 import dumbbellBg from '../assets/dumbbell-bg.png';
+import { getOpenStatus } from '../utils/gymHours';
 import Component from './ui/gradient-bars-background';
 import { LayeredText } from './ui/layered-text';
 import { ShinyButton } from './ui/shiny-button';
@@ -14,24 +15,15 @@ export default function Hero() {
 
   useEffect(() => {
     const updateGymClock = () => {
-      const now = new Date();
-      const hours = now.getHours();
-      const isMorningShift = hours >= 6 && hours < 13;
-      const isEveningShift = hours >= 17 && hours < 22;
-
-      if (isMorningShift || isEveningShift) {
-        setIsOpen(true);
-        setNextStatusText('OPEN NOW (Closes ' + (isMorningShift ? '1:00 PM' : '10:00 PM') + ')');
-      } else {
-        setIsOpen(false);
-        if (hours < 6) {
-          setNextStatusText('OPENS TODAY AT 6:00 AM');
-        } else if (hours >= 13 && hours < 17) {
-          setNextStatusText('OPENS TODAY AT 5:00 PM');
-        } else {
-          setNextStatusText('OPENS TOMORROW AT 6:00 AM');
-        }
-      }
+      // Hours come from utils/gymHours.js so the badge, the FAQ bot and this
+      // clock can never disagree. Evaluated against the visitor's local time.
+      const status = getOpenStatus();
+      setIsOpen(status.isOpen);
+      setNextStatusText(
+        status.isOpen
+          ? `OPEN NOW (${status.detail})`.toUpperCase()
+          : status.detail.toUpperCase()
+      );
     };
 
     updateGymClock();

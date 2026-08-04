@@ -1,78 +1,33 @@
-import React, { useState } from 'react';
-import { CheckCircle2, Tag, Zap, Shield, Gift } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { CheckCircle2, Tag, Zap } from 'lucide-react';
 import { GradientCard } from './ui/gradient-card';
 import { scrollToSection } from '../lib/scrollToSection';
+import { getMemberships, STORE_KEYS } from '../utils/adminStore';
+import { resolvePlanPricing } from '../data/membershipPlans';
 
 export default function MembershipPlans({ onSelectPlan }) {
   const [billingCycle, setBillingCycle] = useState('monthly'); // 'monthly' | 'yearly'
 
-  const plansData = [
-    {
-      id: 'basic-plan',
-      name: 'Basic (Gym Only)',
-      tier: 'Basic',
-      description: 'Essential gym floor & weights access.',
-      badgeText: 'Essential Access',
-      badgeColor: '#F59E0B',
-      gradient: 'gray',
-      discountTag: '🎓 15% Student Discount',
-      imageUrl: 'https://images.unsplash.com/photo-1584735935682-2f2b69dff9d2?w=500&auto=format&fit=crop&q=80',
-      price: billingCycle === 'monthly' ? '₹1,500' : '₹1,200',
-      period: billingCycle === 'monthly' ? '/mo' : '/mo (₹14,400/yr)',
-      billingNote: billingCycle === 'yearly' ? 'Billed annually' : 'Billed monthly',
-      features: [
-        'Gym Floor & Weight Room Access',
-        'Cardio & Functional Training Zone',
-        'Standard Locker Room Access',
-        'General Trainer Orientation'
-      ]
-    },
-    {
-      id: 'standard-plan',
-      name: 'Standard (Gym + Classes)',
-      tier: 'Standard',
-      description: 'Gym access plus energetic group classes.',
-      badgeText: 'Most Popular ⭐',
-      badgeColor: '#FF5733',
-      gradient: 'orange',
-      isFeatured: true,
-      discountTag: '👥 Couple Pass: 20% Off 2nd Pass',
-      imageUrl: 'https://images.unsplash.com/photo-1518611012118-696072aa579a?w=500&auto=format&fit=crop&q=80',
-      price: billingCycle === 'monthly' ? '₹2,500' : '₹2,000',
-      period: billingCycle === 'monthly' ? '/mo' : '/mo (₹24,000/yr)',
-      billingNote: billingCycle === 'yearly' ? 'Billed annually' : 'Billed monthly',
-      features: [
-        'All Basic Plan Amenities Included',
-        'Unlimited Group Classes (Yoga, HIIT)',
-        'Dedicated Locker Room Access',
-        'Monthly Diet & Nutrition Consult'
-      ]
-    },
-    {
-      id: 'premium-plan',
-      name: 'Premium (Gym + PT + Diet)',
-      tier: 'Premium',
-      description: '1-on-1 coaching & custom nutrition.',
-      badgeText: 'VIP Transformation 🔥',
-      badgeColor: '#8B5CF6',
-      gradient: 'purple',
-      discountTag: '🏢 Corporate Group Rates (3+)',
-      imageUrl: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=500&auto=format&fit=crop&q=80',
-      price: billingCycle === 'monthly' ? '₹4,500' : '₹3,600',
-      period: billingCycle === 'monthly' ? '/mo' : '/mo (₹43,200/yr)',
-      billingNote: billingCycle === 'yearly' ? 'Billed annually' : 'Billed monthly',
-      features: [
-        'Unlimited Gym & Class Access',
-        '8 Personal Trainer Sessions / Mo',
-        'Custom Diet & Nutrition Plan',
-        'Steam Bath & Sauna Privileges'
-      ]
-    }
-  ];
+  // Plans come from localStorage so the admin panel's edits show up here.
+  const [plans, setPlans] = useState(getMemberships);
+
+  useEffect(() => {
+    const refresh = () => setPlans(getMemberships());
+    // 'storage' covers edits made in another tab; visibilitychange covers
+    // coming back to this tab after editing in the admin overlay.
+    window.addEventListener('storage', refresh);
+    document.addEventListener('visibilitychange', refresh);
+    return () => {
+      window.removeEventListener('storage', refresh);
+      document.removeEventListener('visibilitychange', refresh);
+    };
+  }, []);
 
   const handleChoosePlan = (plan) => {
+    // Flatten the resolved price onto the plan — BookingForm reads `.price`.
     const fullPlanData = {
       ...plan,
+      ...resolvePlanPricing(plan, billingCycle),
       selectedCycle: billingCycle
     };
     if (onSelectPlan) {
@@ -134,7 +89,9 @@ export default function MembershipPlans({ onSelectPlan }) {
 
         {/* Pricing Cards Grid using GradientCard */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5 items-stretch max-w-5xl mx-auto">
-          {plansData.map((plan) => (
+          {plans.map((plan) => {
+            const pricing = resolvePlanPricing(plan, billingCycle);
+            return (
             <div key={plan.id} className="relative group flex flex-col h-full">
               {/* Highlight Glow Border for Most Popular Card */}
               {plan.isFeatured && (
@@ -155,10 +112,10 @@ export default function MembershipPlans({ onSelectPlan }) {
                 {/* Price Display */}
                 <div className="my-3 pb-3 border-b border-slate-800/80 space-y-0.5">
                   <div className="flex items-baseline gap-1">
-                    <span className="text-3xl font-black text-white tracking-tight">{plan.price}</span>
-                    <span className="text-slate-400 text-xs font-semibold">{plan.period}</span>
+                    <span className="text-3xl font-black text-white tracking-tight">{pricing.price}</span>
+                    <span className="text-slate-400 text-xs font-semibold">{pricing.period}</span>
                   </div>
-                  <p className="text-[11px] text-orange-400/90 font-medium">{plan.billingNote}</p>
+                  <p className="text-[11px] text-orange-400/90 font-medium">{pricing.billingNote}</p>
                 </div>
 
                 {/* Features Checklist */}
@@ -182,7 +139,8 @@ export default function MembershipPlans({ onSelectPlan }) {
                 </div>
               </GradientCard>
             </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </section>
