@@ -2,12 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { 
   Calendar, Clock, User, Phone, Dumbbell, CheckCircle2, 
   AlertCircle, Send, ArrowRight, ArrowLeft, ShieldCheck, Sparkles, 
-  Check, Flame, MessageSquare, CalendarPlus
+  Check, Flame, MessageSquare, CalendarPlus, ChevronLeft, ChevronRight
 } from 'lucide-react';
 import { saveBooking, isSlotTaken } from '../utils/localStorage';
 import { sendWhatsAppBookingAlert, WhatsAppConfig } from '../utils/whatsapp';
 import {
-  sendAllConfirmations, scheduleBrowserReminder, downloadCalendarInvite,
+  sendAllConfirmations, scheduleBrowserReminder, downloadCalendarInvite, openGoogleCalendar,
   emailConfigured, smsConfigured,
 } from '../utils/bookingNotifications';
 import { INITIAL_TRAINERS } from '../data/trainersAndScheduleData';
@@ -69,6 +69,25 @@ export default function BookingForm({ selectedPlan = null, onClearPlan = null })
       specialties: t.specialties
     }))
   ];
+
+  const isSlotPast = (dateStr, slotStr) => {
+    const todayStr = new Date().toISOString().split('T')[0];
+    if (dateStr < todayStr) return true;
+    if (dateStr > todayStr) return false;
+
+    // Same day: parse slot time e.g. "07:00 AM" or "05:00 PM"
+    const now = new Date();
+    const [time, modifier] = slotStr.split(' ');
+    let [hours, minutes] = time.split(':').map(Number);
+
+    if (modifier === 'PM' && hours < 12) hours += 12;
+    if (modifier === 'AM' && hours === 12) hours = 0;
+
+    const slotTime = new Date();
+    slotTime.setHours(hours, minutes, 0, 0);
+
+    return slotTime <= now;
+  };
 
   const handleInputChange = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -288,16 +307,143 @@ export default function BookingForm({ selectedPlan = null, onClearPlan = null })
                   </div>
                 )}
 
-                {/* Date Input */}
-                <div className="space-y-2">
-                  <label className="text-xs font-bold text-slate-300 uppercase tracking-wider block">Select Preferred Date</label>
-                  <input 
-                    type="date"
-                    min={new Date().toISOString().split('T')[0]}
-                    value={formData.date}
-                    onChange={(e) => handleInputChange('date', e.target.value)}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-2xl px-4 py-3.5 text-white font-semibold focus:outline-none focus:border-orange-500 transition-colors"
-                  />
+                {/* Interactive Custom Calendar Picker */}
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-bold text-slate-300 uppercase tracking-wider block">
+                      Select Preferred Date
+                    </label>
+                    <span className="text-xs font-bold text-orange-400">
+                      Selected: {formData.date}
+                    </span>
+                  </div>
+
+                  <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 shadow-xl space-y-3">
+                    {/* Calendar Month Navigation Header */}
+                    {(() => {
+                      const selectedDateObj = new Date(formData.date + 'T00:00:00');
+                      const currentMonthStr = selectedDateObj.toLocaleString('default', { month: 'long', year: 'numeric' });
+
+                      const changeMonth = (offset) => {
+                        const newDate = new Date(selectedDateObj);
+                        newDate.setMonth(newDate.getMonth() + offset);
+
+                        const currentNow = new Date();
+                        const minYear = currentNow.getFullYear();
+                        const minMonth = currentNow.getMonth();
+
+                        if (newDate.getFullYear() < minYear || (newDate.getFullYear() === minYear && newDate.getMonth() < minMonth)) {
+                          return;
+                        }
+
+                        const yyyy = newDate.getFullYear();
+                        const mm = String(newDate.getMonth() + 1).padStart(2, '0');
+                        const dd = String(Math.min(selectedDateObj.getDate(), 28)).padStart(2, '0');
+                        handleInputChange('date', `${yyyy}-${mm}-${dd}`);
+                      };
+
+                      // Days of week header
+                      const daysOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+                      // Calculate month days grid
+                      const year = selectedDateObj.getFullYear();
+                      const month = selectedDateObj.getMonth();
+                      const firstDayIndex = new Date(year, month, 1).getDay();
+                      const totalDaysInMonth = new Date(year, month + 1, 0).getDate();
+
+                      const calendarDays = [];
+                      for (let i = 0; i < firstDayIndex; i++) {
+                        calendarDays.push(null);
+                      }
+                      for (let d = 1; d <= totalDaysInMonth; d++) {
+                        calendarDays.push(d);
+                      }
+
+                      const todayStr = new Date().toISOString().split('T')[0];
+                      const currentNow = new Date();
+                      const isCurrentMonth = year === currentNow.getFullYear() && month === currentNow.getMonth();
+
+                      return (
+                        <>
+                          <div className="flex items-center justify-between pb-2 border-b border-slate-800">
+                            <button
+                              type="button"
+                              disabled={isCurrentMonth}
+                              onClick={() => changeMonth(-1)}
+                              className={`p-1.5 rounded-lg transition-colors ${
+                                isCurrentMonth
+                                  ? 'bg-slate-950 text-slate-700 cursor-not-allowed border border-slate-900'
+                                  : 'bg-slate-900 hover:bg-slate-800 text-slate-300'
+                              }`}
+                              title="Previous Month"
+                            >
+                              <ChevronLeft className="w-4 h-4" />
+                            </button>
+
+                            <span className="text-sm font-black text-white tracking-wide">
+                              {currentMonthStr}
+                            </span>
+
+                            <button
+                              type="button"
+                              onClick={() => changeMonth(1)}
+                              className="p-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-300 transition-colors"
+                              title="Next Month"
+                            >
+                              <ChevronRight className="w-4 h-4" />
+                            </button>
+                          </div>
+
+                          {/* Days Header */}
+                          <div className="grid grid-cols-7 gap-1 text-center">
+                            {daysOfWeek.map((day) => (
+                              <span key={day} className="text-[10px] font-extrabold text-slate-400 uppercase py-1">
+                                {day}
+                              </span>
+                            ))}
+                          </div>
+
+                          {/* Dates Grid */}
+                          <div className="grid grid-cols-7 gap-1">
+                            {calendarDays.map((day, idx) => {
+                              if (!day) {
+                                return <div key={`empty-${idx}`} className="h-9" />;
+                              }
+
+                              const mm = String(month + 1).padStart(2, '0');
+                              const dd = String(day).padStart(2, '0');
+                              const dateString = `${year}-${mm}-${dd}`;
+
+                              const isSelected = formData.date === dateString;
+                              const isToday = todayStr === dateString;
+                              const isPast = dateString < todayStr;
+
+                              return (
+                                <button
+                                  key={dateString}
+                                  type="button"
+                                  disabled={isPast}
+                                  onClick={() => handleInputChange('date', dateString)}
+                                  className={`h-9 text-xs font-bold rounded-xl transition-all flex flex-col items-center justify-center relative ${
+                                    isPast
+                                      ? 'bg-slate-950/40 text-slate-700 border border-slate-900/40 cursor-not-allowed line-through opacity-40'
+                                      : isSelected
+                                      ? 'bg-gradient-to-r from-orange-600 to-amber-600 text-white shadow-lg shadow-orange-600/30 scale-105 z-10'
+                                      : 'bg-slate-900/90 text-slate-200 hover:bg-slate-800 border border-slate-800'
+                                  }`}
+                                >
+                                  <span>{day}</span>
+                                  {isToday && !isSelected && (
+                                    <span className="w-1 h-1 rounded-full bg-orange-400 absolute bottom-1" />
+                                  )}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </>
+                      );
+                    })()}
+                  </div>
                 </div>
 
                 {/* Morning Shift Slots */}
@@ -308,16 +454,18 @@ export default function BookingForm({ selectedPlan = null, onClearPlan = null })
                   <div className="grid grid-cols-3 sm:grid-cols-4 gap-2.5">
                     {morningSlots.map((slot) => {
                       const isTaken = isSlotTaken(formData.date, slot);
+                      const isPast = isSlotPast(formData.date, slot);
+                      const isDisabled = isTaken || isPast;
                       const isSelected = formData.time === slot;
                       return (
                         <button
                           key={slot}
                           type="button"
-                          disabled={isTaken}
+                          disabled={isDisabled}
                           onClick={() => handleInputChange('time', slot)}
                           className={`py-3 px-3 text-xs font-extrabold rounded-xl border transition-all ${
-                            isTaken
-                              ? 'bg-slate-950/40 border-slate-900 text-slate-600 cursor-not-allowed line-through'
+                            isDisabled
+                              ? 'bg-slate-950/40 border-slate-900 text-slate-600 cursor-not-allowed line-through opacity-50'
                               : isSelected
                               ? 'bg-orange-500 border-orange-500 text-white shadow-lg shadow-orange-500/30'
                               : 'bg-slate-950 border-slate-800 text-slate-300 hover:border-slate-700'
@@ -338,16 +486,18 @@ export default function BookingForm({ selectedPlan = null, onClearPlan = null })
                   <div className="grid grid-cols-3 sm:grid-cols-4 gap-2.5">
                     {eveningSlots.map((slot) => {
                       const isTaken = isSlotTaken(formData.date, slot);
+                      const isPast = isSlotPast(formData.date, slot);
+                      const isDisabled = isTaken || isPast;
                       const isSelected = formData.time === slot;
                       return (
                         <button
                           key={slot}
                           type="button"
-                          disabled={isTaken}
+                          disabled={isDisabled}
                           onClick={() => handleInputChange('time', slot)}
                           className={`py-3 px-3 text-xs font-extrabold rounded-xl border transition-all ${
-                            isTaken
-                              ? 'bg-slate-950/40 border-slate-900 text-slate-600 cursor-not-allowed line-through'
+                            isDisabled
+                              ? 'bg-slate-950/40 border-slate-900 text-slate-600 cursor-not-allowed line-through opacity-50'
                               : isSelected
                               ? 'bg-orange-500 border-orange-500 text-white shadow-lg shadow-orange-500/30'
                               : 'bg-slate-950 border-slate-800 text-slate-300 hover:border-slate-700'
@@ -624,14 +774,23 @@ export default function BookingForm({ selectedPlan = null, onClearPlan = null })
                     </li>
                   </ul>
 
-                  <button
-                    type="button"
-                    onClick={() => downloadCalendarInvite(confirmedBooking)}
-                    className="w-full px-4 py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs transition-all flex items-center justify-center gap-2"
-                  >
-                    <CalendarPlus className="w-4 h-4 text-orange-400" />
-                    Add to Calendar (reminds you 1 hour before)
-                  </button>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => openGoogleCalendar(confirmedBooking)}
+                      className="px-4 py-3 rounded-xl bg-orange-600 hover:bg-orange-500 text-white font-bold text-xs transition-all flex items-center justify-center gap-2 shadow-lg shadow-orange-600/20"
+                    >
+                      <CalendarPlus className="w-4 h-4" />
+                      Add to Google Calendar
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => downloadCalendarInvite(confirmedBooking)}
+                      className="px-4 py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs transition-all flex items-center justify-center gap-2"
+                    >
+                      Download .ICS (Apple/Outlook)
+                    </button>
+                  </div>
                 </div>
 
                 <div className="pt-4 flex flex-col sm:flex-row items-center justify-center gap-4">
