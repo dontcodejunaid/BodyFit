@@ -9,6 +9,8 @@ import Gallery from './components/Gallery';
 import Testimonials from './components/Testimonials';
 import BookingForm from './components/BookingForm';
 import Footer from './components/Footer';
+import AdminPortal from './components/admin/AdminPortal';
+import FloatingActions from './components/ui/floating-actions';
 
 function App() {
   const [_selectedTrainer, setSelectedTrainer] = useState(null);
@@ -36,6 +38,8 @@ function App() {
       <Testimonials />
       <BookingForm />
       <Footer />
+      <FloatingActions />
+      <AdminPortal />
     </div>
   );
 }
