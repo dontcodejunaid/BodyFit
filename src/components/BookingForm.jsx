@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
-  Calendar, Clock, User, Phone, Mail, Dumbbell, CheckCircle2, 
+  Calendar, Clock, User, Phone, Dumbbell, CheckCircle2, 
   AlertCircle, Send, ArrowRight, ArrowLeft, ShieldCheck, Sparkles, 
   Check, Flame, MessageSquare, CalendarPlus
 } from 'lucide-react';
@@ -13,12 +13,12 @@ import {
 import { INITIAL_TRAINERS } from '../data/trainersAndScheduleData';
 import Component from './ui/gradient-bars-background';
 
-export default function BookingForm() {
+export default function BookingForm({ selectedPlan = null, onClearPlan = null }) {
   const [step, setStep] = useState(1);
 
   // Form State
   const [formData, setFormData] = useState({
-    service: 'Gym Session',
+    service: selectedPlan ? `Membership: ${selectedPlan.name} (${selectedPlan.price})` : 'Gym Session',
     date: new Date().toISOString().split('T')[0],
     time: '07:00 AM',
     trainer: 'No Preference (Assign Any Available)',
@@ -26,6 +26,15 @@ export default function BookingForm() {
     phone: '',
     email: '',
   });
+
+  useEffect(() => {
+    if (selectedPlan) {
+      setFormData(prev => ({
+        ...prev,
+        service: `Membership: ${selectedPlan.name} (${selectedPlan.price})`
+      }));
+    }
+  }, [selectedPlan]);
 
   const [confirmedBooking, setConfirmedBooking] = useState(null);
   const [errors, setErrors] = useState({});
@@ -110,7 +119,7 @@ export default function BookingForm() {
       animationDuration={2}
       backgroundColor="#020617"
     >
-      <section id="book-appointment" className="scroll-mt-20 py-24 text-slate-100 relative overflow-hidden w-full">
+      <section id="book-appointment" className="py-24 text-slate-100 relative overflow-hidden w-full">
         
         {/* Background Lighting Glow */}
         <div className="absolute top-1/4 left-10 w-96 h-96 bg-orange-600/10 rounded-full blur-[130px] pointer-events-none" />
@@ -169,6 +178,40 @@ export default function BookingForm() {
           {/* Card Container */}
           <div className="bg-slate-900/90 backdrop-blur-2xl border border-slate-800 rounded-3xl p-6 sm:p-10 shadow-2xl relative">
             
+            {/* Persistent Chosen Plan Banner visible on all steps while booking */}
+            {selectedPlan && (
+              <div className="mb-8 p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-orange-950/90 via-slate-900 to-amber-950/90 border border-orange-500/50 shadow-xl shadow-orange-500/15 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div className="flex items-center gap-3.5">
+                  <div className="p-3 rounded-xl bg-gradient-to-br from-orange-500 to-amber-500 text-white shadow-md shrink-0">
+                    <Sparkles className="w-5 h-5 fill-white text-white" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-orange-500/20 text-orange-400 border border-orange-500/30">
+                        Selected Plan Active
+                      </span>
+                      <span className="text-xs font-bold text-amber-300">
+                        {selectedPlan.price} {selectedPlan.period}
+                      </span>
+                    </div>
+                    <h4 className="text-lg font-black text-white mt-0.5">{selectedPlan.name}</h4>
+                    <p className="text-xs text-slate-300 line-clamp-1">
+                      Included: {selectedPlan.features ? selectedPlan.features.slice(0, 3).join(' • ') : ''}
+                    </p>
+                  </div>
+                </div>
+                {onClearPlan && (
+                  <button
+                    type="button"
+                    onClick={onClearPlan}
+                    className="text-xs font-bold text-slate-400 hover:text-orange-400 underline underline-offset-4 shrink-0 transition-colors"
+                  >
+                    Change / Remove Plan
+                  </button>
+                )}
+              </div>
+            )}
+
             {/* STEP 1: Select Service */}
             {step === 1 && (
               <div className="space-y-6">

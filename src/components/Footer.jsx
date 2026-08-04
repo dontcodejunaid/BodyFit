@@ -41,7 +41,7 @@ export default function Footer() {
 
   const goTo = (event, href) => {
     event.preventDefault();
-    document.querySelector(href)?.scrollIntoView({ behavior: 'smooth' });
+    document.querySelector(href)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
   const handleSubscribe = (event) => {
