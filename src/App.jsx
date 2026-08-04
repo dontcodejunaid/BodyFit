@@ -21,7 +21,6 @@ import DigitalMemberCardModal from './components/DigitalMemberCardModal';
 import AnalyticsDashboardModal from './components/AnalyticsDashboardModal';
 
 import { trackEvent } from './utils/analytics';
-import { QrCode, BarChart3 } from 'lucide-react';
 
 function App() {
   const [_selectedTrainer, setSelectedTrainer] = useState(null);
@@ -109,29 +108,12 @@ function App() {
       <BookingForm selectedPlan={selectedPlan} onClearPlan={() => setSelectedPlan(null)} />
       <Footer />
 
-      {/* Floating Action Buttons: Digital Entry Pass QR & Internal Analytics */}
-      <div className="fixed bottom-5 right-5 z-40 flex flex-col gap-2.5">
-        {activeMemberPass && (
-          <button
-            onClick={() => setIsPassModalOpen(true)}
-            className="px-4 py-3 rounded-full bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-500 hover:to-amber-500 text-white font-extrabold text-xs shadow-2xl flex items-center gap-2 border border-orange-400/40 animate-pulse transition-all hover:scale-105"
-            title="View Digital Gym Entry Pass"
-          >
-            <QrCode className="w-4 h-4" />
-            <span className="hidden sm:inline">My Digital Pass</span>
-          </button>
-        )}
+      {/* Integrated Floating Action Stack: My Pass, Ask Us Chatbot & WhatsApp */}
+      <FloatingActions
+        activeMemberPass={activeMemberPass}
+        onOpenPass={() => setIsPassModalOpen(true)}
+      />
 
-        <button
-          onClick={() => setIsAnalyticsOpen(true)}
-          className="p-3 rounded-full bg-slate-900/90 border border-slate-800 text-slate-400 hover:text-white hover:border-orange-500/50 shadow-xl transition-all hover:scale-105"
-          title="Internal Business Analytics"
-        >
-          <BarChart3 className="w-4 h-4" />
-        </button>
-      </div>
-
-      <FloatingActions />
       <AdminPortal />
 
       {/* Modals */}
