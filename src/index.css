@@ -16,3 +16,11 @@
 html {
   scroll-behavior: smooth;
 }
+
+/* Edge/Chrome on Windows draw their own reveal + clear buttons inside password
+   fields. They sit on top of our custom eye toggle and fight React's controlled
+   `type`, so the toggle appears dead. Hide them and let the app own the state. */
+input::-ms-reveal,
+input::-ms-clear {
+  display: none;
+}
