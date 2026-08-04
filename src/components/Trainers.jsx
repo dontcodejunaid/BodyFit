@@ -9,7 +9,8 @@ import {
   Filter, 
   X,
   ShieldCheck,
-  Zap
+  Zap,
+  Clock
 } from 'lucide-react';
 import { INITIAL_TRAINERS } from '../data/trainersAndScheduleData';
 
@@ -72,7 +73,7 @@ export default function Trainers({ onSelectTrainer }) {
         <div className="text-center max-w-3xl mx-auto mb-14 space-y-4">
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-orange-500/10 border border-orange-500/20 text-orange-400 text-xs sm:text-sm font-semibold tracking-wide uppercase">
             <ShieldCheck className="w-4 h-4 text-orange-500" />
-            Certified Expert Coaches
+            Certified Expert Coaches & Duty Schedules
           </div>
 
           <h2 className="text-3xl sm:text-5xl font-extrabold text-white tracking-tight leading-tight">
@@ -150,6 +151,14 @@ export default function Trainers({ onSelectTrainer }) {
               {/* Card Body */}
               <div className="p-6 flex-1 flex flex-col justify-between space-y-5">
                 
+                {/* Work Shift Schedule Badge */}
+                {trainer.shiftHours && (
+                  <div className="p-2.5 rounded-xl bg-orange-500/10 border border-orange-500/20 flex items-center gap-2 text-xs text-orange-300 font-semibold">
+                    <Clock className="w-4 h-4 text-orange-400 shrink-0" />
+                    <span>Shift: {trainer.shiftHours}</span>
+                  </div>
+                )}
+
                 {/* Specialty Tags */}
                 <div className="flex flex-wrap gap-1.5">
                   {trainer.specialties.map((spec, i) => (
@@ -182,7 +191,7 @@ export default function Trainers({ onSelectTrainer }) {
                     onClick={() => setSelectedTrainerModal(trainer)}
                     className="w-full text-center text-xs text-slate-400 hover:text-slate-200 font-medium py-1.5 transition-colors"
                   >
-                    View Certifications & Bio →
+                    View Certifications & Shift Schedule →
                   </button>
                 </div>
 
@@ -226,6 +235,14 @@ export default function Trainers({ onSelectTrainer }) {
               </div>
             </div>
 
+            {/* Work Shift Schedule Details */}
+            {selectedTrainerModal.shiftHours && (
+              <div className="p-3 rounded-xl bg-orange-500/10 border border-orange-500/20 text-xs text-slate-200 space-y-1">
+                <span className="font-bold text-orange-400 uppercase tracking-wider block">Allocated Work Shift</span>
+                <p className="text-slate-300 font-semibold">{selectedTrainerModal.shiftHours}</p>
+              </div>
+            )}
+
             {/* Bio */}
             <div>
               <h4 className="text-xs font-semibold uppercase text-slate-400 tracking-wider mb-2">About Trainer</h4>
@@ -252,7 +269,7 @@ export default function Trainers({ onSelectTrainer }) {
                 {selectedTrainerModal.instagram}
               </span>
               <span className="text-emerald-400 font-semibold flex items-center gap-1">
-                <Zap className="w-3.5 h-3.5" /> Slot Available Today
+                <Zap className="w-3.5 h-3.5" /> Shift Active Today
               </span>
             </div>
 

@@ -2,20 +2,11 @@ import { liquidMetalFragmentShader, ShaderMount } from '@paper-design/shaders';
 import { Sparkles } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 
-// Adapted from the source component. Changes made during integration:
-//  1. `shaderMount.destroy()` -> `dispose()`. @paper-design/shaders 0.0.78
-//     exposes dispose(); there is no destroy(). The original call was
-//     optional-chained, so cleanup silently did nothing and every mount leaked
-//     a WebGL context — fatal under React StrictMode, which mounts twice.
-//  2. TypeScript annotations removed (this project is JavaScript).
-//  3. `labelColor` prop added. The original hardcodes #666666, which fails
-//     contrast as a primary CTA; the default is kept faithful.
-
 export function LiquidMetalButton({
   label = 'Get Started',
   onClick,
   viewMode = 'text',
-  labelColor = '#666666',
+  labelColor = '#ffffff',
   width,
 }) {
   const [isHovered, setIsHovered] = useState(false);
@@ -80,7 +71,6 @@ export function LiquidMetalButton({
     const release = () => {
       const mount = shaderMount.current;
       if (!mount) return;
-      // dispose() is the real teardown; destroy() kept only as a fallback.
       if (typeof mount.dispose === 'function') mount.dispose();
       else if (typeof mount.destroy === 'function') mount.destroy();
       shaderMount.current = null;
@@ -96,10 +86,10 @@ export function LiquidMetalButton({
           {
             u_repetition: 4,
             u_softness: 0.5,
-            u_shiftRed: 0.3,
-            u_shiftBlue: 0.3,
-            u_distortion: 0,
-            u_contour: 0,
+            u_shiftRed: 0.8,
+            u_shiftBlue: 0.1,
+            u_distortion: 0.2,
+            u_contour: 0.1,
             u_angle: 45,
             u_scale: 8,
             u_shape: 1,
@@ -204,8 +194,10 @@ export function LiquidMetalButton({
                 style={{
                   fontSize: '14px',
                   color: labelColor,
-                  fontWeight: 400,
-                  textShadow: '0px 1px 2px rgba(0, 0, 0, 0.5)',
+                  fontWeight: 900,
+                  letterSpacing: '1px',
+                  textTransform: 'uppercase',
+                  textShadow: '0px 1px 3px rgba(0, 0, 0, 0.6)',
                   transition: 'all 0.8s cubic-bezier(0.34, 1.56, 0.64, 1)',
                   transform: 'scale(1)',
                   whiteSpace: 'nowrap',
@@ -236,10 +228,10 @@ export function LiquidMetalButton({
                 height: `${dimensions.innerHeight}px`,
                 margin: '2px',
                 borderRadius: '100px',
-                background: 'linear-gradient(180deg, #202020 0%, #000000 100%)',
+                background: 'linear-gradient(135deg, #f97316 0%, #ea580c 50%, #c2410c 100%)',
                 boxShadow: isPressed
-                  ? 'inset 0px 2px 4px rgba(0, 0, 0, 0.4), inset 0px 1px 2px rgba(0, 0, 0, 0.3)'
-                  : 'none',
+                  ? 'inset 0px 2px 4px rgba(0, 0, 0, 0.4)'
+                  : '0 0 20px rgba(249, 115, 22, 0.5)',
                 transition:
                   'all 0.8s cubic-bezier(0.34, 1.56, 0.64, 1), width 0.4s ease, height 0.4s ease, box-shadow 0.15s cubic-bezier(0.4, 0, 0.2, 1)',
               }}
@@ -266,10 +258,10 @@ export function LiquidMetalButton({
                 width: `${dimensions.width}px`,
                 borderRadius: '100px',
                 boxShadow: isPressed
-                  ? '0px 0px 0px 1px rgba(0, 0, 0, 0.5), 0px 1px 2px 0px rgba(0, 0, 0, 0.3)'
+                  ? '0px 0px 0px 1px rgba(249, 115, 22, 0.5)'
                   : isHovered
-                    ? '0px 0px 0px 1px rgba(0, 0, 0, 0.4), 0px 12px 6px 0px rgba(0, 0, 0, 0.05), 0px 8px 5px 0px rgba(0, 0, 0, 0.1), 0px 4px 4px 0px rgba(0, 0, 0, 0.15), 0px 1px 2px 0px rgba(0, 0, 0, 0.2)'
-                    : '0px 0px 0px 1px rgba(0, 0, 0, 0.3), 0px 36px 14px 0px rgba(0, 0, 0, 0.02), 0px 20px 12px 0px rgba(0, 0, 0, 0.08), 0px 9px 9px 0px rgba(0, 0, 0, 0.12), 0px 2px 5px 0px rgba(0, 0, 0, 0.15)',
+                    ? '0px 0px 25px 2px rgba(249, 115, 22, 0.7)'
+                    : '0px 0px 15px 0px rgba(249, 115, 22, 0.4)',
                 transition:
                   'all 0.8s cubic-bezier(0.34, 1.56, 0.64, 1), width 0.4s ease, height 0.4s ease, box-shadow 0.15s cubic-bezier(0.4, 0, 0.2, 1)',
                 background: 'rgb(0 0 0 / 0)',
@@ -330,7 +322,7 @@ export function LiquidMetalButton({
                   height: '20px',
                   borderRadius: '50%',
                   background:
-                    'radial-gradient(circle, rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0) 70%)',
+                    'radial-gradient(circle, rgba(255, 255, 255, 0.6) 0%, rgba(255, 255, 255, 0) 70%)',
                   pointerEvents: 'none',
                   animation: 'ripple-animation 0.6s ease-out',
                 }}

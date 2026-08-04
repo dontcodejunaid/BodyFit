@@ -30,7 +30,7 @@ export const ShinyButton = ({
   ...props
 }) => {
   return (
-    <motion.button
+    <motion.div
       {...animationProps}
       {...props}
       onClick={onClick}
@@ -66,7 +66,7 @@ export const ShinyButton = ({
       <span className="relative z-30 flex items-center justify-center gap-3 text-base uppercase tracking-wider text-white font-black drop-shadow-md">
         {children}
       </span>
-    </motion.button>
+    </motion.div>
   );
 };
 

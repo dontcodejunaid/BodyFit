@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Menu, X, Phone } from "lucide-react";
+import { Menu, X, Phone, Calculator } from "lucide-react";
 import { RandomLetterSwap } from "./random-letter-swap";
 import { WhatsAppIcon } from "./social-icons";
 import { LiquidMetalButton } from "./liquid-metal-button";
@@ -13,7 +13,17 @@ const links = [
   { label: "Facilities", href: "#facilities" },
   { label: "Gallery", href: "#gallery" },
   { label: "Testimonials", href: "#testimonials" },
-  { label: "Contact", href: "#book-appointment" },
+  { label: "Contact", href: "#footer" },
+];
+
+const trackedSections = [
+  "#home",
+  "#about-us",
+  "#bmi-calculator",
+  "#facilities",
+  "#gallery",
+  "#testimonials",
+  "#footer"
 ];
 
 export default function RandomLetterSwapNav() {
@@ -27,18 +37,18 @@ export default function RandomLetterSwapNav() {
 
   useEffect(() => {
     const onScroll = () => {
-      setScrolled(window.scrollY > 24);
+      setScrolled(window.scrollY > 40);
 
       // Section scroll tracking using bounding rect
       const navHeight = 100;
       let currentActive = "#home";
 
-      for (const link of links) {
-        const section = document.querySelector(link.href);
+      for (const href of trackedSections) {
+        const section = document.querySelector(href);
         if (section) {
           const rect = section.getBoundingClientRect();
-          if (rect.top <= navHeight + 50 && rect.bottom >= navHeight) {
-            currentActive = link.href;
+          if (rect.top <= navHeight + 150 && rect.bottom >= navHeight) {
+            currentActive = href;
           }
         }
       }
@@ -57,17 +67,18 @@ export default function RandomLetterSwapNav() {
     setActiveSection(href);
     const element = document.querySelector(href);
     if (element) {
-      element.scrollIntoView({ behavior: "smooth", block: "start" });
+      const block = href === "#bmi-calculator" ? "center" : "start";
+      element.scrollIntoView({ behavior: "smooth", block });
     }
   };
 
   return (
     <header
       className={cn(
-        "fixed top-0 left-0 right-0 z-50 transition-all duration-300",
+        "z-50 transition-all duration-300 w-full",
         scrolled
-          ? "bg-slate-950/85 backdrop-blur-xl border-b border-slate-800/70 shadow-lg shadow-black/30 py-2"
-          : "bg-transparent border-b border-transparent py-3"
+          ? "fixed top-0 left-0 right-0 bg-slate-950/90 backdrop-blur-xl border-b border-slate-800/80 shadow-xl shadow-black/40 py-2.5"
+          : "relative bg-slate-950/60 backdrop-blur-md border-b border-slate-800/50 py-3"
       )}
     >
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-6 px-6">
@@ -107,10 +118,26 @@ export default function RandomLetterSwapNav() {
         </nav>
 
         <div className="flex items-center gap-3">
-          {/* Caller Button left of WhatsApp button */}
+          {/* BMI Calculator Quick Access Icon Button */}
+          <a
+            aria-label="BMI & Calorie Calculator"
+            title="BMI & Calorie Calculator"
+            className={cn(
+              "flex h-10 w-10 items-center justify-center rounded-xl border transition-all duration-300 active:scale-95",
+              activeSection === "#bmi-calculator"
+                ? "border-orange-500 bg-orange-500 text-slate-950 shadow-[0_0_20px_rgba(249,115,22,0.6)] font-bold scale-105"
+                : "border-slate-800 bg-slate-900/60 text-slate-300 hover:border-orange-500/50 hover:bg-orange-500/20 hover:text-white"
+            )}
+            href="#bmi-calculator"
+            onClick={(event) => goTo(event, "#bmi-calculator")}
+          >
+            <Calculator className="h-[18px] w-[18px]" />
+          </a>
+
+          {/* Caller Button */}
           <a
             aria-label="Call Bodyfit Gym"
-            className="flex h-10 w-10 items-center justify-center rounded-xl border border-slate-800 bg-slate-900/60 text-slate-300 transition-all duration-300 hover:border-orange-500/50 hover:bg-orange-500 hover:text-white hover:shadow-[0_0_20px_rgba(249,115,22,0.6)] active:scale-95 active:shadow-[0_0_25px_rgba(249,115,22,0.8)]"
+            className="flex h-10 w-10 items-center justify-center rounded-xl border border-slate-800 bg-slate-900/60 text-slate-300 transition-all duration-300 hover:border-orange-500/50 hover:bg-orange-500 hover:text-white hover:shadow-[0_0_20px_rgba(249,115,22,0.6)] active:scale-95"
             href="tel:+919945505665"
           >
             <Phone className="h-[18px] w-[18px]" />
@@ -127,12 +154,11 @@ export default function RandomLetterSwapNav() {
             <WhatsAppIcon className="h-[18px] w-[18px]" />
           </a>
 
-          {/* Desktop CTA — WebGL liquid metal button. The mobile menu keeps the
-              plain gradient link, since this one is a fixed 142px wide. */}
+          {/* Desktop CTA — WebGL liquid metal button in theme orange */}
           <div className="hidden sm:block">
             <LiquidMetalButton
               label="BOOK NOW"
-              labelColor="#e2e8f0"
+              labelColor="#ffffff"
               onClick={(event) => goTo(event, "#book-appointment")}
             />
           </div>
@@ -187,4 +213,3 @@ export default function RandomLetterSwapNav() {
     </header>
   );
 }
-

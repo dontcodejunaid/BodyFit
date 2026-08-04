@@ -104,6 +104,29 @@ export function buildCalendarInvite(booking) {
   ].join('\r\n');
 }
 
+export function openGoogleCalendar(booking) {
+  const start = toDateTime(booking.date, booking.time);
+  if (!start) return false;
+
+  const end = new Date(start.getTime() + 60 * 60 * 1000);
+
+  const formatGCal = (date) => {
+    return date.toISOString().replace(/-|:|\.\d\d\d/g, '');
+  };
+
+  const title = encodeURIComponent(`Body Fit — ${booking.service || 'Fitness Session'}`);
+  const details = encodeURIComponent(
+    `Booking Ref: #${booking.id}\nMember: ${booking.name}\nTrainer: ${booking.trainer || 'Duty Coach'}\nLocation: Body Fit Gym, Amrit Nagar, New Delhi`
+  );
+  const location = encodeURIComponent('Body Fit Gym, D-20, Amrit Nagar, Block D, New Delhi, Delhi 110049');
+  const dates = `${formatGCal(start)}/${formatGCal(end)}`;
+
+  const googleCalUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${dates}&details=${details}&location=${location}`;
+
+  window.open(googleCalUrl, '_blank');
+  return true;
+}
+
 export function downloadCalendarInvite(booking) {
   const ics = buildCalendarInvite(booking);
   if (!ics) return false;

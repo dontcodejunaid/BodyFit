@@ -5,10 +5,12 @@ import { WhatsAppConfig } from '../utils/whatsapp';
 import { InstagramIcon, FacebookIcon, YoutubeIcon } from './ui/social-icons';
 import { ADMIN_HASH } from './admin/AdminPortal';
 import { ShinySheenButton } from './ui/shiny-button-sheen';
+import LocationMap from './ui/expanded-map';
 
 const quickLinks = [
   { label: 'Home', href: '#home' },
   { label: 'About Us', href: '#about-us' },
+  { label: 'Facilities', href: '#facilities' },
   { label: 'Our Trainers', href: '#trainers' },
   { label: 'Class Schedule', href: '#class-schedule' },
   { label: 'Book a Session', href: '#book-appointment' },
@@ -21,7 +23,6 @@ const socials = [
     Icon: InstagramIcon,
     hover: 'hover:bg-gradient-to-br hover:from-fuchsia-600 hover:to-amber-500 hover:border-transparent',
   },
-  // TODO: replace with the gym's real page URLs once available.
   { label: 'Facebook', href: '#', Icon: FacebookIcon, hover: 'hover:bg-[#1877F2] hover:border-transparent' },
   { label: 'YouTube', href: '#', Icon: YoutubeIcon, hover: 'hover:bg-[#FF0000] hover:border-transparent' },
 ];
@@ -52,7 +53,7 @@ export default function Footer() {
   };
 
   return (
-    <footer className="relative bg-slate-950 text-slate-300 border-t border-slate-800/60 overflow-hidden">
+    <footer id="footer" className="relative bg-slate-950 text-slate-300 border-t border-slate-800/60 overflow-hidden scroll-mt-20">
       {/* Ambient orange glow to echo the hero treatment */}
       <div
         aria-hidden="true"
@@ -109,7 +110,7 @@ export default function Footer() {
             </ul>
           </div>
 
-          {/* Visit us */}
+          {/* Visit us with Expanded Map */}
           <div className="lg:col-span-3">
             <h3 className="font-teko text-xl uppercase tracking-wider text-white">Visit Us</h3>
             <ul className="mt-5 space-y-4 text-sm">
@@ -149,6 +150,9 @@ export default function Footer() {
                 </div>
               </li>
             </ul>
+
+            {/* Expanded Location Map just below Visit Us section */}
+            <LocationMap location="BodyFit, Amrit Nagar, New Delhi" latitude={28.5684} longitude={77.2241} />
           </div>
 
           {/* Newsletter */}
