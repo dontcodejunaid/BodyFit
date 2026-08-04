@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import {
-  Clock, Dumbbell, ShieldCheck, Users, Award, ChevronRight, Zap, ArrowDown
+  Clock, Dumbbell, ShieldCheck, Users, Award, ChevronRight, Zap
 } from 'lucide-react';
 import dumbbellBg from '../assets/dumbbell-bg.png';
-import { getOpenStatus } from '../utils/gymHours';
 import Component from './ui/gradient-bars-background';
 import { LayeredText } from './ui/layered-text';
 import { ShinyButton } from './ui/shiny-button';
@@ -15,15 +14,24 @@ export default function Hero() {
 
   useEffect(() => {
     const updateGymClock = () => {
-      // Hours come from utils/gymHours.js so the badge, the FAQ bot and this
-      // clock can never disagree. Evaluated against the visitor's local time.
-      const status = getOpenStatus();
-      setIsOpen(status.isOpen);
-      setNextStatusText(
-        status.isOpen
-          ? `OPEN NOW (${status.detail})`.toUpperCase()
-          : status.detail.toUpperCase()
-      );
+      const now = new Date();
+      const hours = now.getHours();
+      const isMorningShift = hours >= 6 && hours < 13;
+      const isEveningShift = hours >= 17 && hours < 22;
+
+      if (isMorningShift || isEveningShift) {
+        setIsOpen(true);
+        setNextStatusText('OPEN NOW (Closes ' + (isMorningShift ? '1:00 PM' : '10:00 PM') + ')');
+      } else {
+        setIsOpen(false);
+        if (hours < 6) {
+          setNextStatusText('OPENS TODAY AT 6:00 AM');
+        } else if (hours >= 13 && hours < 17) {
+          setNextStatusText('OPENS TODAY AT 5:00 PM');
+        } else {
+          setNextStatusText('OPENS TOMORROW AT 6:00 AM');
+        }
+      }
     };
 
     updateGymClock();
@@ -98,8 +106,8 @@ export default function Hero() {
               </p>
             </div>
 
-            {/* Two Main CTA Buttons with ShinyButton - Single line text with matching width */}
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 py-4 sm:py-6">
+            {/* Two Main CTA Buttons with ShinyButton */}
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 py-3 sm:py-4">
               <a
                 href="#book-appointment"
                 className="w-full sm:w-[270px] shrink-0"
@@ -121,34 +129,39 @@ export default function Hero() {
                   scrollToSection('membership', 80);
                 }}
               >
-                <ShinyButton className="w-full sm:w-[270px] h-12 bg-slate-900/90 hover:bg-slate-800 border border-slate-700/80 text-slate-200 text-xs sm:text-sm px-4 justify-center whitespace-nowrap">
+                <ShinyButton className="w-full sm:w-[270px] h-12 bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-500 hover:to-amber-500 shadow-xl shadow-orange-600/30 text-xs sm:text-sm px-4 justify-center text-center whitespace-nowrap">
                   <span>View Membership Plans</span>
-                  <ArrowDown className="w-3.5 h-3.5 text-orange-400 shrink-0" />
                 </ShinyButton>
               </a>
             </div>
 
-            {/* Stats Banner Grid */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3.5 max-w-4xl mx-auto pt-2 sm:pt-4">
-              {stats.map((stat, index) => {
-                const Icon = stat.icon;
+          </div>
+
+          {/* Stats Row - Restored 4 Stat Cards */}
+          <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full pt-4">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 max-w-5xl mx-auto">
+              {stats.map((stat) => {
+                const IconComponent = stat.icon;
                 return (
-                  <ShinyButton
-                    key={index}
-                    className="p-2.5 sm:p-3 rounded-xl bg-slate-900/85 border border-slate-800/80 backdrop-blur-xl flex items-center gap-2.5 shadow-lg hover:border-orange-500/40 transition-all font-normal text-left justify-start"
+                  <div
+                    key={stat.label}
+                    className="flex items-center gap-3 p-3.5 sm:p-4 rounded-2xl bg-slate-900/80 border border-slate-800/80 backdrop-blur-xl shadow-xl hover:border-orange-500/40 transition-all duration-300 group"
                   >
-                    <div className="p-2 rounded-lg bg-gradient-to-br from-orange-500 to-amber-500 text-white shadow-md shrink-0">
-                      <Icon className="w-4 h-4" />
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-orange-500/10 text-orange-500 border border-orange-500/20 group-hover:scale-110 transition-transform">
+                      <IconComponent className="h-5 w-5" />
                     </div>
-                    <div className="text-left min-w-0">
-                      <div className="text-base sm:text-xl font-black text-white leading-none">{stat.value}</div>
-                      <div className="text-[10px] sm:text-xs font-bold text-slate-300 leading-tight mt-0.5 truncate">{stat.label}</div>
+                    <div>
+                      <div className="text-lg sm:text-xl font-black text-white leading-none">
+                        {stat.value}
+                      </div>
+                      <div className="text-[11px] font-bold text-slate-400 tracking-wide uppercase mt-1">
+                        {stat.label}
+                      </div>
                     </div>
-                  </ShinyButton>
+                  </div>
                 );
               })}
             </div>
-
           </div>
 
         </div>
