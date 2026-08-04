@@ -53,7 +53,7 @@ export default function Footer() {
   };
 
   return (
-    <footer id="footer" className="relative bg-slate-950 text-slate-300 border-t border-slate-800/60 overflow-hidden">
+    <footer id="footer" className="relative bg-slate-950 text-slate-300 border-t border-slate-800/60 overflow-hidden scroll-mt-20">
       {/* Ambient orange glow to echo the hero treatment */}
       <div
         aria-hidden="true"
