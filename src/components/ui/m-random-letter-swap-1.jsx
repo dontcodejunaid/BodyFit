@@ -58,13 +58,32 @@ export default function RandomLetterSwapNav() {
 
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
+
+    // Handle direct URL hash landing (e.g., #about-us)
+    if (window.location.hash) {
+      setTimeout(() => {
+        const initialEl = document.querySelector(window.location.hash);
+        if (initialEl) {
+          initialEl.scrollIntoView({ behavior: "smooth" });
+        }
+      }, 500);
+    }
+
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
   const goTo = (event, href) => {
-    event.preventDefault();
+    if (event) event.preventDefault();
     setMenuOpen(false);
     setActiveSection(href);
+
+    // Update browser URL without reloading page
+    if (window.history.pushState) {
+      window.history.pushState(null, "", href);
+    } else {
+      window.location.hash = href;
+    }
+
     const element = document.querySelector(href);
     if (element) {
       const block = href === "#bmi-calculator" ? "center" : "start";
