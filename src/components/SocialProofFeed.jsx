@@ -189,7 +189,7 @@ export default function SocialProofFeed() {
             </div>
 
             <a
-              href="https://instagram.com"
+              href="https://www.instagram.com/code_innovativetechnologies"
               target="_blank"
               rel="noopener noreferrer"
               className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-500 hover:to-purple-500 text-white font-extrabold text-xs flex items-center gap-2 shadow-lg shadow-pink-600/20 transition-all"
@@ -204,7 +204,7 @@ export default function SocialProofFeed() {
             {instagramPosts.map((post) => (
               <a
                 key={post.id}
-                href="https://instagram.com"
+                href="https://www.instagram.com/code_innovativetechnologies"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="group relative rounded-2xl overflow-hidden aspect-square border border-slate-800 bg-slate-900 shadow-xl"

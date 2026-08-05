@@ -19,7 +19,7 @@ const quickLinks = [
 const socials = [
   {
     label: 'Instagram',
-    href: 'https://instagram.com/zoyasayeedaahmed7',
+    href: 'https://www.instagram.com/code_innovativetechnologies',
     Icon: InstagramIcon,
     hover: 'hover:bg-gradient-to-br hover:from-fuchsia-600 hover:to-amber-500 hover:border-transparent',
   },
