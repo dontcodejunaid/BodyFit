@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { CalendarCheck, Settings2, BarChart3, LogOut, ExternalLink } from 'lucide-react';
+import {
+  CalendarCheck, Settings2, BarChart3, LogOut, ExternalLink, MonitorSmartphone,
+} from 'lucide-react';
 import BookingsPanel from './BookingsPanel';
 import ManagePanel from './ManagePanel';
 import AnalyticsPanel from './AnalyticsPanel';
@@ -21,13 +23,27 @@ export default function AdminDashboard({ onLogout, onExit }) {
   const todayCount = bookings.filter((booking) => bucketOf(booking) === 'today').length;
   const pendingCount = bookings.filter((booking) => (booking.status || 'Pending') === 'Pending').length;
 
-  // Pick up bookings made in another tab.
+  // Keep the list live without a manual reload.
+  //
+  // IMPORTANT: this only sees bookings stored in THIS browser. localStorage is
+  // per-device, so a booking made on a customer's phone never reaches another
+  // machine's dashboard no matter how often we poll. Cross-device visibility
+  // needs a shared backend — see the note in utils/adminStore.js.
   useEffect(() => {
-    const onStorage = (event) => {
-      if (event.key === 'bodyfit_bookings') setBookings(getBookings());
+    const refresh = () => setBookings(getBookings());
+
+    // 'storage' fires for other tabs; the poll and focus handlers cover this one.
+    window.addEventListener('storage', refresh);
+    window.addEventListener('focus', refresh);
+    document.addEventListener('visibilitychange', refresh);
+    const interval = setInterval(refresh, 5000);
+
+    return () => {
+      window.removeEventListener('storage', refresh);
+      window.removeEventListener('focus', refresh);
+      document.removeEventListener('visibilitychange', refresh);
+      clearInterval(interval);
     };
-    window.addEventListener('storage', onStorage);
-    return () => window.removeEventListener('storage', onStorage);
   }, []);
 
   const handleLogout = () => {
@@ -106,6 +122,17 @@ export default function AdminDashboard({ onLogout, onExit }) {
               <p className="mt-1 text-sm text-slate-400">
                 {todayCount} today · {pendingCount} awaiting your decision
               </p>
+            </div>
+
+            <div className="mb-6 flex items-start gap-3 rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-xs leading-relaxed text-amber-200">
+              <MonitorSmartphone className="mt-0.5 h-4 w-4 shrink-0 text-amber-400" />
+              <div>
+                <strong className="font-bold">This list is stored on this device only.</strong>{' '}
+                Bookings are saved in each visitor&apos;s own browser, so a booking made on a
+                customer&apos;s phone — or on another admin&apos;s laptop — will not appear here.
+                The list refreshes automatically every few seconds, but only for bookings made in
+                this browser. Sharing bookings across devices requires a backend database.
+              </div>
             </div>
             <BookingsPanel bookings={bookings} onChange={setBookings} />
           </>

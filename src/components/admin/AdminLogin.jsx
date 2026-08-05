@@ -110,8 +110,11 @@ export default function AdminLogin({ onSuccess, onExit }) {
                 />
                 <button
                   aria-label={showPassword ? 'Hide password' : 'Show password'}
-                  className="shrink-0 text-slate-500 transition-colors hover:text-slate-300"
+                  className="-mr-1 shrink-0 cursor-pointer rounded-lg p-2 text-slate-500 transition-colors hover:bg-slate-800/70 hover:text-slate-200"
+                  // Keep focus in the input so toggling doesn't blur the field.
+                  onMouseDown={(event) => event.preventDefault()}
                   onClick={() => setShowPassword((visible) => !visible)}
+                  title={showPassword ? 'Hide password' : 'Show password'}
                   type="button"
                 >
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}

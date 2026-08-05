@@ -20,6 +20,16 @@ const ADMINS = [
     ids: ['dontcodejunaid', 'dontcodejunaid@gmail.com'],
     password: 'JUNAID@123',
   },
+  {
+    name: 'Yaqub',
+    ids: ['yaqubahmed8017@gmail.com'],
+    password: 'YAQUB@123',
+  },
+  {
+    name: 'Sourav',
+    ids: ['souravbrave324@gmail.com'],
+    password: 'SOURAV@123',
+  },
 ];
 
 const SESSION_KEY = 'bodyfit_admin_session';
