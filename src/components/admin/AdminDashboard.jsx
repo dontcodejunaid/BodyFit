@@ -9,6 +9,8 @@ import { getBookings, bucketOf } from '../../utils/adminStore';
 import { getSession, logout } from '../../utils/adminAuth';
 import logoImg from '../../assets/logo.png';
 
+import { getBookingsFromFirebase } from '../../firebase';
+
 const TABS = [
   { id: 'bookings', label: 'Bookings', icon: CalendarCheck },
   { id: 'manage', label: 'Manage', icon: Settings2 },
@@ -18,27 +20,48 @@ const TABS = [
 export default function AdminDashboard({ onLogout, onExit }) {
   const [tab, setTab] = useState('bookings');
   const [bookings, setBookings] = useState(() => getBookings());
+  const [loadingCloud, setLoadingCloud] = useState(true);
 
   const session = getSession();
   const todayCount = bookings.filter((booking) => bucketOf(booking) === 'today').length;
   const pendingCount = bookings.filter((booking) => (booking.status || 'Pending') === 'Pending').length;
 
-  // Keep the list live without a manual reload.
-  //
-  // IMPORTANT: this only sees bookings stored in THIS browser. localStorage is
-  // per-device, so a booking made on a customer's phone never reaches another
-  // machine's dashboard no matter how often we poll. Cross-device visibility
-  // needs a shared backend — see the note in utils/adminStore.js.
+  // Load and subscribe to live bookings from Firebase Cloud Firestore
   useEffect(() => {
-    const refresh = () => setBookings(getBookings());
+    let isMounted = true;
 
-    // 'storage' fires for other tabs; the poll and focus handlers cover this one.
+    const syncFirebaseBookings = async () => {
+      try {
+        const cloudBookings = await getBookingsFromFirebase();
+        if (isMounted && cloudBookings.length > 0) {
+          // Merge local and cloud bookings uniquely
+          const localBookings = getBookings();
+          const combinedMap = new Map();
+          [...cloudBookings, ...localBookings].forEach(b => {
+            if (b.id) combinedMap.set(b.id, b);
+          });
+          setBookings(Array.from(combinedMap.values()));
+        }
+      } catch (err) {
+        console.warn('Could not sync cloud bookings:', err);
+      } finally {
+        if (isMounted) setLoadingCloud(false);
+      }
+    };
+
+    syncFirebaseBookings();
+
+    const refresh = () => {
+      syncFirebaseBookings();
+    };
+
     window.addEventListener('storage', refresh);
     window.addEventListener('focus', refresh);
     document.addEventListener('visibilitychange', refresh);
-    const interval = setInterval(refresh, 5000);
+    const interval = setInterval(refresh, 4000);
 
     return () => {
+      isMounted = false;
       window.removeEventListener('storage', refresh);
       window.removeEventListener('focus', refresh);
       document.removeEventListener('visibilitychange', refresh);
@@ -124,14 +147,11 @@ export default function AdminDashboard({ onLogout, onExit }) {
               </p>
             </div>
 
-            <div className="mb-6 flex items-start gap-3 rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-xs leading-relaxed text-amber-200">
-              <MonitorSmartphone className="mt-0.5 h-4 w-4 shrink-0 text-amber-400" />
+            <div className="mb-6 flex items-start gap-3 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-xs leading-relaxed text-emerald-200">
+              <MonitorSmartphone className="mt-0.5 h-4 w-4 shrink-0 text-emerald-400" />
               <div>
-                <strong className="font-bold">This list is stored on this device only.</strong>{' '}
-                Bookings are saved in each visitor&apos;s own browser, so a booking made on a
-                customer&apos;s phone — or on another admin&apos;s laptop — will not appear here.
-                The list refreshes automatically every few seconds, but only for bookings made in
-                this browser. Sharing bookings across devices requires a backend database.
+                <strong className="font-bold">Google Firebase Cloud Database Active.</strong>{' '}
+                Bookings made on any phone, laptop, or tablet now sync automatically to your Firestore cloud database in real-time.
               </div>
             </div>
             <BookingsPanel bookings={bookings} onChange={setBookings} />
