@@ -113,10 +113,14 @@ export default function Trainers({ onSelectTrainer }) {
           {filteredTrainers.map((trainer) => (
             <div
               key={trainer.id}
-              className="group relative rounded-2xl bg-slate-900/70 border border-slate-800/80 hover:border-orange-500/50 backdrop-blur-md overflow-hidden flex flex-col justify-between transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl hover:shadow-orange-500/10"
+              // Card background is opaque so it matches the photo gradient's
+              // base exactly. At 70% it rendered ~#0b1224 over the slate-950
+              // page while the gradient ended at solid #0f172a, and that
+              // mismatch showed as a light seam under every photo.
+              className="group relative rounded-2xl bg-slate-900 border border-slate-800/80 hover:border-orange-500/50 overflow-hidden flex flex-col justify-between transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl hover:shadow-orange-500/10"
             >
               {/* Photo & Top Badges */}
-              <div className="relative h-72 w-full overflow-hidden bg-slate-950">
+              <div className="relative h-72 w-full overflow-hidden bg-slate-900">
                 <img
                   src={trainer.photo}
                   alt={trainer.name}
@@ -126,6 +130,11 @@ export default function Trainers({ onSelectTrainer }) {
                     sub-pixel rounding can't leave a bright sliver of the photo
                     showing as a hairline under the card image. */}
                 <div className="pointer-events-none absolute left-0 right-0 top-0 -bottom-px bg-gradient-to-t from-slate-900 via-slate-900/40 to-transparent" />
+
+                {/* Solid card-coloured strip pinned to the bottom edge. Even if
+                    sub-pixel rounding leaves the gradient a fraction short, the
+                    photo's last row can never show through as a light hairline. */}
+                <div className="pointer-events-none absolute inset-x-0 bottom-0 h-[2px] bg-slate-900" />
                 
                 {/* Experience Badge */}
                 <div className="absolute top-4 left-4 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-950/80 border border-slate-800 backdrop-blur-md text-xs font-semibold text-orange-400">
