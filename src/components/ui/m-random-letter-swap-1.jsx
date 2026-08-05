@@ -59,10 +59,12 @@ export default function RandomLetterSwapNav() {
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
 
-    // Handle direct URL hash landing (e.g., #about-us)
-    if (window.location.hash) {
+    // Handle direct URL landing (e.g., /about-us or #about-us)
+    const currentPath = window.location.pathname.replace("/", "");
+    const targetHash = window.location.hash || (currentPath ? `#${currentPath}` : "");
+    if (targetHash && targetHash !== "#home") {
       setTimeout(() => {
-        const initialEl = document.querySelector(window.location.hash);
+        const initialEl = document.querySelector(targetHash);
         if (initialEl) {
           initialEl.scrollIntoView({ behavior: "smooth" });
         }
@@ -77,11 +79,10 @@ export default function RandomLetterSwapNav() {
     setMenuOpen(false);
     setActiveSection(href);
 
-    // Update browser URL without reloading page
+    // Update browser URL cleanly without '#' symbol (e.g. /about-us)
+    const cleanPath = href === "#home" ? "/" : "/" + href.replace("#", "");
     if (window.history.pushState) {
-      window.history.pushState(null, "", href);
-    } else {
-      window.location.hash = href;
+      window.history.pushState(null, "", cleanPath);
     }
 
     const element = document.querySelector(href);
