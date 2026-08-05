@@ -52,9 +52,9 @@ export default function BookingsPanel({ bookings, onChange }) {
   }, [bookings, bucket, status, query]);
 
   const setStatusOf = async (id, next) => {
-    updateBooking(id, { status: next });
+    const updatedLocal = updateBooking(id, { status: next });
+    onChange(updatedLocal);
     await updateBookingInFirebase(id, { status: next });
-    refresh();
   };
 
   const startReschedule = (booking) => {
@@ -64,19 +64,19 @@ export default function BookingsPanel({ bookings, onChange }) {
 
   const saveReschedule = async (id) => {
     const patch = { date: draft.date, time: draft.time };
-    updateBooking(id, patch);
+    const updatedLocal = updateBooking(id, patch);
+    onChange(updatedLocal);
     await updateBookingInFirebase(id, patch);
     setRescheduling(null);
-    refresh();
   };
 
   const removeBooking = async (booking) => {
     const label = `${booking.name || 'this booking'} on ${booking.date} at ${booking.time}`;
     // eslint-disable-next-line no-alert
     if (!window.confirm(`Delete the booking for ${label}? This cannot be undone.`)) return;
-    deleteBooking(booking.id);
+    const updatedLocal = deleteBooking(booking.id);
+    onChange(updatedLocal);
     await deleteBookingFromFirebase(booking.id);
-    refresh();
   };
 
   const exportCsv = () => {
