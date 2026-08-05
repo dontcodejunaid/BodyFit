@@ -65,8 +65,13 @@ export async function saveBookingToFirebase(bookingData) {
  */
 export async function getBookingsFromFirebase() {
   try {
-    const q = query(collection(db, BOOKINGS_COLLECTION), orderBy('createdAt', 'desc'));
-    const querySnapshot = await getDocs(q);
+    let querySnapshot;
+    try {
+      const q = query(collection(db, BOOKINGS_COLLECTION), orderBy('createdAt', 'desc'));
+      querySnapshot = await getDocs(q);
+    } catch (e) {
+      querySnapshot = await getDocs(collection(db, BOOKINGS_COLLECTION));
+    }
     return querySnapshot.docs.map((docSnap) => ({
       docId: docSnap.id,
       ...docSnap.data()
