@@ -59,16 +59,9 @@ export default function RandomLetterSwapNav() {
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
 
-    // Handle direct URL landing (e.g., /about-us or #about-us)
-    const currentPath = window.location.pathname.replace("/", "");
-    const targetHash = window.location.hash || (currentPath ? `#${currentPath}` : "");
-    if (targetHash && targetHash !== "#home") {
-      setTimeout(() => {
-        const initialEl = document.querySelector(targetHash);
-        if (initialEl) {
-          initialEl.scrollIntoView({ behavior: "smooth" });
-        }
-      }, 500);
+    // On page reload/refresh, reset URL back to root domain /
+    if (window.history.replaceState) {
+      window.history.replaceState(null, "", "/");
     }
 
     return () => window.removeEventListener("scroll", onScroll);
