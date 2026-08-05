@@ -6,6 +6,8 @@ import {
   getBookings, updateBooking, deleteBooking, bucketOf, todayISO, toCsv, downloadCsv,
 } from '../../utils/adminStore';
 
+import { updateBookingInFirebase, deleteBookingFromFirebase } from '../../firebase';
+
 const BUCKETS = [
   { id: 'all', label: 'All' },
   { id: 'today', label: 'Today' },
@@ -49,8 +51,9 @@ export default function BookingsPanel({ bookings, onChange }) {
       .sort((a, b) => `${b.date} ${b.time}`.localeCompare(`${a.date} ${a.time}`));
   }, [bookings, bucket, status, query]);
 
-  const setStatusOf = (id, next) => {
+  const setStatusOf = async (id, next) => {
     updateBooking(id, { status: next });
+    await updateBookingInFirebase(id, { status: next });
     refresh();
   };
 
@@ -59,17 +62,20 @@ export default function BookingsPanel({ bookings, onChange }) {
     setDraft({ date: booking.date || todayISO(), time: booking.time || ALL_SLOTS[0] });
   };
 
-  const saveReschedule = (id) => {
-    updateBooking(id, { date: draft.date, time: draft.time });
+  const saveReschedule = async (id) => {
+    const patch = { date: draft.date, time: draft.time };
+    updateBooking(id, patch);
+    await updateBookingInFirebase(id, patch);
     setRescheduling(null);
     refresh();
   };
 
-  const removeBooking = (booking) => {
+  const removeBooking = async (booking) => {
     const label = `${booking.name || 'this booking'} on ${booking.date} at ${booking.time}`;
     // eslint-disable-next-line no-alert
     if (!window.confirm(`Delete the booking for ${label}? This cannot be undone.`)) return;
     deleteBooking(booking.id);
+    await deleteBookingFromFirebase(booking.id);
     refresh();
   };
 
