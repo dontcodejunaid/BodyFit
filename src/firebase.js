@@ -81,3 +81,55 @@ export async function getBookingsFromFirebase() {
     return [];
   }
 }
+
+/**
+ * Update an existing booking in Firebase Firestore
+ */
+export async function updateBookingInFirebase(docIdOrBookingId, patch) {
+  try {
+    if (docIdOrBookingId && typeof docIdOrBookingId === 'string' && docIdOrBookingId.length > 15 && !docIdOrBookingId.startsWith('BF-')) {
+      const docRef = doc(db, BOOKINGS_COLLECTION, docIdOrBookingId);
+      await updateDoc(docRef, patch);
+      return true;
+    }
+
+    const q = query(collection(db, BOOKINGS_COLLECTION));
+    const snapshot = await getDocs(q);
+    const targetDoc = snapshot.docs.find((d) => d.data().id === docIdOrBookingId || d.id === docIdOrBookingId);
+
+    if (targetDoc) {
+      const docRef = doc(db, BOOKINGS_COLLECTION, targetDoc.id);
+      await updateDoc(docRef, patch);
+      return true;
+    }
+  } catch (error) {
+    console.warn('Firebase update unavailable:', error.message);
+  }
+  return false;
+}
+
+/**
+ * Delete a booking from Firebase Firestore
+ */
+export async function deleteBookingFromFirebase(docIdOrBookingId) {
+  try {
+    if (docIdOrBookingId && typeof docIdOrBookingId === 'string' && docIdOrBookingId.length > 15 && !docIdOrBookingId.startsWith('BF-')) {
+      const docRef = doc(db, BOOKINGS_COLLECTION, docIdOrBookingId);
+      await deleteDoc(docRef);
+      return true;
+    }
+
+    const q = query(collection(db, BOOKINGS_COLLECTION));
+    const snapshot = await getDocs(q);
+    const targetDoc = snapshot.docs.find((d) => d.data().id === docIdOrBookingId || d.id === docIdOrBookingId);
+
+    if (targetDoc) {
+      const docRef = doc(db, BOOKINGS_COLLECTION, targetDoc.id);
+      await deleteDoc(docRef);
+      return true;
+    }
+  } catch (error) {
+    console.warn('Firebase delete unavailable:', error.message);
+  }
+  return false;
+}
