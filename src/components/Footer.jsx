@@ -8,12 +8,12 @@ import { ShinySheenButton } from './ui/shiny-button-sheen';
 import LocationMap from './ui/expanded-map';
 
 const quickLinks = [
-  { label: 'Home', href: '#home' },
-  { label: 'About Us', href: '#about-us' },
-  { label: 'Facilities', href: '#facilities' },
-  { label: 'Our Trainers', href: '#trainers' },
-  { label: 'Class Schedule', href: '#class-schedule' },
-  { label: 'Book a Session', href: '#book-appointment' },
+  { label: 'Home', href: '/home', sectionId: '#home' },
+  { label: 'About Us', href: '/about-us', sectionId: '#about-us' },
+  { label: 'Facilities', href: '/facilities', sectionId: '#facilities' },
+  { label: 'Our Trainers', href: '/trainers', sectionId: '#trainers' },
+  { label: 'Class Schedule', href: '/class-schedule', sectionId: '#class-schedule' },
+  { label: 'Book a Session', href: '/book-appointment', sectionId: '#book-appointment' },
 ];
 
 const socials = [
@@ -50,9 +50,18 @@ export default function Footer() {
   const phoneDigits = WhatsAppConfig.ActiveNumber;
   const phoneDisplay = `+${phoneDigits.slice(0, 2)} ${phoneDigits.slice(2, 7)} ${phoneDigits.slice(7)}`;
 
-  const goTo = (event, href) => {
-    event.preventDefault();
-    document.querySelector(href)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  const goTo = (event, linkObj) => {
+    if (event) event.preventDefault();
+
+    const path = typeof linkObj === 'string' ? linkObj : linkObj.href;
+    const sectionId = typeof linkObj === 'object' && linkObj.sectionId ? linkObj.sectionId : '#' + path.replace('/', '').replace('#', '');
+    const cleanPath = path.startsWith('/') ? path : '/' + path.replace('#', '');
+
+    if (window.history.pushState) {
+      window.history.pushState(null, '', cleanPath);
+    }
+
+    document.querySelector(sectionId)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
   const handleSubscribe = (event) => {
@@ -111,7 +120,7 @@ export default function Footer() {
                   <a
                     className="text-sm text-slate-400 transition-colors hover:text-orange-400"
                     href={link.href}
-                    onClick={(event) => goTo(event, link.href)}
+                    onClick={(event) => goTo(event, link)}
                   >
                     {link.label}
                   </a>

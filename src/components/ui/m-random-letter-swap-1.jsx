@@ -8,12 +8,12 @@ import { WhatsAppConfig } from "../../utils/whatsapp";
 import logoImg from "../../assets/logo.png";
 
 const links = [
-  { label: "Home", href: "#home" },
-  { label: "About Us", href: "#about-us" },
-  { label: "Facilities", href: "#facilities" },
-  { label: "Gallery", href: "#gallery" },
-  { label: "Testimonials", href: "#testimonials" },
-  { label: "Contact", href: "#contact" },
+  { label: "Home", href: "/home", sectionId: "#home" },
+  { label: "About Us", href: "/about-us", sectionId: "#about-us" },
+  { label: "Facilities", href: "/facilities", sectionId: "#facilities" },
+  { label: "Gallery", href: "/gallery", sectionId: "#gallery" },
+  { label: "Testimonials", href: "/testimonials", sectionId: "#testimonials" },
+  { label: "Contact", href: "/contact", sectionId: "#contact" },
 ];
 
 const trackedSections = [
@@ -74,20 +74,22 @@ export default function RandomLetterSwapNav() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  const goTo = (event, href) => {
+  const goTo = (event, pathOrId) => {
     if (event) event.preventDefault();
     setMenuOpen(false);
-    setActiveSection(href);
 
-    // Update browser URL cleanly without '#' symbol (e.g. /home, /about-us)
-    const cleanPath = "/" + href.replace("#", "");
+    const sectionId = pathOrId.startsWith("#") ? pathOrId : "#" + pathOrId.replace("/", "");
+    const cleanPath = pathOrId.startsWith("/") ? pathOrId : "/" + pathOrId.replace("#", "");
+
+    setActiveSection(sectionId);
+
     if (window.history.pushState) {
       window.history.pushState(null, "", cleanPath);
     }
 
-    const element = document.querySelector(href);
+    const element = document.querySelector(sectionId);
     if (element) {
-      const block = href === "#bmi-calculator" ? "center" : "start";
+      const block = sectionId === "#bmi-calculator" ? "center" : "start";
       element.scrollIntoView({ behavior: "smooth", block });
     }
   };
@@ -104,8 +106,8 @@ export default function RandomLetterSwapNav() {
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-6">
         <a
           className="flex shrink-0 items-center gap-2"
-          href="#home"
-          onClick={(event) => goTo(event, "#home")}
+          href="/home"
+          onClick={(event) => goTo(event, "/home")}
         >
           <img alt="Body Fit" className="h-12 sm:h-14 w-auto transition-transform duration-300 hover:scale-105" src={logoImg} />
           <span className="font-teko text-3xl sm:text-4xl leading-none tracking-wide text-white">
@@ -116,7 +118,7 @@ export default function RandomLetterSwapNav() {
         {/* Desktop links */}
         <nav className="hidden items-center gap-7 lg:flex">
           {links.map((link) => {
-            const isActive = activeSection === link.href;
+            const isActive = activeSection === link.sectionId;
             return (
               <RandomLetterSwap
                 as="a"
