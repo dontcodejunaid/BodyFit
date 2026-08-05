@@ -1,5 +1,4 @@
-// Firebase Integration Module for BodyFit
-// Loads environment variables from Vite (.env / Vercel Environment Variables)
+// Firebase Cloud Integration & Analytics for BodyFit
 import { initializeApp } from 'firebase/app';
 import {
   getFirestore,
@@ -12,23 +11,36 @@ import {
   query,
   orderBy
 } from 'firebase/firestore';
+import { getAnalytics, isSupported } from 'firebase/analytics';
 
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || 'AIzaSyDemoDummyKeyForBuild',
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || 'bodyfit-gym.firebaseapp.com',
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || 'bodyfit-gym',
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || 'bodyfit-gym.appspot.com',
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || '123456789',
-  appId: import.meta.env.VITE_FIREBASE_APP_ID || '1:123456789:web:abcdef123456'
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "AIzaSyC8YVZcgktJamYJR4YTMaC2R9nxWtVKyS8",
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "body-fit-a1823.firebaseapp.com",
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "body-fit-a1823",
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "body-fit-a1823.firebasestorage.app",
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "839012042785",
+  appId: import.meta.env.VITE_FIREBASE_APP_ID || "1:839012042785:web:d65b55b5f5525f3d72fb60",
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID || "G-4ND6FQ5NBJ"
 };
 
+// Initialize Firebase App & Firestore Database
 const app = initializeApp(firebaseConfig);
 export const db = getFirestore(app);
+
+// Safe Analytics Initialization for browser environments
+export let analytics = null;
+if (typeof window !== 'undefined') {
+  isSupported().then((supported) => {
+    if (supported) {
+      analytics = getAnalytics(app);
+    }
+  });
+}
 
 const BOOKINGS_COLLECTION = 'bookings';
 
 /**
- * Save booking to Firebase Firestore (with LocalStorage fallback)
+ * Save booking to Firebase Firestore (with LocalStorage sync)
  */
 export async function saveBookingToFirebase(bookingData) {
   const randomId = Math.floor(10000 + Math.random() * 90000);
