@@ -16,6 +16,10 @@ import { getMemberships } from '../../utils/adminStore';
 // data — prices come from the same store the pricing section reads, so the bot
 // can never quote a figure the site doesn't show.
 
+// The assistant's name. Change it here and it updates everywhere —
+// header, greetings, introductions.
+export const BOT_NAME = 'Flex';
+
 const CATEGORIES = {
   PRICING: 'Pricing',
   VISIT: 'Visiting',
@@ -203,15 +207,50 @@ const FAQS = [
   },
 ];
 
-const GREETINGS = ['hi', 'hii', 'hello', 'hey', 'hola', 'namaste', 'yo', 'good morning', 'good evening', 'good afternoon'];
-const THANKS = ['thanks', 'thank', 'thankyou', 'ty', 'great', 'awesome', 'cool', 'nice', 'perfect', 'ok', 'okay'];
+const GREETINGS = ['hi', 'hii', 'hiii', 'hello', 'helo', 'hey', 'heya', 'hola', 'namaste', 'yo', 'sup', 'good morning', 'good evening', 'good afternoon'];
+const THANKS = ['thanks', 'thank', 'thankyou', 'thx', 'ty', 'great', 'awesome', 'cool', 'nice', 'perfect', 'ok', 'okay', 'got'];
 const BYES = ['bye', 'goodbye', 'see you', 'later', 'cya'];
+const IDENTITY = ['who are you', 'your name', 'whats your name', 'what is your name', 'are you a bot', 'are you human', 'who is this'];
+const HELP = ['help', 'what can you do', 'options', 'menu', 'what can i ask'];
+
+// The three things people ask first — offered as chips after a greeting.
+const STARTER_CHIPS = [
+  'What are the membership prices?',
+  'What are your timings?',
+  'Do you offer a free trial?',
+];
+
+/** Time-of-day aware hello, so it doesn't say "good morning" at 9pm. */
+function timeOfDayGreeting(now = new Date()) {
+  const hour = now.getHours();
+  if (hour < 12) return 'Good morning';
+  if (hour < 17) return 'Good afternoon';
+  return 'Good evening';
+}
+
+const statusSentence = () => {
+  const status = getOpenStatus();
+  return status.isOpen
+    ? "We're open right now, so you can walk in any time."
+    : `We're closed at the moment — ${status.detail.toLowerCase()}.`;
+};
+
+// Rotated so a repeat "hi" doesn't return the identical line.
+const GREETING_OPENERS = [
+  (name) => `${timeOfDayGreeting()}! I'm ${name}, your Body Fit assistant. 💪`,
+  (name) => `Hey there! ${name} here from Body Fit. 👋`,
+  (name) => `Hi! I'm ${name}, the Body Fit assistant.`,
+];
+
+let greetingTurn = 0;
 
 const greetingReply = () => {
-  const status = getOpenStatus();
-  return `Hello! ${
-    status.isOpen ? "We're open right now." : `We're closed at the moment — ${status.detail.toLowerCase()}.`
-  } Ask me anything about pricing, timings, classes or trials.`;
+  const opener = GREETING_OPENERS[greetingTurn % GREETING_OPENERS.length](BOT_NAME);
+  greetingTurn += 1;
+  return {
+    text: `${opener}\n\n${statusSentence()}\n\nWhat are you looking for today? Pick one below, ask me anything, or tap the WhatsApp button if you'd rather talk to the team directly.`,
+    chips: STARTER_CHIPS,
+  };
 };
 
 const normalise = (text) =>
@@ -270,18 +309,38 @@ function respondTo(input) {
   const cleaned = normalise(input);
   const words = cleaned.split(' ').filter(Boolean);
 
-  if (!cleaned) return { text: 'Ask me anything about Body Fit.' };
+  if (!cleaned) return { text: `Ask me anything about Body Fit — I'm ${BOT_NAME}.` };
+
+  // Checked before the length guard: these are questions, not filler.
+  if (IDENTITY.some((phrase) => cleaned.includes(phrase))) {
+    return {
+      text: `I'm ${BOT_NAME}, the Body Fit assistant — a simple helper bot, not a real person. I can answer questions about pricing, timings, classes, trainers and facilities. For anything I can't cover, the WhatsApp button below reaches the actual team.`,
+      chips: STARTER_CHIPS,
+    };
+  }
+
+  if (HELP.some((phrase) => cleaned === phrase || cleaned.includes(phrase))) {
+    return {
+      text: `Happy to help! I know about pricing and plans, timings, free trials, classes, trainers, diet plans, facilities, parking and joining. Pick a category below, or just type your question in your own words.`,
+      chips: STARTER_CHIPS,
+    };
+  }
 
   // Short social messages only — avoids "ok but how much" being read as thanks.
   if (words.length <= 3) {
     if (words.some((word) => GREETINGS.includes(word)) || GREETINGS.includes(cleaned)) {
-      return { text: greetingReply() };
+      return greetingReply();
     }
     if (words.some((word) => BYES.includes(word))) {
-      return { text: 'See you at the gym! Message us on WhatsApp any time.' };
+      return {
+        text: `See you at the gym! 💪 If anything else comes up, I'm here — or message the team on WhatsApp any time.`,
+      };
     }
     if (words.some((word) => THANKS.includes(word))) {
-      return { text: 'Happy to help. Anything else you want to know?' };
+      return {
+        text: 'Happy to help! Anything else you want to know?',
+        chips: STARTER_CHIPS,
+      };
     }
   }
 
@@ -292,8 +351,8 @@ function respondTo(input) {
   if (!ranked.length) {
     return {
       text:
-        "I don't have an answer for that one yet. Try one of these, or tap the WhatsApp button below and the team will reply personally.",
-      chips: [FAQS[0].question, FAQS[1].question, FAQS[2].question],
+        "Sorry, I don't have an answer for that one yet — I'm still learning. Try one of these, or tap the WhatsApp button below and the team will reply personally.",
+      chips: STARTER_CHIPS,
     };
   }
 
@@ -309,7 +368,8 @@ function respondTo(input) {
 
 const openingMessage = () => ({
   from: 'bot',
-  text: "Hi! I'm the Body Fit assistant. Ask me about pricing, timings, trials, classes or anything else — or tap a question below.",
+  text: `${timeOfDayGreeting()}! I'm ${BOT_NAME}, your Body Fit assistant. 💪\n\n${statusSentence()}\n\nHow can I help you today?`,
+  chips: STARTER_CHIPS,
 });
 
 export default function FaqChatbot({ open, onClose }) {
@@ -373,7 +433,9 @@ export default function FaqChatbot({ open, onClose }) {
             <Bot className="h-4 w-4" />
           </div>
           <div className="min-w-0">
-            <div className="text-sm font-bold text-white">Body Fit Assistant</div>
+            <div className="text-sm font-bold text-white">
+              {BOT_NAME} <span className="font-medium text-slate-500">· Body Fit</span>
+            </div>
             <div className="flex items-center gap-1.5 text-[10px] text-slate-500">
               <span
                 className={`h-1.5 w-1.5 shrink-0 rounded-full ${status.isOpen ? 'bg-emerald-400' : 'bg-slate-500'}`}
@@ -504,7 +566,7 @@ export default function FaqChatbot({ open, onClose }) {
             className="min-w-0 flex-1 bg-transparent py-2.5 text-xs text-slate-100 placeholder:text-slate-600 focus:outline-none"
             id="faq-input"
             onChange={(event) => setInput(event.target.value)}
-            placeholder="Ask about pricing, timings…"
+            placeholder={`Message ${BOT_NAME}…`}
             value={input}
           />
           <button
