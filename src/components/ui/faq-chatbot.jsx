@@ -425,7 +425,10 @@ export default function FaqChatbot({ open, onClose }) {
   if (!open) return null;
 
   return (
-    <div className="flex h-[32rem] max-h-[75vh] w-[22rem] max-w-[calc(100vw-2.5rem)] flex-col overflow-hidden rounded-2xl border border-slate-800 bg-slate-950 shadow-2xl">
+    // Width shrinks to fit narrow phones; height leaves ~10rem for the "Ask us"
+    // and WhatsApp buttons stacked below it. svh (not vh) so mobile browser
+    // chrome can't push the panel off screen.
+    <div className="flex h-[32rem] max-h-[calc(100svh-10rem)] w-[min(22rem,calc(100vw-2.5rem))] flex-col overflow-hidden rounded-2xl border border-slate-800 bg-slate-950 shadow-2xl">
       {/* Header */}
       <div className="flex items-center justify-between gap-3 border-b border-slate-800 bg-slate-900/60 px-4 py-3">
         <div className="flex min-w-0 items-center gap-2.5">
@@ -468,7 +471,7 @@ export default function FaqChatbot({ open, onClose }) {
       </div>
 
       {/* Messages */}
-      <div className="flex-1 space-y-3 overflow-y-auto px-4 py-4" ref={scrollRef}>
+      <div className="flex-1 space-y-3 overflow-y-auto overscroll-contain px-3 py-3 sm:px-4 sm:py-4" ref={scrollRef}>
         {messages.map((message, index) => (
           <div key={`${message.from}-${index}`}>
             <div className={`flex ${message.from === 'user' ? 'justify-end' : 'justify-start'}`}>
@@ -488,7 +491,7 @@ export default function FaqChatbot({ open, onClose }) {
               <div className="mt-2 flex flex-wrap gap-1.5">
                 {message.chips.map((chip) => (
                   <button
-                    className="rounded-full border border-orange-500/30 bg-orange-500/10 px-2.5 py-1 text-[10px] font-semibold text-orange-300 transition-colors hover:bg-orange-500/20"
+                    className="rounded-full border border-orange-500/30 bg-orange-500/10 px-3 py-1.5 text-[11px] font-semibold text-orange-300 transition-colors hover:bg-orange-500/20 sm:px-2.5 sm:py-1 sm:text-[10px]"
                     key={chip}
                     onClick={() => ask(chip)}
                     type="button"
@@ -521,7 +524,7 @@ export default function FaqChatbot({ open, onClose }) {
         <div className="flex flex-wrap gap-1">
           {Object.values(CATEGORIES).map((name) => (
             <button
-              className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider transition-colors ${
+              className={`rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider transition-colors sm:px-2 sm:py-0.5 ${
                 category === name
                   ? 'bg-orange-500 text-white'
                   : 'text-slate-500 hover:text-slate-300'
@@ -538,7 +541,7 @@ export default function FaqChatbot({ open, onClose }) {
         <div className="mt-2 flex flex-wrap gap-1.5 pb-1">
           {suggestions.map((faq) => (
             <button
-              className="rounded-full border border-slate-800 bg-slate-900/60 px-2.5 py-1 text-[10px] font-semibold text-slate-400 transition-colors hover:border-orange-500/40 hover:text-white"
+              className="max-w-full truncate rounded-full border border-slate-800 bg-slate-900/60 px-3 py-1.5 text-[11px] font-semibold text-slate-400 transition-colors hover:border-orange-500/40 hover:text-white sm:px-2.5 sm:py-1 sm:text-[10px]"
               key={faq.id}
               onClick={() => ask(faq.question)}
               type="button"
@@ -563,7 +566,9 @@ export default function FaqChatbot({ open, onClose }) {
           </label>
           <input
             autoComplete="off"
-            className="min-w-0 flex-1 bg-transparent py-2.5 text-xs text-slate-100 placeholder:text-slate-600 focus:outline-none"
+            // 16px on mobile: anything smaller makes iOS Safari zoom the page
+            // on focus, which leaves the layout scrolled sideways.
+            className="min-w-0 flex-1 bg-transparent py-2.5 text-base text-slate-100 placeholder:text-slate-600 focus:outline-none sm:text-xs"
             id="faq-input"
             onChange={(event) => setInput(event.target.value)}
             placeholder={`Message ${BOT_NAME}…`}
