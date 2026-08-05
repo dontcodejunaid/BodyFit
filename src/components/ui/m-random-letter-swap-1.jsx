@@ -13,7 +13,7 @@ const links = [
   { label: "Facilities", href: "#facilities" },
   { label: "Gallery", href: "#gallery" },
   { label: "Testimonials", href: "#testimonials" },
-  { label: "Contact", href: "#footer" },
+  { label: "Contact", href: "#contact" },
 ];
 
 const trackedSections = [
@@ -23,7 +23,7 @@ const trackedSections = [
   "#facilities",
   "#gallery",
   "#testimonials",
-  "#footer"
+  "#contact"
 ];
 
 export default function RandomLetterSwapNav() {
