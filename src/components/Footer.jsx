@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { MapPin, Phone, Clock, Send, CheckCircle2, Lock } from 'lucide-react';
 import logoImg from '../assets/logo.png';
 import { WhatsAppConfig } from '../utils/whatsapp';
-import { InstagramIcon, FacebookIcon, YoutubeIcon } from './ui/social-icons';
+import { InstagramIcon, WhatsAppIcon, LinkedInIcon } from './ui/social-icons';
 import { ADMIN_HASH } from './admin/AdminPortal';
 import { ShinySheenButton } from './ui/shiny-button-sheen';
 import LocationMap from './ui/expanded-map';
@@ -23,8 +23,18 @@ const socials = [
     Icon: InstagramIcon,
     hover: 'hover:bg-gradient-to-br hover:from-fuchsia-600 hover:to-amber-500 hover:border-transparent',
   },
-  { label: 'Facebook', href: '#', Icon: FacebookIcon, hover: 'hover:bg-[#1877F2] hover:border-transparent' },
-  { label: 'YouTube', href: '#', Icon: YoutubeIcon, hover: 'hover:bg-[#FF0000] hover:border-transparent' },
+  {
+    label: 'WhatsApp',
+    href: 'https://api.whatsapp.com/send?phone=919620996689&text=Hi%20BodyFit!%20I%20would%20like%20to%20know%20more.',
+    Icon: WhatsAppIcon,
+    hover: 'hover:bg-[#25D366] hover:border-transparent',
+  },
+  {
+    label: 'LinkedIn',
+    href: 'https://www.linkedin.com/company/code-innovative-technologies',
+    Icon: LinkedInIcon,
+    hover: 'hover:bg-[#0A66C2] hover:border-transparent',
+  },
 ];
 
 // Kept in sync with the booking slots in BookingForm.jsx.
