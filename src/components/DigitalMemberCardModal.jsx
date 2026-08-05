@@ -2,6 +2,78 @@ import React, { useRef } from 'react';
 import { X, QrCode, ShieldCheck, Download, Calendar, MapPin, Sparkles, User, Dumbbell } from 'lucide-react';
 import logoImg from '../assets/logo.png';
 
+/**
+ * Generates a deterministic array of QR module rect coordinates based on a seed string (Pass ID).
+ * Grid size: 21x21 modules.
+ */
+function generateQRModules(seedString) {
+  let hash = 0;
+  const str = seedString || 'BF-DEFAULT-PASS';
+  for (let i = 0; i < str.length; i++) {
+    hash = (hash << 5) - hash + str.charCodeAt(i);
+    hash |= 0;
+  }
+
+  const gridSize = 21;
+  const cellSize = 100 / gridSize;
+  const grid = Array.from({ length: gridSize }, () => Array(gridSize).fill(false));
+
+  const markFinder = (startR, startC) => {
+    for (let r = 0; r < 7; r++) {
+      for (let c = 0; c < 7; c++) {
+        const isBorder = r === 0 || r === 6 || c === 0 || c === 6;
+        const isCenter = r >= 2 && r <= 4 && c >= 2 && c <= 4;
+        if (isBorder || isCenter) {
+          grid[startR + r][startC + c] = true;
+        }
+      }
+    }
+  };
+
+  markFinder(0, 0);
+  markFinder(0, gridSize - 7);
+  markFinder(gridSize - 7, 0);
+
+  let state = Math.abs(hash) || 987654321;
+  const nextRandom = () => {
+    state = (state * 1664525 + 1013904223) % 4294967296;
+    return state / 4294967296;
+  };
+
+  const modules = [];
+
+  for (let r = 0; r < gridSize; r++) {
+    for (let c = 0; c < gridSize; c++) {
+      const inTopLeft = r < 8 && c < 8;
+      const inTopRight = r < 8 && c >= gridSize - 8;
+      const inBottomLeft = r >= gridSize - 8 && c < 8;
+
+      if (!inTopLeft && !inTopRight && !inBottomLeft) {
+        if (nextRandom() > 0.52) {
+          grid[r][c] = true;
+        }
+      }
+
+      if (grid[r][c]) {
+        const isTLCenter = r >= 2 && r <= 4 && c >= 2 && c <= 4;
+        const isTRCenter = r >= 2 && r <= 4 && c >= gridSize - 5 && c <= gridSize - 3;
+        const isBLCenter = r >= gridSize - 5 && r <= gridSize - 3 && c >= 2 && c <= 4;
+        const isOrange = isTLCenter || isTRCenter || isBLCenter;
+
+        modules.push({
+          x: (c * cellSize).toFixed(2),
+          y: (r * cellSize).toFixed(2),
+          w: (cellSize + 0.1).toFixed(2),
+          h: (cellSize + 0.1).toFixed(2),
+          fill: isOrange ? '#f97316' : '#0f172a'
+        });
+      }
+    }
+  }
+
+  return modules;
+}
+
 export default function DigitalMemberCardModal({ memberData, isOpen, onClose }) {
   const cardRef = useRef(null);
 
@@ -22,6 +94,8 @@ export default function DigitalMemberCardModal({ memberData, isOpen, onClose }) 
     year: 'numeric'
   });
 
+  const qrModules = generateQRModules(passId);
+
   // Dedicated 1-Page PDF Print Handler
   const handlePrintPass = () => {
     const printWindow = window.open('', '_blank', 'width=500,height=700');
@@ -29,6 +103,13 @@ export default function DigitalMemberCardModal({ memberData, isOpen, onClose }) 
       alert('Please allow popups for this site to download/print your 1-page pass.');
       return;
     }
+
+    const qrSvgContent = `
+      <svg viewBox="0 0 100 100">
+        <rect x="0" y="0" width="100" height="100" fill="#ffffff" rx="4" />
+        ${qrModules.map(m => `<rect x="${m.x}" y="${m.y}" width="${m.w}" height="${m.h}" fill="${m.fill}" />`).join('')}
+      </svg>
+    `;
 
     const htmlContent = `
       <!DOCTYPE html>
@@ -192,29 +273,7 @@ export default function DigitalMemberCardModal({ memberData, isOpen, onClose }) 
             </div>
 
             <div class="qr-box">
-              <svg viewBox="0 0 100 100">
-                <rect x="0" y="0" width="100" height="100" fill="#ffffff" />
-                <rect x="5" y="5" width="25" height="25" fill="#0f172a" />
-                <rect x="9" y="9" width="17" height="17" fill="#ffffff" />
-                <rect x="13" y="13" width="9" height="9" fill="#f97316" />
-                <rect x="70" y="5" width="25" height="25" fill="#0f172a" />
-                <rect x="74" y="9" width="17" height="17" fill="#ffffff" />
-                <rect x="78" y="13" width="9" height="9" fill="#f97316" />
-                <rect x="5" y="70" width="25" height="25" fill="#0f172a" />
-                <rect x="9" y="74" width="17" height="17" fill="#ffffff" />
-                <rect x="13" y="78" width="9" height="9" fill="#f97316" />
-                <rect x="35" y="8" width="8" height="8" fill="#0f172a" />
-                <rect x="48" y="8" width="12" height="8" fill="#0f172a" />
-                <rect x="35" y="20" width="18" height="8" fill="#0f172a" />
-                <rect x="8" y="35" width="22" height="8" fill="#0f172a" />
-                <rect x="35" y="35" width="30" height="30" fill="#0f172a" />
-                <rect x="42" y="42" width="16" height="16" fill="#f97316" />
-                <rect x="70" y="35" width="20" height="8" fill="#0f172a" />
-                <rect x="70" y="48" width="10" height="15" fill="#0f172a" />
-                <rect x="35" y="70" width="15" height="10" fill="#0f172a" />
-                <rect x="55" y="75" width="20" height="15" fill="#0f172a" />
-                <rect x="80" y="80" width="15" height="15" fill="#0f172a" />
-              </svg>
+              ${qrSvgContent}
               <span class="qr-cap">SCAN AT GYM TURNSTILE FOR ENTRY</span>
             </div>
 
@@ -306,27 +365,10 @@ export default function DigitalMemberCardModal({ memberData, isOpen, onClose }) 
           {/* SVG QR Code for Turnstile Check-In (Bigger) */}
           <div className="relative z-10 p-5 rounded-2xl bg-white/95 backdrop-blur-md flex flex-col items-center justify-center gap-2 text-slate-950 shadow-xl">
             <svg viewBox="0 0 100 100" className="w-36 h-36">
-              <rect x="0" y="0" width="100" height="100" fill="#ffffff" />
-              <rect x="5" y="5" width="25" height="25" fill="#0f172a" />
-              <rect x="9" y="9" width="17" height="17" fill="#ffffff" />
-              <rect x="13" y="13" width="9" height="9" fill="#f97316" />
-              <rect x="70" y="5" width="25" height="25" fill="#0f172a" />
-              <rect x="74" y="9" width="17" height="17" fill="#ffffff" />
-              <rect x="78" y="13" width="9" height="9" fill="#f97316" />
-              <rect x="5" y="70" width="25" height="25" fill="#0f172a" />
-              <rect x="9" y="74" width="17" height="17" fill="#ffffff" />
-              <rect x="13" y="78" width="9" height="9" fill="#f97316" />
-              <rect x="35" y="8" width="8" height="8" fill="#0f172a" />
-              <rect x="48" y="8" width="12" height="8" fill="#0f172a" />
-              <rect x="35" y="20" width="18" height="8" fill="#0f172a" />
-              <rect x="8" y="35" width="22" height="8" fill="#0f172a" />
-              <rect x="35" y="35" width="30" height="30" fill="#0f172a" />
-              <rect x="42" y="42" width="16" height="16" fill="#f97316" />
-              <rect x="70" y="35" width="20" height="8" fill="#0f172a" />
-              <rect x="70" y="48" width="10" height="15" fill="#0f172a" />
-              <rect x="35" y="70" width="15" height="10" fill="#0f172a" />
-              <rect x="55" y="75" width="20" height="15" fill="#0f172a" />
-              <rect x="80" y="80" width="15" height="15" fill="#0f172a" />
+              <rect x="0" y="0" width="100" height="100" fill="#ffffff" rx="4" />
+              {qrModules.map((m, idx) => (
+                <rect key={idx} x={m.x} y={m.y} width={m.w} height={m.h} fill={m.fill} />
+              ))}
             </svg>
             <span className="text-[10px] font-extrabold tracking-wider uppercase text-slate-700">
               SCAN AT GYM TURNSTILE FOR ENTRY
