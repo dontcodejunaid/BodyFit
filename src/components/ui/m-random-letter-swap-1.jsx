@@ -77,18 +77,18 @@ export default function RandomLetterSwapNav() {
       className={cn(
         "z-50 transition-all duration-300 w-full",
         scrolled
-          ? "fixed top-0 left-0 right-0 bg-slate-950/90 backdrop-blur-xl border-b border-slate-800/80 shadow-xl shadow-black/40 py-2.5"
-          : "relative bg-slate-950/60 backdrop-blur-md border-b border-slate-800/50 py-3"
+          ? "fixed top-0 left-0 right-0 bg-slate-950/90 backdrop-blur-xl border-b border-slate-800/80 shadow-xl shadow-black/40 py-1.5"
+          : "relative bg-slate-950/60 backdrop-blur-md border-b border-slate-800/50 py-2"
       )}
     >
-      <div className="mx-auto flex max-w-7xl items-center justify-between gap-6 px-6">
+      <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-6">
         <a
-          className="flex shrink-0 items-center gap-3"
+          className="flex shrink-0 items-center gap-2"
           href="#home"
           onClick={(event) => goTo(event, "#home")}
         >
-          <img alt="Body Fit" className="h-20 sm:h-24 w-auto transition-transform duration-300 hover:scale-105" src={logoImg} />
-          <span className="font-teko text-4xl sm:text-5xl leading-none tracking-wide text-white">
+          <img alt="Body Fit" className="h-12 sm:h-14 w-auto transition-transform duration-300 hover:scale-105" src={logoImg} />
+          <span className="font-teko text-3xl sm:text-4xl leading-none tracking-wide text-white">
             BODY<span className="text-orange-500">FIT</span>
           </span>
         </a>
