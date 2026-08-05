@@ -13,7 +13,7 @@ const links = [
   { label: "Facilities", href: "#facilities" },
   { label: "Gallery", href: "#gallery" },
   { label: "Testimonials", href: "#testimonials" },
-  { label: "Contact", href: "#footer" },
+  { label: "Contact", href: "#contact" },
 ];
 
 const trackedSections = [
@@ -23,7 +23,7 @@ const trackedSections = [
   "#facilities",
   "#gallery",
   "#testimonials",
-  "#footer"
+  "#contact"
 ];
 
 export default function RandomLetterSwapNav() {
@@ -79,8 +79,8 @@ export default function RandomLetterSwapNav() {
     setMenuOpen(false);
     setActiveSection(href);
 
-    // Update browser URL cleanly without '#' symbol (e.g. /about-us)
-    const cleanPath = href === "#home" ? "/" : "/" + href.replace("#", "");
+    // Update browser URL cleanly without '#' symbol (e.g. /home, /about-us)
+    const cleanPath = "/" + href.replace("#", "");
     if (window.history.pushState) {
       window.history.pushState(null, "", cleanPath);
     }
