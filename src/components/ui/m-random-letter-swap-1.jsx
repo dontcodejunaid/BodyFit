@@ -158,7 +158,7 @@ export default function RandomLetterSwapNav() {
           <a
             aria-label="Call Bodyfit Gym"
             className="flex h-10 w-10 items-center justify-center rounded-xl border border-slate-800 bg-slate-900/60 text-slate-300 transition-all duration-300 hover:border-orange-500/50 hover:bg-orange-500 hover:text-white hover:shadow-[0_0_20px_rgba(249,115,22,0.6)] active:scale-95"
-            href="tel:+919945505665"
+            href="tel:+919620996689"
           >
             <Phone className="h-[18px] w-[18px]" />
           </a>

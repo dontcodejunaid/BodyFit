@@ -7,7 +7,7 @@ export class WhatsAppConfig {
     if (envNum && envNum.trim()) {
       return envNum.replace(/\D/g, '');
     }
-    return '919945505665'; // Default fallback testing number
+    return '919620996689'; // Default fallback testing number
   }
 }
 
