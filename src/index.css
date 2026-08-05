@@ -24,3 +24,33 @@ input::-ms-reveal,
 input::-ms-clear {
   display: none;
 }
+
+/* Scrollbars in the site's orange, replacing the default light grey thumb.
+   Firefox gets scrollbar-color; Chrome/Edge/Safari get the ::-webkit rules. */
+html {
+  scrollbar-width: thin;
+  scrollbar-color: #f97316 #0b1220;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: #0b1220;
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #fb923c 0%, #f97316 55%, #ea580c 100%);
+  border: 2px solid #0b1220;
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #fdba74 0%, #fb923c 55%, #f97316 100%);
+}
+
+::-webkit-scrollbar-corner {
+  background: #0b1220;
+}

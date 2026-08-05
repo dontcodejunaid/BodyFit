@@ -122,7 +122,10 @@ export default function Trainers({ onSelectTrainer }) {
                   alt={trainer.name}
                   className="w-full h-full object-cover object-top transition-transform duration-700 ease-out group-hover:scale-105"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/40 to-transparent" />
+                {/* Extends 1px past the bottom (clipped by overflow-hidden) so
+                    sub-pixel rounding can't leave a bright sliver of the photo
+                    showing as a hairline under the card image. */}
+                <div className="pointer-events-none absolute left-0 right-0 top-0 -bottom-px bg-gradient-to-t from-slate-900 via-slate-900/40 to-transparent" />
                 
                 {/* Experience Badge */}
                 <div className="absolute top-4 left-4 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-950/80 border border-slate-800 backdrop-blur-md text-xs font-semibold text-orange-400">
