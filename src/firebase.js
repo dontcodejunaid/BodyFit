@@ -14,13 +14,13 @@ import {
 import { getAnalytics, isSupported } from 'firebase/analytics';
 
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "AIzaSyC8YVZcgktJamYJR4YTMaC2R9nxWtVKyS8",
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "body-fit-a1823.firebaseapp.com",
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "body-fit-a1823",
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "body-fit-a1823.firebasestorage.app",
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "839012042785",
-  appId: import.meta.env.VITE_FIREBASE_APP_ID || "1:839012042785:web:d65b55b5f5525f3d72fb60",
-  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID || "G-4ND6FQ5NBJ"
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
 };
 
 // Initialize Firebase App & Firestore Database
