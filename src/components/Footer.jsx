@@ -51,7 +51,14 @@ export default function Footer() {
   const phoneDisplay = `+${phoneDigits.slice(0, 2)} ${phoneDigits.slice(2, 7)} ${phoneDigits.slice(7)}`;
 
   const goTo = (event, href) => {
-    event.preventDefault();
+    if (event) event.preventDefault();
+
+    // Update browser URL cleanly without '#' symbol (e.g. /home, /about-us, /facilities)
+    const cleanPath = "/" + href.replace("#", "");
+    if (window.history.pushState) {
+      window.history.pushState(null, "", cleanPath);
+    }
+
     document.querySelector(href)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
