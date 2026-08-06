@@ -2,24 +2,45 @@ import React, { useEffect, useState } from 'react';
 import { CheckCircle2, Tag, Zap } from 'lucide-react';
 import { GradientCard } from './ui/gradient-card';
 import { scrollToSection } from '../lib/scrollToSection';
-import { getMemberships, STORE_KEYS } from '../utils/adminStore';
+import { getMemberships, saveMemberships, STORE_KEYS } from '../utils/adminStore';
 import { resolvePlanPricing } from '../data/membershipPlans';
+import { getMembershipsFromFirebase } from '../firebase';
 
 export default function MembershipPlans({ onSelectPlan }) {
   const [billingCycle, setBillingCycle] = useState('monthly'); // 'monthly' | 'yearly'
+  const [plans, setPlans] = useState([]);
 
-  // Plans come from localStorage so the admin panel's edits show up here.
-  const [plans, setPlans] = useState(getMemberships);
-
+  // Load plans from Firebase Cloud Firestore with fallback to LocalStorage/defaults
   useEffect(() => {
-    const refresh = () => setPlans(getMemberships());
-    // 'storage' covers edits made in another tab; visibilitychange covers
-    // coming back to this tab after editing in the admin overlay.
-    window.addEventListener('storage', refresh);
-    document.addEventListener('visibilitychange', refresh);
+    let isMounted = true;
+    async function loadPlans() {
+      try {
+        const fbPlans = await getMembershipsFromFirebase();
+        if (fbPlans && fbPlans.length > 0) {
+          if (isMounted) setPlans(fbPlans);
+          return;
+        }
+      } catch (err) {
+        console.warn('Firebase memberships fetch issue:', err);
+      }
+
+      if (isMounted) {
+        setPlans(getMemberships());
+      }
+    }
+
+    loadPlans();
+
+    const handleRefresh = () => loadPlans();
+    window.addEventListener('storage', handleRefresh);
+    window.addEventListener('bodyfit_memberships_updated', handleRefresh);
+    document.addEventListener('visibilitychange', handleRefresh);
+
     return () => {
-      window.removeEventListener('storage', refresh);
-      document.removeEventListener('visibilitychange', refresh);
+      isMounted = false;
+      window.removeEventListener('storage', handleRefresh);
+      window.removeEventListener('bodyfit_memberships_updated', handleRefresh);
+      document.removeEventListener('visibilitychange', handleRefresh);
     };
   }, []);
 

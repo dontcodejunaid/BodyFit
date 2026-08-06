@@ -28,6 +28,7 @@ import PassRecoveryModal from './components/PassRecoveryModal';
 import { trackEvent } from './utils/analytics';
 import { saveBooking } from './utils/localStorage';
 import { saveBookingToFirebase } from './firebase';
+import { recordMembershipSignup } from './utils/membershipSignups';
 
 function App() {
   const [_selectedTrainer, setSelectedTrainer] = useState(null);
@@ -99,6 +100,19 @@ function App() {
       await saveBookingToFirebase(bookingRecord);
     } catch (err) {
       console.warn('Failed to save payment booking to Firebase:', err);
+    }
+
+    // Register the buyer in the owner's Memberships tab / Firestore register.
+    try {
+      await recordMembershipSignup({
+        customer: memberData.customer,
+        plan: memberData.plan,
+        pricing: memberData.pricing,
+        paymentResult: memberData.paymentResult,
+        source: 'Online Payment',
+      });
+    } catch (err) {
+      console.warn('Failed to record membership signup:', err);
     }
 
     try {

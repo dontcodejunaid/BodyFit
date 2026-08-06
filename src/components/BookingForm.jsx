@@ -11,6 +11,7 @@ import {
   sendAllConfirmations, scheduleBrowserReminder, downloadCalendarInvite, openGoogleCalendar,
   emailConfigured, smsConfigured,
 } from '../utils/bookingNotifications';
+import { recordMembershipSignup } from '../utils/membershipSignups';
 import { INITIAL_TRAINERS, getTrainerPhoto } from '../data/trainersAndScheduleData';
 import OTPVerificationModal from './ui/OTPVerificationModal';
 import Component from './ui/gradient-bars-background';
@@ -209,6 +210,17 @@ export default function BookingForm({ selectedPlan = null, selectedClass = null,
     saveBookingToFirebase(formData);
     setConfirmedBooking(newBooking);
     setStep(5);
+
+    // Booked against a chosen plan? That's a membership — send it to the
+    // owner's Memberships register alongside the booking itself.
+    if (selectedPlan) {
+      recordMembershipSignup({
+        customer: { name: formData.name, phone: formData.phone, email: formData.email },
+        plan: selectedPlan,
+        source: 'Booking Form',
+        startDate: formData.date,
+      });
+    }
 
     // Auto-trigger WhatsApp notification to active testing number
     sendWhatsAppBookingAlert(newBooking);
@@ -667,11 +679,11 @@ export default function BookingForm({ selectedPlan = null, selectedClass = null,
                         }`}
                       >
                         <img
-                          src={getTrainerPhoto(t.name, t.photo)}
+                          src={getTrainerPhoto(t.name, t.photo || t.imageUrl)}
                           alt={t.name}
                           onError={(e) => {
                             e.currentTarget.onerror = null;
-                            e.currentTarget.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(t.name)}&background=f97316&color=ffffff&bold=true&size=128`;
+                            e.currentTarget.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(t.name || 'Trainer')}&background=f97316&color=ffffff&bold=true&size=128`;
                           }}
                           className={`w-14 h-14 rounded-2xl object-cover object-top shrink-0 border border-slate-700 shadow-md ${!isOnDuty ? 'opacity-50' : ''}`}
                         />

@@ -5,6 +5,27 @@ import ananyaImg from '../assets/trainers/ananya.png';
 import karanImg from '../assets/trainers/karan.png';
 import nehaImg from '../assets/trainers/neha.png';
 
+export const TRAINER_IMAGES = {
+  'tr-1': vikramImg,
+  'tr-2': priyaImg,
+  'tr-3': rahulImg,
+  'tr-4': ananyaImg,
+  'tr-5': karanImg,
+  'tr-6': nehaImg,
+  'vikram-sharma': vikramImg,
+  'priya-kapoor': priyaImg,
+  'rahul-verma': rahulImg,
+  'ananya-roy': ananyaImg,
+  'karan-mehra': karanImg,
+  'neha-singh': nehaImg,
+  'vikram': vikramImg,
+  'priya': priyaImg,
+  'rahul': rahulImg,
+  'ananya': ananyaImg,
+  'karan': karanImg,
+  'neha': nehaImg,
+};
+
 export const INITIAL_TRAINERS = [
   {
     id: 'tr-1',
@@ -104,23 +125,39 @@ export const INITIAL_TRAINERS = [
   },
 ];
 
-export function getTrainerPhoto(trainerName, photoUrl) {
-  if (photoUrl && typeof photoUrl === 'string' && photoUrl.trim() && !photoUrl.includes('undefined')) {
-    return photoUrl;
+export function getTrainerPhoto(trainerOrName, photoUrl) {
+  let name = '';
+  let url = photoUrl;
+
+  if (trainerOrName && typeof trainerOrName === 'object') {
+    name = trainerOrName.name || '';
+    url = trainerOrName.photo || trainerOrName.imageUrl || photoUrl;
+  } else {
+    name = String(trainerOrName || '');
   }
+
+  if (url && typeof url === 'string' && url.trim() && !url.includes('undefined')) {
+    return url;
+  }
+
+  const nameKey = name.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-');
+  if (nameKey && TRAINER_PHOTO_MAP[nameKey]) return TRAINER_PHOTO_MAP[nameKey];
+
+  const firstName = name.toLowerCase().trim().split(' ')[0];
+  if (firstName && TRAINER_PHOTO_MAP[firstName]) return TRAINER_PHOTO_MAP[firstName];
 
   try {
     const stored = JSON.parse(localStorage.getItem('bodyfit_trainers') || '[]');
     const all = [...INITIAL_TRAINERS, ...stored];
-    const match = all.find(t => t.name?.toLowerCase().trim() === trainerName?.toLowerCase().trim());
+    const match = all.find(t => t.name?.toLowerCase().trim() === name.toLowerCase().trim());
     if (match && match.photo) return match.photo;
     if (match && match.imageUrl) return match.imageUrl;
   } catch (e) {
     // fallback
   }
 
-  const cleanName = (trainerName || 'Duty Coach').trim();
-  return `https://ui-avatars.com/api/?name=${encodeURIComponent(cleanName)}&background=f97316&color=ffffff&bold=true&size=128`;
+  const cleanName = (name || 'Duty Coach').trim();
+  return `https://ui-avatars.com/api/?name=${encodeURIComponent(cleanName)}&background=f97316&color=ffffff&bold=true&size=256`;
 }
 
 export const CLASS_CATEGORIES = [

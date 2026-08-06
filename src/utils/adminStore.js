@@ -15,9 +15,91 @@ export const STORE_KEYS = {
   TRAINERS: 'bodyfit_trainers',
   CLASSES: 'bodyfit_classes',
   MEMBERSHIPS: 'bodyfit_memberships',
+  ABOUT: 'bodyfit_about_data',
+  MEMBER_SIGNUPS: 'bodyfit_member_signups',
 };
 
+export const INITIAL_ABOUT_DATA = {
+  header: {
+    badge: 'About Body Fit Fitness Centre',
+    titleMain: 'More Than a Gym - A Community',
+    titleSub: 'Built on Discipline & Growth',
+    story: "Body Fit Fitness Centre was founded with a simple belief: fitness should be accessible, motivating, and sustainable for everyone - not just athletes. Located in the heart of Amrit Nagar, we've built a space where beginners feel welcome and serious lifters feel challenged. Our certified trainers, modern equipment, and supportive community come together to help every member reach their goals, one rep at a time.",
+  },
+  tabContents: {
+    philosophy: {
+      title: '1. Consistency Over Intensity',
+      quote: 'Sustainable progress beats short bursts of extreme effort. We focus on building lifelong habits.',
+      bullets: [
+        'Sustainable, habit-building fitness routines',
+        'Long-term progressive development over quick fixes',
+        'Designed for beginners and advanced athletes alike',
+      ],
+    },
+    equipment: {
+      title: '2. Commercial Grade Equipment',
+      quote: 'We invest in biomechanically engineered machinery for optimal muscle activation and maximum joint safety.',
+      bullets: [
+        'Bio-mechanically correct plate-loaded & pin-selected machines',
+        'Imported rubberized dumbbells (2.5kg to 50kg) & Olympic turf',
+        'Dedicated cardio zone with treadmills, spin bikes & ellipticals',
+      ],
+    },
+    coaching: {
+      title: '3. Expert Guidance',
+      quote: 'Every plan is backed by certified trainers, not guesswork.',
+      bullets: [
+        'ACE Certified Trainers & structured guidance',
+        'Custom workout & form assessment routines',
+        'Regular tracking to ensure consistent results',
+      ],
+    },
+  },
+  founder: {
+    badge: 'Head Coach & Owner',
+    title: "Owner's Note",
+    note: '"We didn\'t just want to open another gym — we wanted to build a place where people actually show up. Every piece of equipment, every class, every trainer we hired was chosen with that goal in mind."',
+    rating: '4.9 / 5 Rating',
+    photo: '',
+  },
+  highlights: [
+    {
+      id: 'trainers',
+      title: 'Consistency Over Intensity',
+      description: 'Sustainable progress beats short bursts of extreme effort.',
+      color: 'from-orange-500 to-amber-500',
+    },
+    {
+      id: 'equipment',
+      title: 'Community First',
+      description: 'Members train together, motivate each other, and celebrate wins together.',
+      color: 'from-amber-500 to-red-500',
+    },
+    {
+      id: 'community',
+      title: 'Expert Guidance',
+      description: 'Every plan is backed by certified trainers, not guesswork.',
+      color: 'from-red-500 to-orange-500',
+    },
+  ],
+  badges: [
+    { id: 1, text: 'ACE Certified Trainers' },
+    { id: 2, text: 'ISO Hygiene Standards' },
+    { id: 3, text: 'Delhi Fitness Association Member' },
+    { id: 4, text: '100% Sanitized Facility' },
+  ],
+  metrics: [
+    { value: '5', label: 'Years Active' },
+    { value: '1,200+', label: 'Members Trained' },
+    { value: '8', label: 'Certified Trainers' },
+    { value: '50+', label: 'Pieces of Equipment' },
+  ],
+};
+
+
 export const BOOKING_STATUSES = ['Pending', 'Approved', 'Rejected'];
+
+export const MEMBERSHIP_STATUSES = ['Active', 'Expired', 'Cancelled'];
 
 // Dummy price list used only for the revenue estimate. Update these to the
 // gym's real rates — nothing else depends on them.
@@ -132,6 +214,85 @@ export const saveMemberships = (list) => {
 };
 
 export const newId = (prefix) => `${prefix}-${Date.now().toString(36)}`;
+
+/* --------------------------- membership signups -------------------------- */
+// One row per person who took a plan — written by the checkout flow and the
+// booking form, managed by the admin Memberships tab, mirrored to Firestore.
+
+export const getMemberSignups = () => read(STORE_KEYS.MEMBER_SIGNUPS);
+export const saveMemberSignups = (list) => write(STORE_KEYS.MEMBER_SIGNUPS, list);
+
+/** Adds a signup, replacing any earlier row that carries the same id. */
+export function addMemberSignup(signup) {
+  const existing = getMemberSignups().filter((item) => item.id !== signup.id);
+  return saveMemberSignups([signup, ...existing]);
+}
+
+export function updateMemberSignup(id, patch) {
+  const next = getMemberSignups().map((signup) =>
+    signup.id === id ? { ...signup, ...patch, updatedAt: new Date().toISOString() } : signup
+  );
+  return saveMemberSignups(next);
+}
+
+export function deleteMemberSignup(id) {
+  return saveMemberSignups(getMemberSignups().filter((signup) => signup.id !== id));
+}
+
+/** Days left before the plan lapses. Negative once it already has. */
+export function daysUntilExpiry(signup) {
+  if (!signup?.endDate) return null;
+  const end = new Date(`${signup.endDate}T23:59:59`);
+  if (Number.isNaN(end.getTime())) return null;
+  return Math.ceil((end.getTime() - Date.now()) / 86400000);
+}
+
+/**
+ * The status to show: a stored 'Cancelled' always wins, but an 'Active' plan
+ * whose end date has passed is reported as expired without needing a write.
+ */
+export function effectiveMembershipStatus(signup) {
+  const stored = signup?.status || 'Active';
+  if (stored === 'Cancelled') return 'Cancelled';
+  const remaining = daysUntilExpiry(signup);
+  if (remaining !== null && remaining < 0) return 'Expired';
+  return stored;
+}
+
+/** Active plans lapsing within `withinDays` — the renewal call list. */
+export function isExpiringSoon(signup, withinDays = 7) {
+  if (effectiveMembershipStatus(signup) !== 'Active') return false;
+  const remaining = daysUntilExpiry(signup);
+  return remaining !== null && remaining >= 0 && remaining <= withinDays;
+}
+
+export function buildMembershipStats(signups) {
+  const active = signups.filter((signup) => effectiveMembershipStatus(signup) === 'Active');
+  const expired = signups.filter((signup) => effectiveMembershipStatus(signup) === 'Expired');
+  const cancelled = signups.filter((signup) => effectiveMembershipStatus(signup) === 'Cancelled');
+  const expiringSoon = signups.filter((signup) => isExpiringSoon(signup));
+
+  // Revenue counts money actually collected, so cancelled plans still count.
+  const revenue = signups.reduce((total, signup) => total + (Number(signup.amountPaid) || 0), 0);
+
+  const byPlan = {};
+  signups.forEach((signup) => {
+    const name = signup.planName || 'Unspecified plan';
+    byPlan[name] = (byPlan[name] || 0) + 1;
+  });
+
+  return {
+    total: signups.length,
+    active: active.length,
+    expired: expired.length,
+    cancelled: cancelled.length,
+    expiringSoon: expiringSoon.length,
+    revenue,
+    plans: Object.entries(byPlan)
+      .map(([name, count]) => ({ name, count }))
+      .sort((a, b) => b.count - a.count),
+  };
+}
 
 /* ------------------------------- analytics ------------------------------- */
 
@@ -255,3 +416,26 @@ export function downloadCsv(filename, csv) {
   document.body.removeChild(link);
   URL.revokeObjectURL(url);
 }
+
+/* ------------------------------- About Us -------------------------------- */
+
+export function getAboutData() {
+  return readSeeded(STORE_KEYS.ABOUT, INITIAL_ABOUT_DATA);
+}
+
+export function saveAboutData(data) {
+  const updated = write(STORE_KEYS.ABOUT, data);
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new Event('bodyfit_about_updated'));
+  }
+  return updated;
+}
+
+export function resetAboutData() {
+  const updated = write(STORE_KEYS.ABOUT, INITIAL_ABOUT_DATA);
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new Event('bodyfit_about_updated'));
+  }
+  return updated;
+}
+
