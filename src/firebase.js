@@ -949,3 +949,50 @@ export async function deleteReviewFromFirebase(docIdOrReviewId) {
 
   return false;
 }
+
+/* -------------------------------- About Us -------------------------------- */
+
+export async function getAboutFromFirebase() {
+  if (!db) return null;
+  try {
+    const docRef = doc(db, 'settings', 'about');
+    const snap = await getDoc(docRef);
+    if (snap.exists()) {
+      return snap.data();
+    }
+    return null;
+  } catch (err) {
+    console.warn('Error fetching About data from Firebase:', err);
+    return null;
+  }
+}
+
+export async function saveAboutToFirebase(aboutData) {
+  if (!db) return false;
+  try {
+    const docRef = doc(db, 'settings', 'about');
+    await setDoc(docRef, { ...aboutData, updatedAt: new Date().toISOString() });
+    return true;
+  } catch (err) {
+    console.warn('Error saving About data to Firebase:', err);
+    return false;
+  }
+}
+
+export function subscribeToAboutFromFirebase(callback) {
+  if (!db) return () => {};
+  try {
+    const docRef = doc(db, 'settings', 'about');
+    return onSnapshot(docRef, (snap) => {
+      if (snap.exists()) {
+        callback(snap.data());
+      }
+    }, (err) => {
+      console.warn('About snapshot error:', err);
+    });
+  } catch (err) {
+    console.warn('About snapshot setup failed:', err);
+    return () => {};
+  }
+}
+

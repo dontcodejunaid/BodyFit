@@ -1,11 +1,17 @@
 import React, { useState } from 'react';
-import { Save, RotateCcw, Upload, X, Image as ImageIcon, Sparkles, User, Award, CheckCircle } from 'lucide-react';
+import { Save, RotateCcw, Upload, X, Image as ImageIcon, Sparkles, User, Award, CheckCircle, Loader2 } from 'lucide-react';
 import { getAboutData, saveAboutData, resetAboutData } from '../../utils/adminStore';
+import { saveAboutToFirebase } from '../../firebase';
+import AdminConfirmModal from './AdminConfirmModal';
+
 
 export default function AboutPanel() {
   const [data, setData] = useState(() => getAboutData());
   const [savedNotice, setSavedNotice] = useState('');
   const [fileError, setFileError] = useState('');
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   const updateField = (path, value) => {
     const keys = path.split('.');
@@ -46,20 +52,29 @@ export default function AboutPanel() {
     updateField('founder.photo', '');
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
+    setIsSaving(true);
     saveAboutData(data);
-    setSavedNotice('✅ About Us details updated successfully! Live website will reflect changes immediately.');
-    setTimeout(() => setSavedNotice(''), 4000);
+    await saveAboutToFirebase(data);
+    setIsSaving(false);
+    setShowSuccessModal(true);
   };
 
-  const handleReset = () => {
-    if (window.confirm('Reset About Us content to original defaults?')) {
-      const defaultData = resetAboutData();
-      setData(defaultData);
-      setSavedNotice('Reset to default About Us values.');
-      setTimeout(() => setSavedNotice(''), 4000);
-    }
+  const handleResetRequest = () => {
+    setShowResetConfirm(true);
   };
+
+  const confirmReset = async () => {
+    setIsSaving(true);
+    const defaultData = resetAboutData();
+    setData(defaultData);
+    await saveAboutToFirebase(defaultData);
+    setIsSaving(false);
+    setShowResetConfirm(false);
+    setShowSuccessModal(true);
+  };
+
+
 
   return (
     <div className="space-y-8 text-slate-100">
@@ -77,12 +92,13 @@ export default function AboutPanel() {
         <div className="flex items-center gap-3">
           <button
             className="inline-flex items-center gap-2 rounded-xl border border-slate-800 bg-slate-900/50 px-4 py-2.5 text-xs font-bold text-slate-400 hover:bg-slate-800 hover:text-white transition-all"
-            onClick={handleReset}
+            onClick={handleResetRequest}
             type="button"
           >
             <RotateCcw className="h-4 w-4" />
             Reset Defaults
           </button>
+
 
           <button
             className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 px-5 py-2.5 text-xs font-black uppercase tracking-wider text-white shadow-lg shadow-orange-500/20 hover:from-orange-400 hover:to-amber-400 transition-all active:scale-95"
@@ -318,14 +334,73 @@ export default function AboutPanel() {
       {/* Bottom Save Bar */}
       <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-800">
         <button
-          className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 px-6 py-3 text-xs font-black uppercase tracking-wider text-white shadow-lg shadow-orange-500/20 hover:from-orange-400 hover:to-amber-400 transition-all active:scale-95"
+          disabled={isSaving}
+          className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 px-6 py-3 text-xs font-black uppercase tracking-wider text-white shadow-lg shadow-orange-500/20 hover:from-orange-400 hover:to-amber-400 transition-all active:scale-95 disabled:opacity-50"
           onClick={handleSave}
           type="button"
         >
-          <Save className="h-4 w-4" />
-          Save All About Us Changes
+          {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+          {isSaving ? 'Syncing...' : 'Save All About Us Changes'}
         </button>
       </div>
+
+      {/* Custom Reset Confirmation Modal */}
+      <AdminConfirmModal
+        cancelText="Cancel"
+        confirmText="Reset to Defaults"
+        isOpen={showResetConfirm}
+        loading={isSaving}
+        message="Are you sure you want to reset all About Us text, images, and metrics back to their original default values? This action will sync live across the site."
+        onClose={() => setShowResetConfirm(false)}
+        onConfirm={confirmReset}
+        title="Reset About Us Defaults"
+        type="danger"
+      />
+
+      {/* Pop-up Window Modal: CHANGES SAVED */}
+      {showSuccessModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 overflow-y-auto animate-in fade-in duration-200">
+          <div
+            className="fixed inset-0 bg-slate-950/80 backdrop-blur-md transition-opacity"
+            onClick={() => setShowSuccessModal(false)}
+          />
+          <div className="relative w-full max-w-md transform overflow-hidden rounded-3xl border border-slate-800 bg-slate-900 p-6 sm:p-8 shadow-2xl transition-all animate-in zoom-in-95 duration-200 z-10 text-center">
+            <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-emerald-500 via-teal-400 to-emerald-600" />
+
+            <button
+              className="absolute top-4 right-4 rounded-full p-2 text-slate-400 hover:bg-slate-800 hover:text-white transition-colors"
+              onClick={() => setShowSuccessModal(false)}
+              type="button"
+            >
+              <X className="h-5 w-5" />
+            </button>
+
+            <div className="mb-4 mx-auto flex h-16 w-16 items-center justify-center rounded-2xl border border-emerald-500/30 bg-emerald-500/10 text-emerald-400 shadow-lg shadow-emerald-500/20 ring-4 ring-emerald-500/10">
+              <CheckCircle className="h-8 w-8 animate-bounce" />
+            </div>
+
+            <h3 className="font-teko text-3xl uppercase tracking-wide text-white">
+              CHANGES SAVED
+            </h3>
+
+            <p className="mt-2 text-xs leading-relaxed text-slate-300">
+              Your About Us changes have been successfully saved and synced live to Google Firebase Cloud Database! Visitors on all devices and live links will now see your updated content immediately.
+            </p>
+
+            <div className="mt-6 flex justify-center">
+              <button
+                className="w-full sm:w-auto rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 px-8 py-3 text-xs font-black uppercase tracking-wider text-white shadow-lg shadow-emerald-500/25 hover:from-emerald-400 hover:to-teal-400 transition-all active:scale-95"
+                onClick={() => setShowSuccessModal(false)}
+                type="button"
+              >
+                OK, Got It
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
+
+
