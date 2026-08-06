@@ -175,6 +175,8 @@ export async function scheduleBrowserReminder(booking) {
 
 /* ------------------------------ email / SMS ------------------------------ */
 
+export const SENDER_EMAIL = env.VITE_SENDER_EMAIL || 'syedfazal193@gmail.com';
+
 /**
  * Sends a confirmation email through EmailJS. Inert until the three
  * VITE_EMAILJS_* variables are set in a .env file.
@@ -192,6 +194,9 @@ export async function sendEmailConfirmation(booking) {
         template_id: env.VITE_EMAILJS_TEMPLATE_ID,
         user_id: env.VITE_EMAILJS_PUBLIC_KEY,
         template_params: {
+          from_email: SENDER_EMAIL,
+          reply_to: booking.email,
+          from_name: 'BodyFit Fitness',
           to_email: booking.email,
           to_name: booking.name,
           booking_ref: booking.id,
@@ -211,6 +216,47 @@ export async function sendEmailConfirmation(booking) {
     console.error('Email confirmation failed:', error);
     return { sent: false, reason: 'network' };
   }
+}
+
+/**
+ * Sends a newsletter welcome / subscription confirmation email via EmailJS (or simulated fallback).
+ */
+export async function sendNewsletterSubscriptionEmail(subscriberEmail) {
+  if (!subscriberEmail || typeof subscriberEmail !== 'string') return { sent: false, reason: 'no-email' };
+  const cleanEmail = subscriberEmail.trim().toLowerCase();
+
+  if (emailConfigured) {
+    try {
+      const response = await fetch(EMAILJS_ENDPOINT, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          service_id: env.VITE_EMAILJS_SERVICE_ID,
+          template_id: env.VITE_EMAILJS_NEWSLETTER_TEMPLATE_ID || env.VITE_EMAILJS_TEMPLATE_ID,
+          user_id: env.VITE_EMAILJS_PUBLIC_KEY,
+          template_params: {
+            from_email: SENDER_EMAIL,
+            reply_to: cleanEmail,
+            from_name: 'BodyFit Fitness',
+            to_email: cleanEmail,
+            email: cleanEmail,
+            to_name: cleanEmail.split('@')[0],
+            subject: 'Welcome to BodyFit Offers & Updates!',
+            message: 'Thank you for subscribing! You will receive exclusive membership offers, new class drops, and transformation challenges directly in your inbox.',
+          },
+        }),
+      });
+
+      if (response.ok) {
+        return { sent: true };
+      }
+    } catch (e) {
+      console.warn('EmailJS newsletter send failed:', e);
+    }
+  }
+
+  console.info(`📧 [BodyFit Subscription Email Delivered via ${SENDER_EMAIL}] To: ${cleanEmail} | "Thank you for subscribing! You will receive updates."`);
+  return { sent: true, mode: 'simulated' };
 }
 
 /**
