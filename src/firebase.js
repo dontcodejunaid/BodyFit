@@ -17,6 +17,13 @@ import { getAnalytics, isSupported } from 'firebase/analytics';
 import { INITIAL_TRAINERS } from './data/trainersAndScheduleData';
 import { DEFAULT_MEMBERSHIP_PLANS } from './data/membershipPlans';
 
+// Check if Firebase configuration environment variables are present and valid
+export const isFirebaseConfigured = Boolean(
+  import.meta.env.VITE_FIREBASE_API_KEY &&
+  import.meta.env.VITE_FIREBASE_PROJECT_ID &&
+  !import.meta.env.VITE_FIREBASE_API_KEY.includes('your_firebase_api_key')
+);
+
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
   authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
@@ -27,21 +34,75 @@ const firebaseConfig = {
   measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
 };
 
-// Initialize Firebase App & Firestore Database
-const app = initializeApp(firebaseConfig);
-export const db = getFirestore(app);
+// Initialize Firebase App & Firestore Database safely
+let app = null;
+let db = null;
+let analytics = null;
 
-// Safe Analytics Initialization for browser environments
-export let analytics = null;
-if (typeof window !== 'undefined') {
-  isSupported().then((supported) => {
-    if (supported) {
-      analytics = getAnalytics(app);
+if (isFirebaseConfigured) {
+  try {
+    app = initializeApp(firebaseConfig);
+    db = getFirestore(app);
+
+    if (typeof window !== 'undefined' && firebaseConfig.measurementId) {
+      isSupported().then((supported) => {
+        if (supported) {
+          analytics = getAnalytics(app);
+        }
+      }).catch((err) => {
+        console.warn('Firebase Analytics initialization warning:', err.message);
+      });
     }
-  });
+  } catch (err) {
+    console.error('Firebase Initialization Error:', err.message);
+  }
+} else {
+  console.info(
+    '🔥 Firebase API keys not configured. Set VITE_FIREBASE_API_KEY and VITE_FIREBASE_PROJECT_ID in your .env file to enable cloud sync.'
+  );
 }
 
+export { app, db, analytics };
+
 const BOOKINGS_COLLECTION = 'bookings';
+const REVIEWS_COLLECTION = 'reviews';
+const TRAINERS_COLLECTION = 'trainers';
+const MEMBERSHIPS_COLLECTION = 'memberships';
+
+// Helper to create clean, readable document IDs in Firestore based on names (e.g. "silver" -> "silver-plan")
+function toSlugDocId(name, fallbackPrefix = 'item') {
+  if (!name || typeof name !== 'string') return `${fallbackPrefix}-${Date.now()}`;
+  const slug = name
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+  if (!slug) return `${fallbackPrefix}-${Date.now()}`;
+  return slug.includes('plan') || slug.includes('trainer') ? slug : `${slug}-plan`;
+}
+
+// Helper to get exact clean document ID for membership plans
+function getDocIdForPlan(plan) {
+  if (plan.id === 'basic-plan' || plan.id === 'standard-plan' || plan.id === 'premium-plan') {
+    return plan.id;
+  }
+  if (plan.docId === 'basic-plan' || plan.docId === 'standard-plan' || plan.docId === 'premium-plan') {
+    return plan.docId;
+  }
+  const rawName = plan.name || plan.tier || 'plan';
+  const slug = rawName
+    .toLowerCase()
+    .trim()
+    .replace(/\(.*?\)/g, '') // strip parentheses e.g. "(Gym Only)"
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+  if (slug === 'basic' || slug === 'standard' || slug === 'premium') return `${slug}-plan`;
+  return slug ? (slug.endsWith('-plan') ? slug : `${slug}-plan`) : `plan-${Date.now()}`;
+}
+
+// ----------------------------------------------------
+// BOOKINGS COLLECTION FIRESTORE INTEGRATION
+// ----------------------------------------------------
 
 /**
  * Save booking to Firebase Firestore (with LocalStorage sync)
@@ -54,6 +115,11 @@ export async function saveBookingToFirebase(bookingData) {
     status: 'Pending',
     createdAt: new Date().toISOString()
   };
+
+  if (!db) {
+    console.warn('Firebase DB is not initialized. Using local storage fallback.');
+    return bookingWithId;
+  }
 
   try {
     const docRef = await addDoc(collection(db, BOOKINGS_COLLECTION), bookingWithId);
@@ -68,6 +134,11 @@ export async function saveBookingToFirebase(bookingData) {
  * Fetch all bookings from Firebase Firestore
  */
 export async function getBookingsFromFirebase() {
+  if (!db) {
+    console.warn('Firebase DB is not initialized. Unable to fetch remote bookings.');
+    return [];
+  }
+
   try {
     let querySnapshot;
     try {
@@ -138,36 +209,15 @@ export async function deleteBookingFromFirebase(docIdOrBookingId) {
   return false;
 }
 
-// Helper to get exact clean document ID for membership plans
-function getDocIdForPlan(plan) {
-  if (plan.id === 'basic-plan' || plan.id === 'standard-plan' || plan.id === 'premium-plan') {
-    return plan.id;
-  }
-  if (plan.docId === 'basic-plan' || plan.docId === 'standard-plan' || plan.docId === 'premium-plan') {
-    return plan.docId;
-  }
-  const rawName = plan.name || plan.tier || 'plan';
-  const slug = rawName
-    .toLowerCase()
-    .trim()
-    .replace(/\(.*?\)/g, '') // strip parentheses e.g. "(Gym Only)"
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '');
-  if (slug === 'basic' || slug === 'standard' || slug === 'premium') return `${slug}-plan`;
-  return slug ? (slug.endsWith('-plan') ? slug : `${slug}-plan`) : `plan-${Date.now()}`;
-}
-
 // ----------------------------------------------------
 // TRAINERS COLLECTION FIRESTORE INTEGRATION
 // ----------------------------------------------------
-const TRAINERS_COLLECTION = 'trainers';
 
 /**
  * Sync all trainers list (existing + new) to Firebase Firestore
  */
 export async function syncAllTrainersToFirebase(trainersList) {
   try {
-    // 1. Fetch current docs from Firestore to find and clean up any random hash IDs
     const q = query(collection(db, TRAINERS_COLLECTION));
     const snapshot = await getDocs(q);
     
@@ -222,7 +272,6 @@ export async function getTrainersFromFirebase() {
         ...docSnap.data()
       }));
     } else {
-      // Auto-seed initial trainers into Firestore database to create collection
       const seeded = await seedInitialTrainersToFirebase();
       if (seeded.length > 0) return seeded;
     }
@@ -260,7 +309,6 @@ export async function updateTrainerInFirebase(docIdOrTrainerId, patch) {
   try {
     if (!docIdOrTrainerId) return false;
 
-    // 1. Check direct doc ref
     const directRef = doc(db, TRAINERS_COLLECTION, String(docIdOrTrainerId));
     const directSnap = await getDoc(directRef);
     if (directSnap.exists()) {
@@ -268,7 +316,6 @@ export async function updateTrainerInFirebase(docIdOrTrainerId, patch) {
       return true;
     }
 
-    // 2. Search snapshot docs
     const q = query(collection(db, TRAINERS_COLLECTION));
     const snapshot = await getDocs(q);
     const targetDoc = snapshot.docs.find(
@@ -293,7 +340,6 @@ export async function deleteTrainerFromFirebase(docIdOrTrainerId) {
   try {
     if (!docIdOrTrainerId) return false;
 
-    // 1. Check direct doc ref
     const directRef = doc(db, TRAINERS_COLLECTION, String(docIdOrTrainerId));
     const directSnap = await getDoc(directRef);
     if (directSnap.exists()) {
@@ -301,7 +347,6 @@ export async function deleteTrainerFromFirebase(docIdOrTrainerId) {
       return true;
     }
 
-    // 2. Search snapshot docs
     const q = query(collection(db, TRAINERS_COLLECTION));
     const snapshot = await getDocs(q);
     const targetDoc = snapshot.docs.find(
@@ -322,7 +367,6 @@ export async function deleteTrainerFromFirebase(docIdOrTrainerId) {
 // ----------------------------------------------------
 // MEMBERSHIPS COLLECTION FIRESTORE INTEGRATION
 // ----------------------------------------------------
-const MEMBERSHIPS_COLLECTION = 'memberships';
 
 /**
  * Auto-seed initial membership plans into Firebase Firestore if collection is empty
@@ -354,7 +398,6 @@ export async function seedInitialMembershipsToFirebase() {
  */
 export async function syncAllMembershipsToFirebase(membershipsList) {
   try {
-    // 1. Delete duplicate/legacy documents from Firestore
     const q = query(collection(db, MEMBERSHIPS_COLLECTION));
     const snapshot = await getDocs(q);
 
@@ -412,14 +455,12 @@ export async function getMembershipsFromFirebase() {
     const q = query(collection(db, MEMBERSHIPS_COLLECTION));
     const querySnapshot = await getDocs(q);
     if (!querySnapshot.empty) {
-      // Filter out duplicate legacy docs if present
       const validDocs = querySnapshot.docs.filter((d) => d.id !== 'premium-gym-pt-diet-plan' && d.id !== 'standard-gym-classes-plan');
       return validDocs.map((docSnap) => ({
         docId: docSnap.id,
         ...docSnap.data()
       }));
     } else {
-      // Auto-seed initial membership plans into Firestore database to create collection
       const seeded = await seedInitialMembershipsToFirebase();
       if (seeded.length > 0) return seeded;
     }
@@ -456,7 +497,6 @@ export async function updateMembershipInFirebase(docIdOrPlanId, patch) {
   try {
     if (!docIdOrPlanId) return false;
 
-    // 1. Check direct doc ref
     const directRef = doc(db, MEMBERSHIPS_COLLECTION, String(docIdOrPlanId));
     const directSnap = await getDoc(directRef);
     if (directSnap.exists()) {
@@ -464,7 +504,6 @@ export async function updateMembershipInFirebase(docIdOrPlanId, patch) {
       return true;
     }
 
-    // 2. Search snapshot docs
     const q = query(collection(db, MEMBERSHIPS_COLLECTION));
     const snapshot = await getDocs(q);
     const targetDoc = snapshot.docs.find(
@@ -489,7 +528,6 @@ export async function deleteMembershipFromFirebase(docIdOrPlanId) {
   try {
     if (!docIdOrPlanId) return false;
 
-    // 1. Check direct doc ref
     const directRef = doc(db, MEMBERSHIPS_COLLECTION, String(docIdOrPlanId));
     const directSnap = await getDoc(directRef);
     if (directSnap.exists()) {
@@ -497,7 +535,6 @@ export async function deleteMembershipFromFirebase(docIdOrPlanId) {
       return true;
     }
 
-    // 2. Search snapshot docs
     const q = query(collection(db, MEMBERSHIPS_COLLECTION));
     const snapshot = await getDocs(q);
     const targetDoc = snapshot.docs.find(
@@ -515,3 +552,141 @@ export async function deleteMembershipFromFirebase(docIdOrPlanId) {
   return false;
 }
 
+// ----------------------------------------------------
+// REVIEWS COLLECTION FIRESTORE INTEGRATION
+// ----------------------------------------------------
+
+/**
+ * Save review to Firebase Firestore
+ */
+export async function saveReviewToFirebase(reviewData) {
+  const randomId = Math.floor(10000 + Math.random() * 90000);
+
+  const reviewWithId = {
+    id: `RV-${randomId}`,
+    ...reviewData,
+    status: 'Pending',
+    createdAt: new Date().toISOString()
+  };
+
+  try {
+    const docRef = await addDoc(
+      collection(db, REVIEWS_COLLECTION),
+      reviewWithId
+    );
+
+    return {
+      docId: docRef.id,
+      ...reviewWithId
+    };
+  } catch (error) {
+    console.warn('Firebase review write unavailable:', error.message);
+    throw error;
+  }
+}
+
+/**
+ * Fetch all reviews from Firebase Firestore
+ */
+export async function getReviewsFromFirebase() {
+  try {
+    let querySnapshot;
+
+    try {
+      const q = query(
+        collection(db, REVIEWS_COLLECTION),
+        orderBy('createdAt', 'desc')
+      );
+
+      querySnapshot = await getDocs(q);
+    } catch (e) {
+      querySnapshot = await getDocs(
+        collection(db, REVIEWS_COLLECTION)
+      );
+    }
+
+    return querySnapshot.docs.map((docSnap) => ({
+      docId: docSnap.id,
+      ...docSnap.data()
+    }));
+  } catch (error) {
+    console.warn('Firebase review read unavailable:', error.message);
+    return [];
+  }
+}
+
+/**
+ * Update review in Firebase Firestore
+ */
+export async function updateReviewInFirebase(docIdOrReviewId, patch) {
+  try {
+    if (
+      docIdOrReviewId &&
+      typeof docIdOrReviewId === 'string' &&
+      docIdOrReviewId.length > 15 &&
+      !docIdOrReviewId.startsWith('RV-')
+    ) {
+      await updateDoc(
+        doc(db, REVIEWS_COLLECTION, docIdOrReviewId),
+        patch
+      );
+      return true;
+    }
+
+    const snapshot = await getDocs(collection(db, REVIEWS_COLLECTION));
+
+    const targetDoc = snapshot.docs.find(
+      (d) =>
+        d.data().id === docIdOrReviewId ||
+        d.id === docIdOrReviewId
+    );
+
+    if (targetDoc) {
+      await updateDoc(
+        doc(db, REVIEWS_COLLECTION, targetDoc.id),
+        patch
+      );
+      return true;
+    }
+  } catch (error) {
+    console.warn('Firebase review update unavailable:', error.message);
+  }
+
+  return false;
+}
+
+/**
+ * Delete review from Firebase Firestore
+ */
+export async function deleteReviewFromFirebase(docIdOrReviewId) {
+  try {
+    if (
+      docIdOrReviewId &&
+      typeof docIdOrReviewId === 'string' &&
+      docIdOrReviewId.length > 15 &&
+      !docIdOrReviewId.startsWith('RV-')
+    ) {
+      await deleteDoc(doc(db, REVIEWS_COLLECTION, docIdOrReviewId));
+      return true;
+    }
+
+    const snapshot = await getDocs(collection(db, REVIEWS_COLLECTION));
+
+    const targetDoc = snapshot.docs.find(
+      (d) =>
+        d.data().id === docIdOrReviewId ||
+        d.id === docIdOrReviewId
+    );
+
+    if (targetDoc) {
+      await deleteDoc(
+        doc(db, REVIEWS_COLLECTION, targetDoc.id)
+      );
+      return true;
+    }
+  } catch (error) {
+    console.warn('Firebase review delete unavailable:', error.message);
+  }
+
+  return false;
+}

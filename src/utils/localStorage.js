@@ -37,6 +37,9 @@ export function saveBooking(bookingData) {
   
   try {
     localStorage.setItem(BOOKINGS_KEY, JSON.stringify(updatedList));
+    if (bookingData?.phone && bookingData?.name) {
+      saveUserProfile(bookingData.phone, bookingData.name, bookingData.email || '');
+    }
   } catch (error) {
     console.error('Error saving booking to localStorage:', error);
   }
@@ -82,4 +85,42 @@ export function updateBookingStatus(id, newStatus) {
     console.error('Error updating booking status:', error);
   }
   return updated;
+}
+
+const PROFILES_KEY = 'bodyfit_user_profiles';
+
+export function getUserProfiles() {
+  try {
+    const data = localStorage.getItem(PROFILES_KEY);
+    return data ? JSON.parse(data) : {};
+  } catch (error) {
+    return {};
+  }
+}
+
+export function saveUserProfile(phone, name, email = '') {
+  if (!phone || !name) return;
+  const profiles = getUserProfiles();
+  const digits = phone.replace(/\D/g, '').slice(-10);
+  if (!digits) return;
+
+  profiles[digits] = {
+    name: name.trim(),
+    phone: phone.trim(),
+    email: email.trim(),
+    updatedAt: new Date().toISOString()
+  };
+
+  try {
+    localStorage.setItem(PROFILES_KEY, JSON.stringify(profiles));
+  } catch (error) {
+    console.error('Error saving user profile:', error);
+  }
+}
+
+export function findUserProfileByPhone(phone) {
+  if (!phone) return null;
+  const digits = phone.replace(/\D/g, '').slice(-10);
+  const profiles = getUserProfiles();
+  return profiles[digits] || null;
 }

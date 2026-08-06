@@ -1,12 +1,31 @@
 import React, { useMemo, useState } from 'react';
 import {
-  Search, Check, X, CalendarClock, Trash2, Download, Phone, Mail, Inbox,
+  Search, Check, X, CalendarClock, Trash2, Download, Phone, Mail, Inbox, Clock,
 } from 'lucide-react';
 import {
   getBookings, updateBooking, deleteBooking, bucketOf, todayISO, toCsv, downloadCsv,
 } from '../../utils/adminStore';
 
 import { updateBookingInFirebase, deleteBookingFromFirebase } from '../../firebase';
+
+function formatBookingTimestamp(createdAt, fallbackDate) {
+  const ts = createdAt || fallbackDate;
+  if (!ts) return 'N/A';
+  try {
+    const d = new Date(ts);
+    if (isNaN(d.getTime())) return String(ts);
+    return d.toLocaleString('en-IN', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true,
+    });
+  } catch (e) {
+    return String(ts);
+  }
+}
 
 const BUCKETS = [
   { id: 'all', label: 'All' },
@@ -190,12 +209,16 @@ export default function BookingsPanel({ bookings, onChange }) {
                       {currentStatus}
                     </span>
                     <span className="font-mono text-[11px] text-slate-600">{booking.id}</span>
+                    <span className="inline-flex items-center gap-1.5 rounded-full border border-slate-700/60 bg-slate-800/80 px-2.5 py-0.5 text-[11px] font-medium text-slate-300">
+                      <Clock className="h-3 w-3 text-orange-400" />
+                      <span>Booked: {formatBookingTimestamp(booking.createdAt, booking.date)}</span>
+                    </span>
                   </div>
 
                   <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-400">
                     <span className="font-semibold text-orange-400">{booking.service}</span>
                     <span>
-                      {booking.date} · {booking.time}
+                      Slot: <strong className="text-slate-300 font-medium">{booking.date} · {booking.time}</strong>
                     </span>
                     {booking.trainer && <span className="text-slate-500">{booking.trainer}</span>}
                   </div>

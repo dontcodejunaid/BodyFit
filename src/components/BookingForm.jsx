@@ -12,10 +12,12 @@ import {
   emailConfigured, smsConfigured,
 } from '../utils/bookingNotifications';
 import { INITIAL_TRAINERS } from '../data/trainersAndScheduleData';
+import OTPVerificationModal from './ui/OTPVerificationModal';
 import Component from './ui/gradient-bars-background';
 
 export default function BookingForm({ selectedPlan = null, onClearPlan = null }) {
   const [step, setStep] = useState(1);
+  const [isOtpOpen, setIsOtpOpen] = useState(false);
 
   // Form State
   const [formData, setFormData] = useState({
@@ -136,6 +138,11 @@ export default function BookingForm({ selectedPlan = null, onClearPlan = null })
       return;
     }
 
+    setIsOtpOpen(true);
+  };
+
+  const handleOtpVerified = () => {
+    setIsOtpOpen(false);
     const newBooking = saveBooking(formData);
     saveBookingToFirebase(formData);
     setConfirmedBooking(newBooking);
@@ -889,6 +896,15 @@ export default function BookingForm({ selectedPlan = null, onClearPlan = null })
         </div>
 
       </section>
+
+      <OTPVerificationModal
+        isOpen={isOtpOpen}
+        onClose={() => setIsOtpOpen(false)}
+        phoneNumber={formData.phone || '+91 98765 43210'}
+        onVerified={handleOtpVerified}
+        title="Confirm Booking via OTP"
+        description="Verify your phone number with the 6-digit OTP sent to"
+      />
     </Component>
   );
 }

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Pencil, Trash2, Save, X, Loader2, Cloud } from 'lucide-react';
+import { Plus, Pencil, Trash2, Save, X, Loader2, Cloud, Upload, Image as ImageIcon } from 'lucide-react';
 import {
   getTrainers, saveTrainers, getClasses, saveClasses,
   getMemberships, saveMemberships, newId,
@@ -40,7 +40,7 @@ const COLLECTIONS = {
       { key: 'badgeColor', label: 'Badge colour (hex)', type: 'text', placeholder: '#FF5733' },
       { key: 'gradient', label: 'Card gradient', type: 'select', options: PLAN_GRADIENTS },
       { key: 'discountTag', label: 'Discount tag', type: 'text', wide: true },
-      { key: 'imageUrl', label: 'Image URL', type: 'text', wide: true },
+      { key: 'imageUrl', label: 'Image URL / Upload Image', type: 'image', wide: true },
       { key: 'features', label: 'Features (comma separated)', type: 'list', wide: true },
       { key: 'isFeatured', label: 'Highlight as featured plan', type: 'boolean' },
     ],
@@ -55,6 +55,7 @@ const COLLECTIONS = {
     fields: [
       { key: 'name', label: 'Full name', type: 'text' },
       { key: 'role', label: 'Role', type: 'text' },
+      { key: 'photo', label: 'Trainer Photo / Image URL', type: 'image', wide: true },
       { key: 'experience', label: 'Experience', type: 'text', placeholder: '5+ Years' },
       { key: 'rating', label: 'Rating', type: 'number', step: '0.1' },
       { key: 'specialties', label: 'Specialties (comma separated)', type: 'list', wide: true },
@@ -102,6 +103,80 @@ const blankRow = (config) => {
 function FieldInput({ field, value, onChange }) {
   const base =
     'w-full rounded-lg border border-slate-800 bg-slate-950/60 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-600 focus:border-orange-500/60 focus:outline-none';
+
+  if (field.type === 'image' || field.key === 'imageUrl' || field.key === 'photo') {
+    const handleFileChange = (e) => {
+      const file = e.target.files && e.target.files[0];
+      if (!file) return;
+
+      if (!file.type.startsWith('image/')) {
+        // eslint-disable-next-line no-alert
+        alert('Please select a valid image file (PNG, JPG, WEBP, etc.).');
+        return;
+      }
+
+      if (file.size > 5 * 1024 * 1024) {
+        // eslint-disable-next-line no-alert
+        alert('Image file size should be under 5MB.');
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        onChange(event.target.result);
+      };
+      reader.readAsDataURL(file);
+    };
+
+    return (
+      <div className="space-y-2">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+          <input
+            className={base}
+            onChange={(event) => onChange(event.target.value)}
+            placeholder={field.placeholder || 'Paste image URL or upload image file below'}
+            type="text"
+            value={value || ''}
+          />
+          <label className="inline-flex shrink-0 cursor-pointer items-center justify-center gap-2 rounded-lg border border-slate-700 bg-slate-800/80 px-3.5 py-2 text-xs font-bold text-slate-200 transition-all hover:border-orange-500/50 hover:bg-slate-800 hover:text-white active:scale-95">
+            <Upload className="h-4 w-4 text-orange-400" />
+            <span>Upload Image</span>
+            <input
+              accept="image/*"
+              className="hidden"
+              onChange={handleFileChange}
+              type="file"
+            />
+          </label>
+        </div>
+
+        {value && (
+          <div className="flex items-center gap-3 rounded-lg border border-slate-800 bg-slate-950/60 p-2">
+            <img
+              alt="Preview"
+              className="h-12 w-12 rounded-md object-cover border border-slate-800 bg-slate-900 shrink-0"
+              onError={(e) => { e.target.style.display = 'none'; }}
+              src={value}
+            />
+            <div className="min-w-0 flex-1 text-xs">
+              <span className="font-semibold text-slate-300">Image Active</span>
+              <div className="truncate text-[10px] text-slate-500">
+                {value.startsWith('data:') ? 'Local file uploaded (Data URL)' : value}
+              </div>
+            </div>
+            <button
+              className="rounded p-1 text-slate-500 hover:bg-slate-800 hover:text-red-400 transition-colors"
+              onClick={() => onChange('')}
+              title="Clear Image"
+              type="button"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+        )}
+      </div>
+    );
+  }
 
   if (field.type === 'boolean') {
     return (

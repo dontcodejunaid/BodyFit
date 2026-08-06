@@ -239,6 +239,32 @@ export default function ReviewForm({
           </span>
         </div>
       </motion.div>
+      {/* Submit Button */}
+<motion.button
+  type="submit"
+  disabled={loading}
+  whileHover={{ scale: loading ? 1 : 1.02 }}
+  whileTap={{ scale: loading ? 1 : 0.98 }}
+  className="
+    w-full
+    rounded-xl
+    bg-gradient-to-r
+    from-orange-500
+    to-orange-600
+    py-3
+    text-sm
+    font-bold
+    text-white
+    transition-all
+    duration-300
+    hover:shadow-lg
+    hover:shadow-orange-500/30
+    disabled:cursor-not-allowed
+    disabled:opacity-60
+  "
+>
+  {loading ? "Submitting..." : "Submit Review"}
+</motion.button>
     </form>
   );
 }

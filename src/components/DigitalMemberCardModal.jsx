@@ -1,5 +1,5 @@
-import React, { useRef } from 'react';
-import { X, QrCode, ShieldCheck, Download, Calendar, MapPin, Sparkles, User, Dumbbell } from 'lucide-react';
+import React, { useRef, useState, useMemo } from 'react';
+import { X, QrCode, ShieldCheck, Download, Calendar, MapPin, Sparkles, User, Dumbbell, Layers } from 'lucide-react';
 import logoImg from '../assets/logo.png';
 
 /**
@@ -74,16 +74,40 @@ function generateQRModules(seedString) {
   return modules;
 }
 
-export default function DigitalMemberCardModal({ memberData, isOpen, onClose }) {
+export default function DigitalMemberCardModal({ memberData, isOpen, onClose, onOpenRecovery }) {
   const cardRef = useRef(null);
+  const [selectedPassIndex, setSelectedPassIndex] = useState(0);
 
-  if (!isOpen || !memberData) return null;
+  const passesList = useMemo(() => {
+    if (!memberData) return [];
+    if (Array.isArray(memberData.passes) && memberData.passes.length > 0) {
+      return memberData.passes;
+    }
+    const rawPayId = String(memberData.paymentResult?.paymentId || '2026-8492');
+    const cleanPayId = rawPayId.startsWith('BF-') ? rawPayId : `BF-${rawPayId.toUpperCase()}`;
 
-  const { customer, plan, paymentResult } = memberData;
-  const memberName = customer?.name || 'BodyFit Member';
-  const memberPhone = customer?.phone || '+91 98765 43210';
-  const planName = plan?.name || 'Standard Membership';
-  const passId = paymentResult?.paymentId ? `BF-${paymentResult.paymentId.slice(-8).toUpperCase()}` : 'BF-2026-8492';
+    return [
+      {
+        id: cleanPayId,
+        service: String(memberData.plan?.name || 'Standard Membership'),
+        date: memberData.date || 'Active',
+        time: memberData.time || '',
+        trainer: memberData.trainer || '',
+        status: 'Active'
+      }
+    ];
+  }, [memberData]);
+
+  if (!isOpen || !memberData || passesList.length === 0) return null;
+
+  const activeIndex = selectedPassIndex < passesList.length ? selectedPassIndex : 0;
+  const currentPass = passesList[activeIndex] || passesList[0];
+
+  const memberName = String(memberData.customer?.name || 'BodyFit Member');
+  const memberPhone = String(memberData.customer?.phone || '+91 98765 43210');
+  const planName = String(currentPass.service || 'Standard Membership');
+  const rawPassId = String(currentPass.id || 'BF-84920194');
+  const passId = rawPassId.startsWith('BF-') ? rawPassId : `BF-${rawPassId}`;
   
   // Expiry date calculation (1 month or 1 year)
   const validUntilDate = new Date();
@@ -316,10 +340,40 @@ export default function DigitalMemberCardModal({ memberData, isOpen, onClose }) 
           </button>
         </div>
 
+        {/* Multi-Membership Selector (If member holds multiple active plans) */}
+        {passesList.length > 1 && (
+          <div className="space-y-2 rounded-2xl bg-slate-950/60 border border-slate-800 p-3">
+            <div className="flex items-center justify-between text-xs">
+              <span className="font-extrabold uppercase tracking-wider text-orange-400 flex items-center gap-1.5">
+                <Layers className="w-4 h-4" />
+                <span>All Active Memberships ({passesList.length})</span>
+              </span>
+              <span className="text-[10px] text-slate-400">Tap pass to switch</span>
+            </div>
+
+            <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
+              {passesList.map((p, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => setSelectedPassIndex(idx)}
+                  type="button"
+                  className={`shrink-0 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer border ${
+                    activeIndex === idx
+                      ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-slate-950 border-orange-400 shadow-md shadow-orange-500/20 scale-105'
+                      : 'bg-slate-800/80 text-slate-300 border-slate-700 hover:border-orange-500/40 hover:text-white'
+                  }`}
+                >
+                  {p.service || `Membership #${idx + 1}`}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* On-Screen Digital Membership Card */}
         <div
           ref={cardRef}
-          className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-950 via-slate-900 to-orange-950 border border-orange-500/40 p-6 shadow-2xl text-slate-100 space-y-6"
+          className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-950 via-slate-900 to-orange-950 border border-orange-500/40 p-6 shadow-2xl text-slate-100 space-y-5"
         >
           {/* Decorative Lighting Orbs */}
           <div className="absolute top-0 right-0 w-40 h-40 bg-orange-500/15 rounded-full blur-2xl pointer-events-none" />
@@ -339,7 +393,7 @@ export default function DigitalMemberCardModal({ memberData, isOpen, onClose }) 
               </div>
             </div>
             <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 text-[10px] font-black uppercase tracking-wider">
-              ● ACTIVE PASS
+              ● ACTIVE PASS ({activeIndex + 1}/{passesList.length})
             </span>
           </div>
 
@@ -356,10 +410,34 @@ export default function DigitalMemberCardModal({ memberData, isOpen, onClose }) 
                 <span className="font-mono text-amber-400 font-bold">{passId}</span>
               </div>
               <div>
-                <span className="text-[10px] text-slate-400 uppercase font-bold tracking-wider block">PLAN TYPE</span>
+                <span className="text-[10px] text-slate-400 uppercase font-bold tracking-wider block">SELECTED PLAN</span>
                 <span className="text-white font-bold truncate block">{planName}</span>
               </div>
             </div>
+
+            {/* List of All Active Memberships Badges */}
+            {passesList.length > 1 && (
+              <div className="pt-2 border-t border-slate-800/80 space-y-1.5">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">
+                  All Subscriptions on this Pass ({passesList.length}):
+                </span>
+                <div className="flex flex-wrap gap-1.5">
+                  {passesList.map((p, idx) => (
+                    <span
+                      key={idx}
+                      onClick={() => setSelectedPassIndex(idx)}
+                      className={`px-2.5 py-1 rounded-lg border text-[11px] font-bold cursor-pointer transition-all ${
+                        activeIndex === idx
+                          ? 'bg-orange-500/30 border-orange-400 text-orange-200 ring-1 ring-orange-500'
+                          : 'bg-slate-800/80 border-slate-700 text-slate-300 hover:text-white'
+                      }`}
+                    >
+                      ✓ {p.service}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* SVG QR Code for Turnstile Check-In (Bigger) */}
@@ -404,6 +482,18 @@ export default function DigitalMemberCardModal({ memberData, isOpen, onClose }) 
             Close
           </button>
         </div>
+
+        {onOpenRecovery && (
+          <div className="text-center pt-1">
+            <button
+              onClick={onOpenRecovery}
+              type="button"
+              className="text-[11px] text-slate-400 hover:text-orange-400 font-medium transition-colors underline"
+            >
+              Need to find or recover a different pass? Click here
+            </button>
+          </div>
+        )}
 
       </div>
     </div>
