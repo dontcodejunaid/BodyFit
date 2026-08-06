@@ -12,7 +12,7 @@ import {
   Zap,
   Clock
 } from 'lucide-react';
-import { INITIAL_TRAINERS } from '../data/trainersAndScheduleData';
+import { INITIAL_TRAINERS, getTrainerPhoto } from '../data/trainersAndScheduleData';
 import { getTrainersFromFirebase } from '../firebase';
 
 export default function Trainers({ onSelectTrainer }) {
@@ -148,7 +148,7 @@ export default function Trainers({ onSelectTrainer }) {
               {/* Photo & Top Badges */}
               <div className="relative h-72 w-full overflow-hidden bg-slate-900">
                 <img
-                  src={trainer.photo || trainer.imageUrl}
+                  src={getTrainerPhoto(trainer)}
                   alt={trainer.name}
                   className="w-full h-full object-cover object-top transition-transform duration-700 ease-out group-hover:scale-105"
                 />
@@ -256,7 +256,7 @@ export default function Trainers({ onSelectTrainer }) {
             {/* Modal Header */}
             <div className="flex items-center gap-4">
               <img
-                src={selectedTrainerModal.photo || selectedTrainerModal.imageUrl}
+                src={getTrainerPhoto(selectedTrainerModal)}
                 alt={selectedTrainerModal.name}
                 className="w-20 h-20 rounded-2xl object-cover border border-slate-700 shadow-md"
               />
