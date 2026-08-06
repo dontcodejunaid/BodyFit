@@ -23,8 +23,11 @@ import SplashIntroScreen from './components/SplashIntroScreen';
 import PaymentModal from './components/PaymentModal';
 import DigitalMemberCardModal from './components/DigitalMemberCardModal';
 import AnalyticsDashboardModal from './components/AnalyticsDashboardModal';
+import PassRecoveryModal from './components/PassRecoveryModal';
 
 import { trackEvent } from './utils/analytics';
+import { saveBooking } from './utils/localStorage';
+import { saveBookingToFirebase } from './firebase';
 
 function App() {
   const [_selectedTrainer, setSelectedTrainer] = useState(null);
@@ -36,6 +39,7 @@ function App() {
 
   const [activeMemberPass, setActiveMemberPass] = useState(null);
   const [isPassModalOpen, setIsPassModalOpen] = useState(false);
+  const [isRecoveryModalOpen, setIsRecoveryModalOpen] = useState(false);
 
   const [isAnalyticsOpen, setIsAnalyticsOpen] = useState(false);
 
@@ -71,16 +75,42 @@ function App() {
     if (el) el.scrollIntoView({ behavior: 'smooth' });
   };
 
-  const handlePaymentSuccess = (memberData) => {
+  const handlePaymentSuccess = async (memberData) => {
     setActiveMemberPass(memberData);
     setIsPaymentModalOpen(false);
     setIsPassModalOpen(true);
+
+    const bookingRecord = {
+      id: memberData.paymentResult?.paymentId ? `BF-${memberData.paymentResult.paymentId.replace(/^BF-/, '')}` : `BF-${Math.floor(10000 + Math.random() * 90000)}`,
+      name: memberData.customer?.name || 'BodyFit Member',
+      phone: memberData.customer?.phone || '',
+      email: memberData.customer?.email || '',
+      service: memberData.plan?.name || 'BodyFit Membership Pass',
+      date: memberData.date || new Date().toISOString().split('T')[0],
+      time: memberData.time || 'All Day Access',
+      trainer: memberData.trainer || 'Unassigned',
+      status: 'Confirmed',
+      createdAt: new Date().toISOString()
+    };
+
+    saveBooking(bookingRecord);
+
+    try {
+      await saveBookingToFirebase(bookingRecord);
+    } catch (err) {
+      console.warn('Failed to save payment booking to Firebase:', err);
+    }
 
     try {
       localStorage.setItem('bodyfit_member_pass', JSON.stringify(memberData));
     } catch (e) {
       console.error('Failed to save member pass:', e);
     }
+  };
+
+  const handlePassRecovered = (recoveredPass) => {
+    setActiveMemberPass(recoveredPass);
+    setIsPassModalOpen(true);
   };
 
   return (
@@ -91,7 +121,7 @@ function App() {
       {/* Offers & Seasonal Discount Banner */}
       <OffersBanner onClaimOffer={handleClaimOffer} />
 
-      <RandomLetterSwapNav />
+      <RandomLetterSwapNav onOpenRecovery={() => setIsRecoveryModalOpen(true)} />
       <Hero />
       <About />
       <BMICalculator />
@@ -114,6 +144,7 @@ function App() {
       <FloatingActions
         activeMemberPass={activeMemberPass}
         onOpenPass={() => setIsPassModalOpen(true)}
+        onOpenRecovery={() => setIsRecoveryModalOpen(true)}
       />
 
       <AdminPortal />
@@ -131,6 +162,16 @@ function App() {
         memberData={activeMemberPass}
         isOpen={isPassModalOpen}
         onClose={() => setIsPassModalOpen(false)}
+        onOpenRecovery={() => {
+          setIsPassModalOpen(false);
+          setIsRecoveryModalOpen(true);
+        }}
+      />
+
+      <PassRecoveryModal
+        isOpen={isRecoveryModalOpen}
+        onClose={() => setIsRecoveryModalOpen(false)}
+        onPassRecovered={handlePassRecovered}
       />
 
       <AnalyticsDashboardModal
@@ -141,4 +182,14 @@ function App() {
   );
 }
 
-export default App;
+import ErrorBoundary from './components/ui/ErrorBoundary';
+
+function AppWrapper() {
+  return (
+    <ErrorBoundary>
+      <App />
+    </ErrorBoundary>
+  );
+}
+
+export default AppWrapper;

@@ -122,7 +122,7 @@ export default function Trainers({ onSelectTrainer }) {
               {/* Photo & Top Badges */}
               <div className="relative h-72 w-full overflow-hidden bg-slate-900">
                 <img
-                  src={trainer.photo}
+                  src={trainer.photo || trainer.imageUrl}
                   alt={trainer.name}
                   className="w-full h-full object-cover object-top transition-transform duration-700 ease-out group-hover:scale-105"
                 />
@@ -230,7 +230,7 @@ export default function Trainers({ onSelectTrainer }) {
             {/* Modal Header */}
             <div className="flex items-center gap-4">
               <img
-                src={selectedTrainerModal.photo}
+                src={selectedTrainerModal.photo || selectedTrainerModal.imageUrl}
                 alt={selectedTrainerModal.name}
                 className="w-20 h-20 rounded-2xl object-cover border border-slate-700 shadow-md"
               />

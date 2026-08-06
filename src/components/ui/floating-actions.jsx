@@ -9,7 +9,7 @@ import { ADMIN_HASH } from '../admin/AdminPortal';
  * 1. My Digital Pass (when active pass exists)
  * 2. FAQ Assistant ("Ask Us")
  */
-export default function FloatingActions({ activeMemberPass, onOpenPass }) {
+export default function FloatingActions({ activeMemberPass, onOpenPass, onOpenRecovery }) {
   const [chatOpen, setChatOpen] = useState(false);
   const [hidden, setHidden] = useState(() => window.location.hash === ADMIN_HASH);
   const [savedPass, setSavedPass] = useState(activeMemberPass);
@@ -27,6 +27,7 @@ export default function FloatingActions({ activeMemberPass, onOpenPass }) {
       try {
         const stored = localStorage.getItem('bodyfit_member_pass');
         if (stored) setSavedPass(JSON.parse(stored));
+        else setSavedPass(null);
       } catch (e) {
         console.error(e);
       }
@@ -49,8 +50,8 @@ export default function FloatingActions({ activeMemberPass, onOpenPass }) {
     <div className="fixed bottom-5 right-5 z-40 flex flex-col items-end gap-3 print:hidden">
       {chatOpen && <FaqChatbot onClose={() => setChatOpen(false)} open={chatOpen} />}
 
-      {/* Top: My Digital Pass Button (When active pass exists) */}
-      {savedPass && (
+      {/* Digital Pass Button */}
+      {savedPass ? (
         <button
           onClick={onOpenPass}
           className="px-4 py-2.5 rounded-full bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-500 hover:to-amber-500 text-white font-extrabold text-xs shadow-2xl flex items-center gap-2 border border-orange-400/40 animate-pulse transition-all hover:scale-105 cursor-pointer"
@@ -58,6 +59,15 @@ export default function FloatingActions({ activeMemberPass, onOpenPass }) {
         >
           <QrCode className="w-4 h-4 text-white" />
           <span className="tracking-wider uppercase">My Digital Pass</span>
+        </button>
+      ) : (
+        <button
+          onClick={onOpenRecovery}
+          className="px-3.5 py-2 rounded-full bg-slate-900/90 hover:bg-slate-800 text-orange-400 font-bold text-xs shadow-xl flex items-center gap-2 border border-orange-500/30 transition-all hover:scale-105 cursor-pointer"
+          title="Find or Recover Lost Digital Pass"
+        >
+          <QrCode className="w-4 h-4 text-orange-500" />
+          <span className="tracking-wider uppercase">Find My Pass</span>
         </button>
       )}
 
