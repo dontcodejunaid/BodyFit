@@ -7,15 +7,18 @@ import {
   ChevronRight, 
   Filter, 
   LayoutGrid,
-  List
+  List,
+  Users
 } from 'lucide-react';
 import { INITIAL_SCHEDULE, CLASS_CATEGORIES, DAYS_OF_WEEK, getTrainerPhoto } from '../data/trainersAndScheduleData';
+import ClassRosterModal from './ClassRosterModal';
 
 export default function ClassSchedule({ onSelectClass }) {
   const [schedule, setSchedule] = useState([]);
   const [selectedDay, setSelectedDay] = useState('All');
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [viewMode, setViewMode] = useState('grid'); // 'grid' or 'list'
+  const [rosterClass, setRosterClass] = useState(null);
 
   // Load schedule from LocalStorage & calculate real-time seat availability
   const loadSchedule = () => {
@@ -331,8 +334,17 @@ export default function ClassSchedule({ onSelectClass }) {
 
                   </div>
 
-                  {/* Booking CTA Button */}
-                  <div className="pt-6">
+                  {/* Booking & Roster CTA Buttons */}
+                  <div className="pt-6 space-y-2">
+                    <button
+                      type="button"
+                      onClick={() => setRosterClass(item)}
+                      className="w-full py-2 px-3 rounded-xl bg-orange-500/10 hover:bg-orange-500/20 border border-orange-500/30 text-orange-400 text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer"
+                    >
+                      <Users className="w-3.5 h-3.5" />
+                      <span>Joined Members ({item.booked || 0})</span>
+                    </button>
+
                     <button
                       onClick={() => handleBookClass(item)}
                       disabled={spotsLeft === 0}
@@ -405,6 +417,15 @@ export default function ClassSchedule({ onSelectClass }) {
                     </div>
 
                     <button
+                      type="button"
+                      onClick={() => setRosterClass(item)}
+                      className="py-2 px-3 rounded-xl bg-orange-500/10 hover:bg-orange-500/20 border border-orange-500/30 text-orange-400 text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer"
+                    >
+                      <Users className="w-3.5 h-3.5" />
+                      <span>Roster ({item.booked || 0})</span>
+                    </button>
+
+                    <button
                       onClick={() => handleBookClass(item)}
                       disabled={spotsLeft === 0}
                       className={`py-2.5 px-5 rounded-xl font-bold text-xs sm:text-sm flex items-center gap-2 transition-all ${
@@ -424,6 +445,12 @@ export default function ClassSchedule({ onSelectClass }) {
         )}
 
       </div>
+
+      <ClassRosterModal
+        isOpen={Boolean(rosterClass)}
+        onClose={() => setRosterClass(null)}
+        classItem={rosterClass}
+      />
     </section>
   );
 }

@@ -27,6 +27,11 @@ export default class ErrorBoundary extends React.Component {
             <p className="text-xs text-slate-400 leading-relaxed">
               We encountered a temporary rendering error. Click below to refresh and reload your session.
             </p>
+            {this.state.error && (
+              <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-left font-mono text-[11px] text-red-400 break-words max-h-32 overflow-y-auto">
+                {String(this.state.error.message || this.state.error)}
+              </div>
+            )}
             <button
               onClick={() => {
                 this.setState({ hasError: false, error: null });

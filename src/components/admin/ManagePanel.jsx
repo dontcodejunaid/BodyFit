@@ -1,11 +1,12 @@
-import React, { useState } from 'react';
-import { Plus, Pencil, Trash2, Save, X, Upload, Image as ImageIcon } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Plus, Pencil, Trash2, Save, X, Upload, Image as ImageIcon, Users } from 'lucide-react';
 import {
   getTrainers, saveTrainers, getClasses, saveClasses,
   getMemberships, saveMemberships, newId,
 } from '../../utils/adminStore';
 import { CLASS_CATEGORIES, DAYS_OF_WEEK } from '../../data/trainersAndScheduleData';
 import { PLAN_GRADIENTS } from '../../data/membershipPlans';
+import ClassRosterModal from '../ClassRosterModal';
 
 // Each collection declares its own fields, so one editor renders all three.
 // `list` fields are stored as arrays but edited as comma-separated text.
@@ -229,15 +230,35 @@ function FieldInput({ field, value, onChange }) {
 
 export default function ManagePanel() {
   const [active, setActive] = useState('memberships');
-  const [rows, setRows] = useState(() => COLLECTIONS.memberships.read());
+  const [rows, setRows] = useState(() => COLLECTIONS.memberships.read() || []);
   const [editing, setEditing] = useState(null); // row id, or 'new'
   const [draft, setDraft] = useState(null);
+  const [rosterClass, setRosterClass] = useState(null);
 
-  const config = COLLECTIONS[active];
+  const config = COLLECTIONS[active] || COLLECTIONS.memberships;
+  const safeRows = Array.isArray(rows) ? rows : [];
+
+  useEffect(() => {
+    const handleSync = () => {
+      setRows(COLLECTIONS[active]?.read() || []);
+    };
+
+    window.addEventListener('storage', handleSync);
+    window.addEventListener('bodyfit-schedule-update', handleSync);
+    window.addEventListener('bodyfit-trainers-update', handleSync);
+    window.addEventListener('bodyfit-memberships-update', handleSync);
+
+    return () => {
+      window.removeEventListener('storage', handleSync);
+      window.removeEventListener('bodyfit-schedule-update', handleSync);
+      window.removeEventListener('bodyfit-trainers-update', handleSync);
+      window.removeEventListener('bodyfit-memberships-update', handleSync);
+    };
+  }, [active]);
 
   const switchTo = (key) => {
     setActive(key);
-    setRows(COLLECTIONS[key].read());
+    setRows(COLLECTIONS[key]?.read() || []);
     setEditing(null);
     setDraft(null);
   };
@@ -372,13 +393,13 @@ export default function ManagePanel() {
 
       {/* Rows */}
       <div className="mt-4 space-y-2">
-        {rows.length === 0 && (
+        {safeRows.length === 0 && (
           <div className="rounded-2xl border border-dashed border-slate-800 bg-slate-900/30 py-12 text-center text-sm text-slate-500">
             Nothing here yet. Use “Add new” to create the first entry.
           </div>
         )}
 
-        {rows.map((row) => (
+        {safeRows.map((row) => (
           <div
             className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-800 bg-slate-900/40 px-4 py-3"
             key={row.id}
@@ -400,6 +421,16 @@ export default function ManagePanel() {
             </div>
 
             <div className="flex shrink-0 items-center gap-2">
+              {active === 'classes' && (
+                <button
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-orange-500/30 bg-orange-500/10 px-3 py-1.5 text-xs font-bold text-orange-400 transition-all hover:bg-orange-500/20 hover:text-orange-300 cursor-pointer"
+                  onClick={() => setRosterClass(row)}
+                  type="button"
+                >
+                  <Users className="h-3.5 w-3.5" />
+                  <span>Joined Members ({row.booked || 0})</span>
+                </button>
+              )}
               <button
                 aria-label="Edit"
                 className="rounded-lg border border-slate-800 p-2 text-slate-400 transition-colors hover:border-orange-500/40 hover:text-white"
@@ -420,6 +451,12 @@ export default function ManagePanel() {
           </div>
         ))}
       </div>
+
+      <ClassRosterModal
+        isOpen={Boolean(rosterClass)}
+        onClose={() => setRosterClass(null)}
+        classItem={rosterClass}
+      />
     </div>
   );
 }
