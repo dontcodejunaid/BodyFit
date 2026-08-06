@@ -5,6 +5,8 @@ import {
 import BookingsPanel from './BookingsPanel';
 import ManagePanel from './ManagePanel';
 import AnalyticsPanel from './AnalyticsPanel';
+import AboutPanel from './AboutPanel';
+import { Info } from 'lucide-react';
 import { getBookings, bucketOf } from '../../utils/adminStore';
 import { getSession, logout } from '../../utils/adminAuth';
 import logoImg from '../../assets/logo.png';
@@ -14,6 +16,7 @@ import { getBookingsFromFirebase } from '../../firebase';
 const TABS = [
   { id: 'bookings', label: 'Bookings', icon: CalendarCheck },
   { id: 'manage', label: 'Manage', icon: Settings2 },
+  { id: 'about', label: 'About Us', icon: Info },
   { id: 'analytics', label: 'Analytics', icon: BarChart3 },
 ];
 
@@ -169,6 +172,11 @@ export default function AdminDashboard({ onLogout, onExit }) {
             <ManagePanel />
           </>
         )}
+
+        {tab === 'about' && (
+          <AboutPanel />
+        )}
+
 
         {tab === 'analytics' && (
           <>
