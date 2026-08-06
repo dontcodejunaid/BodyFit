@@ -1,11 +1,37 @@
+import { useEffect, useState } from "react";
+
 import SectionHeader from "./SectionHeader";
 import StatsBar from "./StatsBar";
 import FeaturedTestimonial from "./FeaturedTestimonial";
 import TestimonialsGrid from "./TestimonialsGrid";
 import TestimonialsCTA from "./TestimonialsCTA";
-import { featuredTestimonial, supportingTestimonials } from "./testimonialsData";
+import {
+  featuredTestimonial,
+  supportingTestimonials,
+} from "./testimonialsData";
+
+import { getReviewsFromFirebase } from "../../firebase";
 
 export default function Testimonials() {
+  const [firebaseReviews, setFirebaseReviews] = useState([]);
+
+  useEffect(() => {
+    async function loadReviews() {
+      try {
+        const reviews = await getReviewsFromFirebase();
+
+        // For testing, show all reviews.
+        // Later change this to:
+        // reviews.filter((review) => review.status === "Approved")
+        setFirebaseReviews(reviews);
+      } catch (error) {
+        console.error("Failed to load reviews:", error);
+      }
+    }
+
+    loadReviews();
+  }, []);
+
   return (
     <section
       id="testimonials"
@@ -22,7 +48,10 @@ export default function Testimonials() {
       />
 
       {/* Background Watermark */}
-      <div aria-hidden="true" className="pointer-events-none absolute inset-0 flex items-center justify-center">
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 flex items-center justify-center"
+      >
         <h1
           className="
           select-none
@@ -55,6 +84,12 @@ export default function Testimonials() {
         <div className="mt-6">
           <TestimonialsGrid testimonials={supportingTestimonials} />
         </div>
+
+        {firebaseReviews.length > 0 && (
+          <div className="mt-8">
+            <TestimonialsGrid testimonials={firebaseReviews} />
+          </div>
+        )}
 
         <div className="mt-8">
           <TestimonialsCTA />
