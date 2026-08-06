@@ -56,14 +56,15 @@ const COLLECTIONS = {
     primary: 'name',
     fields: [
       { key: 'name', label: 'Full name', type: 'text' },
-      { key: 'role', label: 'Role', type: 'text' },
+      { key: 'role', label: 'Role / Designation', type: 'text', placeholder: 'e.g. Head Strength Coach' },
       { key: 'photo', label: 'Trainer Photo / Image URL', type: 'image', wide: true },
       { key: 'experience', label: 'Experience', type: 'text', placeholder: '5+ Years' },
-      { key: 'rating', label: 'Rating', type: 'number', step: '0.1' },
-      { key: 'specialties', label: 'Specialties (comma separated)', type: 'list', wide: true },
-      { key: 'photo', label: 'Photo Image URL', type: 'text', wide: true, placeholder: 'https://images.unsplash.com/...' },
+      { key: 'rating', label: 'Rating (1.0 - 5.0)', type: 'number', step: '0.1', placeholder: '4.9' },
+      { key: 'specialties', label: 'Specialties (comma separated)', type: 'list', wide: true, placeholder: 'Strength, Bodybuilding, CrossFit' },
+      { key: 'shiftHours', label: 'Work Shift Schedule', type: 'text', wide: true, placeholder: 'Full Day (6 AM - 9 PM) or Morning (7 AM - 1 PM)' },
+      { key: 'availableSlots', label: 'Available Slots (comma separated times or All)', type: 'list', wide: true, placeholder: '06:00 AM, 07:00 AM, 08:00 AM, 05:00 PM, 06:00 PM, 07:00 PM' },
       { key: 'bio', label: 'Short bio', type: 'textarea', wide: true },
-      { key: 'available', label: 'Currently available', type: 'boolean' },
+      { key: 'available', label: 'Currently available for booking', type: 'boolean' },
     ],
   },
   classes: {
@@ -100,6 +101,16 @@ const blankRow = (config) => {
     else if (field.type === 'number') row[field.key] = 0;
     else row[field.key] = '';
   });
+
+  if (config.idPrefix === 'tr') {
+    row.shiftHours = 'Full Day (6 AM - 9 PM)';
+    row.availableSlots = ['06:00 AM', '07:00 AM', '08:00 AM', '09:00 AM', '10:00 AM', '11:00 AM', '12:00 PM', '05:00 PM', '06:00 PM', '07:00 PM', '08:00 PM', '09:00 PM'];
+    row.available = true;
+    row.rating = 4.9;
+    row.reviewsCount = 10;
+    row.experience = '3+ Years';
+  }
+
   return row;
 };
 
@@ -285,10 +296,26 @@ export default function ManagePanel() {
       if (active === 'trainers') {
         setLoading(true);
         try {
-          const fbTrainers = await getTrainersFromFirebase();
-          if (fbTrainers && fbTrainers.length > 0 && isMounted) {
-            setRows(fbTrainers);
-            saveTrainers(fbTrainers);
+          const localTrainers = getTrainers() || [];
+          const fbTrainers = (await getTrainersFromFirebase()) || [];
+          
+          const mergedMap = new Map();
+          localTrainers.forEach(t => {
+            const key = (t.name || t.id || '').toLowerCase().trim();
+            if (key) mergedMap.set(key, t);
+          });
+          fbTrainers.forEach(t => {
+            const key = (t.name || t.id || '').toLowerCase().trim();
+            if (key) {
+              const existing = mergedMap.get(key) || {};
+              mergedMap.set(key, { ...existing, ...t });
+            }
+          });
+          
+          const combined = Array.from(mergedMap.values());
+          if (combined.length > 0 && isMounted) {
+            setRows(combined);
+            saveTrainers(combined);
             setLoading(false);
             return;
           }

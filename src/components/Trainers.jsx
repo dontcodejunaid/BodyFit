@@ -24,27 +24,34 @@ export default function Trainers({ onSelectTrainer }) {
   useEffect(() => {
     let isMounted = true;
     async function loadTrainers() {
+      let combined = [];
       try {
-        const fbTrainers = await getTrainersFromFirebase();
-        if (fbTrainers && fbTrainers.length > 0) {
-          if (isMounted) setTrainers(fbTrainers);
-          return;
-        }
+        const rawLocal = localStorage.getItem('bodyfit_trainers');
+        const localList = rawLocal ? JSON.parse(rawLocal) : INITIAL_TRAINERS;
+        const fbList = (await getTrainersFromFirebase()) || [];
+
+        const mergedMap = new Map();
+        INITIAL_TRAINERS.forEach(t => {
+          const key = (t.name || t.id || '').toLowerCase().trim();
+          if (key) mergedMap.set(key, t);
+        });
+        localList.forEach(t => {
+          const key = (t.name || t.id || '').toLowerCase().trim();
+          if (key) mergedMap.set(key, { ...mergedMap.get(key), ...t });
+        });
+        fbList.forEach(t => {
+          const key = (t.name || t.id || '').toLowerCase().trim();
+          if (key) mergedMap.set(key, { ...mergedMap.get(key), ...t });
+        });
+
+        combined = Array.from(mergedMap.values());
       } catch (err) {
-        console.warn('Firebase trainers fetch issue:', err);
+        console.warn('Trainers fetch error:', err);
+        combined = INITIAL_TRAINERS;
       }
 
-      // Fallback to local storage or seed data if empty or offline
-      try {
-        const saved = localStorage.getItem('bodyfit_trainers');
-        if (saved && isMounted) {
-          setTrainers(JSON.parse(saved));
-        } else if (isMounted) {
-          setTrainers(INITIAL_TRAINERS);
-          localStorage.setItem('bodyfit_trainers', JSON.stringify(INITIAL_TRAINERS));
-        }
-      } catch (e) {
-        if (isMounted) setTrainers(INITIAL_TRAINERS);
+      if (isMounted) {
+        setTrainers(combined.length > 0 ? combined : INITIAL_TRAINERS);
       }
     }
 
@@ -52,11 +59,13 @@ export default function Trainers({ onSelectTrainer }) {
 
     const handleStorageChange = () => loadTrainers();
     window.addEventListener('storage', handleStorageChange);
+    window.addEventListener('bodyfit-trainers-update', handleStorageChange);
     window.addEventListener('bodyfit_trainers_updated', handleStorageChange);
 
     return () => {
       isMounted = false;
       window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('bodyfit-trainers-update', handleStorageChange);
       window.removeEventListener('bodyfit_trainers_updated', handleStorageChange);
     };
   }, []);

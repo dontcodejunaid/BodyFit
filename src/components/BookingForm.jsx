@@ -77,8 +77,14 @@ export default function BookingForm({ selectedPlan = null, selectedClass = null,
     if (t.available === false) return false;
 
     // 2. Check availableSlots if defined
-    if (Array.isArray(t.availableSlots) && t.availableSlots.length > 0) {
-      if (!t.availableSlots.includes(selectedTime)) return false;
+    if (t.availableSlots) {
+      const slots = Array.isArray(t.availableSlots)
+        ? t.availableSlots
+        : String(t.availableSlots).split(',').map(s => s.trim());
+      if (slots.length > 0 && !slots.includes('All')) {
+        const matches = slots.some(s => s.toLowerCase() === (selectedTime || '').toLowerCase());
+        if (!matches) return false;
+      }
     }
 
     // 3. Check if trainer is scheduled for a group class at this date & time
