@@ -103,18 +103,34 @@ Make sure you have [Node.js](https://nodejs.org/) installed (v18+ recommended).
    npm install
    ```
 
-3. **Run the development server**
+3. **Configure Firebase API Keys & Environment Variables**
+   - Copy `.env.example` to `.env`:
+     ```bash
+     cp .env.example .env
+     ```
+   - Open `.env` and fill in your Firebase Web App credentials obtained from the [Firebase Console](https://console.firebase.google.com/):
+     ```env
+     VITE_FIREBASE_API_KEY=AIzaSy...
+     VITE_FIREBASE_AUTH_DOMAIN=your-app.firebaseapp.com
+     VITE_FIREBASE_PROJECT_ID=your-app-id
+     VITE_FIREBASE_STORAGE_BUCKET=your-app.firebasestorage.app
+     VITE_FIREBASE_MESSAGING_SENDER_ID=123456789012
+     VITE_FIREBASE_APP_ID=1:123456789012:web:abcdef...
+     VITE_FIREBASE_MEASUREMENT_ID=G-XXXXXXXXXX
+     ```
+
+4. **Run the development server**
    ```bash
    npm run dev
    ```
    Open `http://localhost:5173` in your web browser.
 
-4. **Build for production**
+5. **Build for production**
    ```bash
    npm run build
    ```
 
-5. **Preview production build**
+6. **Preview production build**
    ```bash
    npm run preview
    ```

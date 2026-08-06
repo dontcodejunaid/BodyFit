@@ -13,6 +13,13 @@ import {
 } from 'firebase/firestore';
 import { getAnalytics, isSupported } from 'firebase/analytics';
 
+// Check if Firebase configuration environment variables are present and valid
+export const isFirebaseConfigured = Boolean(
+  import.meta.env.VITE_FIREBASE_API_KEY &&
+  import.meta.env.VITE_FIREBASE_PROJECT_ID &&
+  !import.meta.env.VITE_FIREBASE_API_KEY.includes('your_firebase_api_key')
+);
+
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
   authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
@@ -23,19 +30,35 @@ const firebaseConfig = {
   measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
 };
 
-// Initialize Firebase App & Firestore Database
-const app = initializeApp(firebaseConfig);
-export const db = getFirestore(app);
+// Initialize Firebase App & Firestore Database safely
+let app = null;
+let db = null;
+let analytics = null;
 
-// Safe Analytics Initialization for browser environments
-export let analytics = null;
-if (typeof window !== 'undefined') {
-  isSupported().then((supported) => {
-    if (supported) {
-      analytics = getAnalytics(app);
+if (isFirebaseConfigured) {
+  try {
+    app = initializeApp(firebaseConfig);
+    db = getFirestore(app);
+
+    if (typeof window !== 'undefined' && firebaseConfig.measurementId) {
+      isSupported().then((supported) => {
+        if (supported) {
+          analytics = getAnalytics(app);
+        }
+      }).catch((err) => {
+        console.warn('Firebase Analytics initialization warning:', err.message);
+      });
     }
-  });
+  } catch (err) {
+    console.error('Firebase Initialization Error:', err.message);
+  }
+} else {
+  console.info(
+    '🔥 Firebase API keys not configured. Set VITE_FIREBASE_API_KEY and VITE_FIREBASE_PROJECT_ID in your .env file to enable cloud sync.'
+  );
 }
+
+export { app, db, analytics };
 
 const BOOKINGS_COLLECTION = 'bookings';
 
@@ -51,6 +74,11 @@ export async function saveBookingToFirebase(bookingData) {
     createdAt: new Date().toISOString()
   };
 
+  if (!db) {
+    console.warn('Firebase DB is not initialized. Using local storage fallback.');
+    return bookingWithId;
+  }
+
   try {
     const docRef = await addDoc(collection(db, BOOKINGS_COLLECTION), bookingWithId);
     return { docId: docRef.id, ...bookingWithId };
@@ -64,6 +92,11 @@ export async function saveBookingToFirebase(bookingData) {
  * Fetch all bookings from Firebase Firestore
  */
 export async function getBookingsFromFirebase() {
+  if (!db) {
+    console.warn('Firebase DB is not initialized. Unable to fetch remote bookings.');
+    return [];
+  }
+
   try {
     let querySnapshot;
     try {
