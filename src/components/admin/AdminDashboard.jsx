@@ -1,14 +1,17 @@
 import React, { useEffect, useState } from 'react';
 import {
-  CalendarCheck, Settings2, BarChart3, LogOut, ExternalLink, MonitorSmartphone, CreditCard,
+  CalendarCheck, Settings2, BarChart3, LogOut, ExternalLink, MonitorSmartphone, CreditCard, Info,
 } from 'lucide-react';
 import BookingsPanel from './BookingsPanel';
 import MembershipsPanel from './MembershipsPanel';
 import ManagePanel from './ManagePanel';
 import AnalyticsPanel from './AnalyticsPanel';
+import AboutPanel from './AboutPanel';
+
 import {
   getBookings, bucketOf, getMemberSignups, saveMemberSignups, effectiveMembershipStatus,
 } from '../../utils/adminStore';
+
 import { getSession, logout } from '../../utils/adminAuth';
 import logoImg from '../../assets/logo.png';
 
@@ -19,6 +22,7 @@ const TABS = [
   { id: 'bookings', label: 'Bookings', icon: CalendarCheck },
   { id: 'memberships', label: 'Memberships', icon: CreditCard },
   { id: 'manage', label: 'Manage', icon: Settings2 },
+  { id: 'about', label: 'About Us', icon: Info },
   { id: 'analytics', label: 'Analytics', icon: BarChart3 },
 ];
 
@@ -249,6 +253,11 @@ export default function AdminDashboard({ onLogout, onExit }) {
             <ManagePanel />
           </>
         )}
+
+        {tab === 'about' && (
+          <AboutPanel />
+        )}
+
 
         {tab === 'analytics' && (
           <>

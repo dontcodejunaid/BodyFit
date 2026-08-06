@@ -7,96 +7,30 @@ import ownerImg from '../assets/owner.png';
 import Component from './ui/gradient-bars-background';
 import { TextReveal } from './ui/cascade-text';
 import { ShinyButton } from './ui/shiny-button';
-
-const INITIAL_ABOUT_DATA = {
-  header: {
-    badge: 'About Body Fit Fitness Centre',
-    titleMain: 'More Than a Gym - A Community',
-    titleSub: 'Built on Discipline & Growth',
-    story: 'Body Fit Fitness Centre was founded with a simple belief: fitness should be accessible, motivating, and sustainable for everyone - not just athletes. Located in the heart of Amrit Nagar, we\'ve built a space where beginners feel welcome and serious lifters feel challenged. Our certified trainers, modern equipment, and supportive community come together to help every member reach their goals, one rep at a time.'
-  },
-  tabContents: {
-    philosophy: {
-      title: '1. Consistency Over Intensity',
-      quote: 'Sustainable progress beats short bursts of extreme effort. We focus on building lifelong habits.',
-      bullets: [
-        'Sustainable, habit-building fitness routines',
-        'Long-term progressive development over quick fixes',
-        'Designed for beginners and advanced athletes alike'
-      ]
-    },
-    equipment: {
-      title: '2. Commercial Grade Equipment',
-      quote: 'We invest in biomechanically engineered machinery for optimal muscle activation and maximum joint safety.',
-      bullets: [
-        'Bio-mechanically correct plate-loaded & pin-selected machines',
-        'Imported rubberized dumbbells (2.5kg to 50kg) & Olympic turf',
-        'Dedicated cardio zone with treadmills, spin bikes & ellipticals'
-      ]
-    },
-    coaching: {
-      title: '3. Expert Guidance',
-      quote: 'Every plan is backed by certified trainers, not guesswork.',
-      bullets: [
-        'ACE Certified Trainers & structured guidance',
-        'Custom workout & form assessment routines',
-        'Regular tracking to ensure consistent results'
-      ]
-    }
-  },
-  founder: {
-    badge: 'Head Coach & Owner',
-    title: 'Owner\'s Note',
-    note: '"We didn\'t just want to open another gym — we wanted to build a place where people actually show up. Every piece of equipment, every class, every trainer we hired was chosen with that goal in mind."',
-    rating: '4.9 / 5 Rating'
-  },
-  highlights: [
-    {
-      id: 'trainers',
-      title: 'Consistency Over Intensity',
-      description: 'Sustainable progress beats short bursts of extreme effort.',
-      color: 'from-orange-500 to-amber-500'
-    },
-    {
-      id: 'equipment',
-      title: 'Community First',
-      description: 'Members train together, motivate each other, and celebrate wins together.',
-      color: 'from-amber-500 to-red-500'
-    },
-    {
-      id: 'community',
-      title: 'Expert Guidance',
-      description: 'Every plan is backed by certified trainers, not guesswork.',
-      color: 'from-red-500 to-orange-500'
-    }
-  ],
-  badges: [
-    { id: 1, text: 'ACE Certified Trainers' },
-    { id: 2, text: 'ISO Hygiene Standards' },
-    { id: 3, text: 'Delhi Fitness Association Member' },
-    { id: 4, text: '100% Sanitized Facility' }
-  ],
-  metrics: [
-    { value: '5', label: 'Years Active' },
-    { value: '1,200+', label: 'Members Trained' },
-    { value: '8', label: 'Certified Trainers' },
-    { value: '50+', label: 'Pieces of Equipment' }
-  ]
-};
+import { getAboutData, INITIAL_ABOUT_DATA } from '../utils/adminStore';
 
 export default function About() {
   const [activeTab, setActiveTab] = useState('philosophy');
   const [isEditing, setIsEditing] = useState(false);
-  const [data, setData] = useState(() => {
-    try {
-      const saved = localStorage.getItem('bodyfit_about_data');
-      return saved ? JSON.parse(saved) : INITIAL_ABOUT_DATA;
-    } catch {
-      return INITIAL_ABOUT_DATA;
-    }
-  });
+  const [data, setData] = useState(() => getAboutData());
 
   const [editForm, setEditForm] = useState(data);
+
+  useEffect(() => {
+    const handleUpdate = () => {
+      setData(getAboutData());
+    };
+
+    window.addEventListener('bodyfit_about_updated', handleUpdate);
+    window.addEventListener('storage', handleUpdate);
+    window.addEventListener('focus', handleUpdate);
+
+    return () => {
+      window.removeEventListener('bodyfit_about_updated', handleUpdate);
+      window.removeEventListener('storage', handleUpdate);
+      window.removeEventListener('focus', handleUpdate);
+    };
+  }, []);
 
   useEffect(() => {
     setEditForm(data);
@@ -106,6 +40,7 @@ export default function About() {
     setData(editForm);
     try {
       localStorage.setItem('bodyfit_about_data', JSON.stringify(editForm));
+      window.dispatchEvent(new Event('bodyfit_about_updated'));
     } catch (e) {
       console.error(e);
     }
@@ -362,10 +297,11 @@ export default function About() {
 
                   <div className="relative overflow-hidden rounded-2xl aspect-[16/10] border border-slate-800">
                     <img
-                      src={ownerImg}
+                      src={data.founder?.photo || ownerImg}
                       alt="Body Fit Gym Founder & Lead Coach"
                       className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-700"
                     />
+
                     <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-transparent opacity-80" />
 
                     <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between text-xs text-white font-bold">
