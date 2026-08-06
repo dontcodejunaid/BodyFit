@@ -136,16 +136,19 @@ export function getTrainerPhoto(trainerOrName, photoUrl) {
     return url;
   }
 
+  const map = (typeof TRAINER_IMAGES !== 'undefined' && TRAINER_IMAGES) ? TRAINER_IMAGES : {};
+
   const nameKey = name.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-');
-  if (nameKey && TRAINER_PHOTO_MAP[nameKey]) return TRAINER_PHOTO_MAP[nameKey];
+  if (nameKey && map[nameKey]) return map[nameKey];
 
   const firstName = name.toLowerCase().trim().split(' ')[0];
-  if (firstName && TRAINER_PHOTO_MAP[firstName]) return TRAINER_PHOTO_MAP[firstName];
+  if (firstName && map[firstName]) return map[firstName];
 
   try {
     const stored = JSON.parse(localStorage.getItem('bodyfit_trainers') || '[]');
-    const all = [...INITIAL_TRAINERS, ...stored];
-    const match = all.find(t => t.name?.toLowerCase().trim() === name.toLowerCase().trim());
+    const initialList = Array.isArray(INITIAL_TRAINERS) ? INITIAL_TRAINERS : [];
+    const all = [...initialList, ...stored];
+    const match = all.find(t => t && t.name && t.name.toLowerCase().trim() === name.toLowerCase().trim());
     if (match && match.photo) return match.photo;
     if (match && match.imageUrl) return match.imageUrl;
   } catch (e) {
