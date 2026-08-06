@@ -72,6 +72,55 @@ const MEMBERSHIPS_COLLECTION = 'memberships';
 // Members who actually bought a plan. `memberships` above holds the plan
 // catalogue; this one holds the people on those plans.
 const MEMBER_SIGNUPS_COLLECTION = 'membershipSignups';
+const NEWSLETTER_COLLECTION = 'newsletterSubscribers';
+
+// Helper to create clean document ID for newsletter subscribers (e.g. "you@example.com" -> "you-at-example-com")
+function getNewsletterDocId(email) {
+  const cleanEmail = (email || '').toLowerCase().trim();
+  const slug = cleanEmail
+    .replace(/@/g, '-at-')
+    .replace(/[^a-z0-9-]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+  return slug || `sub-${Date.now()}`;
+}
+
+/**
+ * Save a newsletter subscriber email to Firebase Firestore
+ */
+export async function saveNewsletterSubscriberToFirebase(email) {
+  if (!email || typeof email !== 'string') return null;
+  const cleanEmail = email.trim().toLowerCase();
+  const docId = getNewsletterDocId(cleanEmail);
+
+  const subscriberData = {
+    email: cleanEmail,
+    subscribedAt: new Date().toISOString(),
+    status: 'Active',
+    source: 'Website Footer'
+  };
+
+  // Local storage fallback
+  try {
+    const localSubs = JSON.parse(localStorage.getItem('bodyfit_newsletter_subscribers') || '[]');
+    if (!localSubs.some(s => s.email === cleanEmail)) {
+      localSubs.unshift(subscriberData);
+      localStorage.setItem('bodyfit_newsletter_subscribers', JSON.stringify(localSubs));
+    }
+  } catch (e) {}
+
+  if (!db) {
+    console.warn('Firebase DB not initialized. Saved newsletter email locally.');
+    return subscriberData;
+  }
+
+  try {
+    await setDoc(doc(db, NEWSLETTER_COLLECTION, docId), subscriberData, { merge: true });
+    return subscriberData;
+  } catch (error) {
+    console.warn('Firebase newsletter write error:', error.message);
+    return subscriberData;
+  }
+}
 
 // Helper to create clean, readable document IDs in Firestore for trainers (e.g. "Priya Kapoor" -> "priya-kapoor")
 function getTrainerDocId(trainerOrName) {
@@ -343,91 +392,12 @@ export async function deleteMembershipSignupFromFirebase(docIdOrMemberId) {
   return false;
 }
 
-/**
- * Fetch all bookings from Firebase Firestore
- */
-export async function getBookingsFromFirebase() {
-  if (!db) {
-    console.warn('Firebase DB is not initialized. Unable to fetch remote bookings.');
-    return [];
-  }
-
-  try {
-    let querySnapshot;
-    try {
-      const q = query(collection(db, BOOKINGS_COLLECTION), orderBy('createdAt', 'desc'));
-      querySnapshot = await getDocs(q);
-    } catch (e) {
-      querySnapshot = await getDocs(collection(db, BOOKINGS_COLLECTION));
-    }
-    return querySnapshot.docs.map((docSnap) => ({
-      docId: docSnap.id,
-      ...docSnap.data()
-    }));
-  } catch (error) {
-    console.warn('Firebase read unavailable or fallback mode active:', error.message);
-    return [];
-  }
-}
-
-/**
- * Update an existing booking in Firebase Firestore
- */
-export async function updateBookingInFirebase(docIdOrBookingId, patch) {
-  try {
-    if (docIdOrBookingId && typeof docIdOrBookingId === 'string' && docIdOrBookingId.length > 15 && !docIdOrBookingId.startsWith('BF-')) {
-      const docRef = doc(db, BOOKINGS_COLLECTION, docIdOrBookingId);
-      await updateDoc(docRef, patch);
-      return true;
-    }
-
-    const q = query(collection(db, BOOKINGS_COLLECTION));
-    const snapshot = await getDocs(q);
-    const targetDoc = snapshot.docs.find((d) => d.data().id === docIdOrBookingId || d.id === docIdOrBookingId);
-
-    if (targetDoc) {
-      const docRef = doc(db, BOOKINGS_COLLECTION, targetDoc.id);
-      await updateDoc(docRef, patch);
-      return true;
-    }
-  } catch (error) {
-    console.warn('Firebase update unavailable:', error.message);
-  }
-  return false;
-}
-
-/**
- * Delete a booking from Firebase Firestore
- */
-export async function deleteBookingFromFirebase(docIdOrBookingId) {
-  try {
-    if (docIdOrBookingId && typeof docIdOrBookingId === 'string' && docIdOrBookingId.length > 15 && !docIdOrBookingId.startsWith('BF-')) {
-      const docRef = doc(db, BOOKINGS_COLLECTION, docIdOrBookingId);
-      await deleteDoc(docRef);
-      return true;
-    }
-
-    const q = query(collection(db, BOOKINGS_COLLECTION));
-    const snapshot = await getDocs(q);
-    const targetDoc = snapshot.docs.find((d) => d.data().id === docIdOrBookingId || d.id === docIdOrBookingId);
-
-    if (targetDoc) {
-      const docRef = doc(db, BOOKINGS_COLLECTION, targetDoc.id);
-      await deleteDoc(docRef);
-      return true;
-    }
-  } catch (error) {
-    console.warn('Firebase delete unavailable:', error.message);
-  }
-  return false;
-}
-
 // ----------------------------------------------------
 // TRAINERS COLLECTION FIRESTORE INTEGRATION
 // ----------------------------------------------------
 
 /**
- * Auto-seed initial trainers into Firebase Firestore
+ * Auto-seed initial trainers into Firebase Firestore if collection is empty
  */
 export async function seedInitialTrainersToFirebase() {
   try {
@@ -453,24 +423,21 @@ export async function seedInitialTrainersToFirebase() {
 
 /**
  * Sync all trainers list (existing + new) to Firebase Firestore
- * Purges legacy random hash IDs (like 0TQVg2lCU606oDgpAk0F) and replaces with trainer names
+ * Purges duplicate/legacy random hash doc IDs (like "0TQVg2lCU606oDgpAk0F")
  */
 export async function syncAllTrainersToFirebase(trainersList) {
   try {
-    // 1. Delete legacy random doc IDs from Firestore
     const q = query(collection(db, TRAINERS_COLLECTION));
     const snapshot = await getDocs(q);
 
-    const VALID_IDS = new Set(INITIAL_TRAINERS.map((t) => getTrainerDocId(t)));
-
+    // Purge any legacy random hash IDs from Firestore
     for (const docSnap of snapshot.docs) {
       const docId = docSnap.id;
-      const isLegacyRandomDoc = !VALID_IDS.has(docId) && (!docId.includes('-') || docId.endsWith('-plan') || docId.length > 15);
-      if (isLegacyRandomDoc) {
+      if (!docId.includes('-') || docId.length > 15) {
         try {
           await deleteDoc(doc(db, TRAINERS_COLLECTION, docId));
         } catch (e) {
-          console.warn('Could not delete legacy random trainer doc:', docId);
+          console.warn('Could not delete random hash doc:', docId);
         }
       }
     }
@@ -490,11 +457,11 @@ export async function syncAllTrainersToFirebase(trainersList) {
         ...trainer,
         id: cleanId,
         docId: cleanId,
-        photo: typeof trainer.photo === 'string' ? trainer.photo : '',
+        photo: typeof trainer.photo === 'string' ? trainer.photo : (trainer.photo || ''),
         createdAt: trainer.createdAt || new Date().toISOString()
       };
       await setDoc(doc(db, TRAINERS_COLLECTION, cleanId), trainerToSave, { merge: true });
-      updatedList.push({ docId: cleanId, ...trainerToSave });
+      updatedList.push(trainerToSave);
     }
     return updatedList;
   } catch (error) {
@@ -510,7 +477,7 @@ export async function getTrainersFromFirebase() {
   try {
     const q = query(collection(db, TRAINERS_COLLECTION));
     const querySnapshot = await getDocs(q);
-    
+
     if (!querySnapshot.empty) {
       // Purge any legacy random hash IDs from Firestore on fetch
       for (const docSnap of querySnapshot.docs) {
@@ -522,9 +489,16 @@ export async function getTrainersFromFirebase() {
           }
         }
       }
+
+      const validDocs = querySnapshot.docs.filter((d) => d.id.includes('-') && !d.id.endsWith('-plan'));
+      if (validDocs.length > 0) {
+        return validDocs.map((docSnap) => ({
+          docId: docSnap.id,
+          ...docSnap.data()
+        }));
+      }
     }
-    
-    // Seed and ensure clean trainer name document IDs exist in Firestore
+
     const seeded = await seedInitialTrainersToFirebase();
     if (seeded.length > 0) return seeded;
   } catch (error) {
@@ -534,7 +508,7 @@ export async function getTrainersFromFirebase() {
 }
 
 /**
- * Add a new trainer to Firebase Firestore with a readable document ID
+ * Add a new trainer directly to Firebase Firestore on creation (with readable slug doc ID like "priya-kapoor")
  */
 export async function addTrainerToFirebase(trainerData) {
   try {
@@ -612,6 +586,85 @@ export async function deleteTrainerFromFirebase(docIdOrTrainerId) {
     }
   } catch (error) {
     console.warn('Firebase trainer delete failed:', error.message);
+  }
+  return false;
+}
+
+/**
+ * Fetch all bookings from Firebase Firestore
+ */
+export async function getBookingsFromFirebase() {
+  if (!db) {
+    console.warn('Firebase DB is not initialized. Unable to fetch remote bookings.');
+    return [];
+  }
+
+  try {
+    let querySnapshot;
+    try {
+      const q = query(collection(db, BOOKINGS_COLLECTION), orderBy('createdAt', 'desc'));
+      querySnapshot = await getDocs(q);
+    } catch (e) {
+      querySnapshot = await getDocs(collection(db, BOOKINGS_COLLECTION));
+    }
+    return querySnapshot.docs.map((docSnap) => ({
+      docId: docSnap.id,
+      ...docSnap.data()
+    }));
+  } catch (error) {
+    console.warn('Firebase read unavailable or fallback mode active:', error.message);
+    return [];
+  }
+}
+
+/**
+ * Update an existing booking in Firebase Firestore
+ */
+export async function updateBookingInFirebase(docIdOrBookingId, patch) {
+  try {
+    if (docIdOrBookingId && typeof docIdOrBookingId === 'string' && docIdOrBookingId.length > 15 && !docIdOrBookingId.startsWith('BF-')) {
+      const docRef = doc(db, BOOKINGS_COLLECTION, docIdOrBookingId);
+      await updateDoc(docRef, patch);
+      return true;
+    }
+
+    const q = query(collection(db, BOOKINGS_COLLECTION));
+    const snapshot = await getDocs(q);
+    const targetDoc = snapshot.docs.find((d) => d.data().id === docIdOrBookingId || d.id === docIdOrBookingId);
+
+    if (targetDoc) {
+      const docRef = doc(db, BOOKINGS_COLLECTION, targetDoc.id);
+      await updateDoc(docRef, patch);
+      return true;
+    }
+  } catch (error) {
+    console.warn('Firebase update unavailable:', error.message);
+  }
+  return false;
+}
+
+/**
+ * Delete a booking from Firebase Firestore
+ */
+export async function deleteBookingFromFirebase(docIdOrBookingId) {
+  try {
+    if (docIdOrBookingId && typeof docIdOrBookingId === 'string' && docIdOrBookingId.length > 15 && !docIdOrBookingId.startsWith('BF-')) {
+      const docRef = doc(db, BOOKINGS_COLLECTION, docIdOrBookingId);
+      await deleteDoc(docRef);
+      return true;
+    }
+
+    const q = query(collection(db, BOOKINGS_COLLECTION));
+    const snapshot = await getDocs(q);
+    const targetDoc = snapshot.docs.find((d) => d.data().id === docIdOrBookingId || d.id === docIdOrBookingId);
+
+    if (targetDoc) {
+      const docRef = doc(db, BOOKINGS_COLLECTION, targetDoc.id);
+      await deleteDoc(docRef);
+      return true;
+    }
+  } catch (error) {
+    console.warn('Firebase delete unavailable:', error.message);
   }
   return false;
 }

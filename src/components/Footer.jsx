@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
-import { MapPin, Phone, Clock, Send, CheckCircle2, Lock } from 'lucide-react';
+import { MapPin, Phone, Clock, Send, CheckCircle2, Lock, Loader2 } from 'lucide-react';
 import logoImg from '../assets/logo.png';
 import { WhatsAppConfig } from '../utils/whatsapp';
 import { InstagramIcon, WhatsAppIcon, LinkedInIcon } from './ui/social-icons';
 import { ADMIN_HASH } from './admin/AdminPortal';
 import { ShinySheenButton } from './ui/shiny-button-sheen';
-import LocationMap from './ui/expanded-map';
+import { saveNewsletterSubscriberToFirebase } from '../firebase';
+import { sendNewsletterSubscriptionEmail } from '../utils/bookingNotifications';
 
 const quickLinks = [
   { label: 'Home', href: '/home', sectionId: '#home' },
@@ -46,6 +47,7 @@ const hours = [
 export default function Footer() {
   const [email, setEmail] = useState('');
   const [subscribed, setSubscribed] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const phoneDigits = WhatsAppConfig.ActiveNumber;
   const phoneDisplay = `+${phoneDigits.slice(0, 2)} ${phoneDigits.slice(2, 7)} ${phoneDigits.slice(7)}`;
@@ -64,11 +66,20 @@ export default function Footer() {
     document.querySelector(sectionId)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
-  const handleSubscribe = (event) => {
+  const handleSubscribe = async (event) => {
     event.preventDefault();
-    if (!email.trim()) return;
+    if (!email.trim() || isSubmitting) return;
+    const targetEmail = email.trim();
+    setIsSubmitting(true);
+    try {
+      await saveNewsletterSubscriberToFirebase(targetEmail);
+      await sendNewsletterSubscriptionEmail(targetEmail);
+    } catch (e) {
+      console.warn('Newsletter subscription error:', e);
+    }
     setSubscribed(true);
     setEmail('');
+    setIsSubmitting(false);
   };
 
   return (
@@ -202,10 +213,11 @@ export default function Footer() {
                 />
                 <button
                   aria-label="Subscribe"
-                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-orange-500 to-amber-500 text-white shadow-md transition-all hover:shadow-[0_0_20px_rgba(251,146,60,0.45)] active:scale-95"
+                  disabled={isSubmitting}
+                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-orange-500 to-amber-500 text-white shadow-md transition-all hover:shadow-[0_0_20px_rgba(251,146,60,0.45)] active:scale-95 disabled:opacity-50"
                   type="submit"
                 >
-                  <Send className="h-4 w-4" />
+                  {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
                 </button>
               </div>
             </form>
