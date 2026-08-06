@@ -5,6 +5,7 @@ import {
   Check, Flame, MessageSquare, CalendarPlus, ChevronLeft, ChevronRight, XCircle
 } from 'lucide-react';
 import { saveBooking, isSlotTaken } from '../utils/localStorage';
+import { saveBookingToFirebase } from '../firebase';
 import { sendWhatsAppBookingAlert, WhatsAppConfig } from '../utils/whatsapp';
 import {
   sendAllConfirmations, scheduleBrowserReminder, downloadCalendarInvite, openGoogleCalendar,
@@ -136,6 +137,7 @@ export default function BookingForm({ selectedPlan = null, onClearPlan = null })
     }
 
     const newBooking = saveBooking(formData);
+    saveBookingToFirebase(formData);
     setConfirmedBooking(newBooking);
     setStep(5);
 

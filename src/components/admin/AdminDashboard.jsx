@@ -1,11 +1,15 @@
 import React, { useEffect, useState } from 'react';
-import { CalendarCheck, Settings2, BarChart3, LogOut, ExternalLink } from 'lucide-react';
+import {
+  CalendarCheck, Settings2, BarChart3, LogOut, ExternalLink, MonitorSmartphone,
+} from 'lucide-react';
 import BookingsPanel from './BookingsPanel';
 import ManagePanel from './ManagePanel';
 import AnalyticsPanel from './AnalyticsPanel';
 import { getBookings, bucketOf } from '../../utils/adminStore';
 import { getSession, logout } from '../../utils/adminAuth';
 import logoImg from '../../assets/logo.png';
+
+import { getBookingsFromFirebase } from '../../firebase';
 
 const TABS = [
   { id: 'bookings', label: 'Bookings', icon: CalendarCheck },
@@ -16,18 +20,53 @@ const TABS = [
 export default function AdminDashboard({ onLogout, onExit }) {
   const [tab, setTab] = useState('bookings');
   const [bookings, setBookings] = useState(() => getBookings());
+  const [loadingCloud, setLoadingCloud] = useState(true);
 
   const session = getSession();
   const todayCount = bookings.filter((booking) => bucketOf(booking) === 'today').length;
   const pendingCount = bookings.filter((booking) => (booking.status || 'Pending') === 'Pending').length;
 
-  // Pick up bookings made in another tab.
+  // Load and subscribe to live bookings from Firebase Cloud Firestore
   useEffect(() => {
-    const onStorage = (event) => {
-      if (event.key === 'bodyfit_bookings') setBookings(getBookings());
+    let isMounted = true;
+
+    const syncFirebaseBookings = async () => {
+      try {
+        const cloudBookings = await getBookingsFromFirebase();
+        if (isMounted && cloudBookings.length > 0) {
+          // Merge local and cloud bookings uniquely
+          const localBookings = getBookings();
+          const combinedMap = new Map();
+          [...cloudBookings, ...localBookings].forEach(b => {
+            if (b.id) combinedMap.set(b.id, b);
+          });
+          setBookings(Array.from(combinedMap.values()));
+        }
+      } catch (err) {
+        console.warn('Could not sync cloud bookings:', err);
+      } finally {
+        if (isMounted) setLoadingCloud(false);
+      }
     };
-    window.addEventListener('storage', onStorage);
-    return () => window.removeEventListener('storage', onStorage);
+
+    syncFirebaseBookings();
+
+    const refresh = () => {
+      syncFirebaseBookings();
+    };
+
+    window.addEventListener('storage', refresh);
+    window.addEventListener('focus', refresh);
+    document.addEventListener('visibilitychange', refresh);
+    const interval = setInterval(refresh, 4000);
+
+    return () => {
+      isMounted = false;
+      window.removeEventListener('storage', refresh);
+      window.removeEventListener('focus', refresh);
+      document.removeEventListener('visibilitychange', refresh);
+      clearInterval(interval);
+    };
   }, []);
 
   const handleLogout = () => {
@@ -106,6 +145,14 @@ export default function AdminDashboard({ onLogout, onExit }) {
               <p className="mt-1 text-sm text-slate-400">
                 {todayCount} today · {pendingCount} awaiting your decision
               </p>
+            </div>
+
+            <div className="mb-6 flex items-start gap-3 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-xs leading-relaxed text-emerald-200">
+              <MonitorSmartphone className="mt-0.5 h-4 w-4 shrink-0 text-emerald-400" />
+              <div>
+                <strong className="font-bold">Google Firebase Cloud Database Active.</strong>{' '}
+                Bookings made on any phone, laptop, or tablet now sync automatically to your Firestore cloud database in real-time.
+              </div>
             </div>
             <BookingsPanel bookings={bookings} onChange={setBookings} />
           </>

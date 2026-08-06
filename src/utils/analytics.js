@@ -63,7 +63,7 @@ export function getAnalyticsSummary() {
   // Seed sample Booked Trial Members + Live Saved Pass
   const bookedTrialMembers = [
     { name: 'Aarav Sharma', phone: '+91 98765 43210', slot: '7:00 AM (Morning)', trainer: 'Rahul Sharma', status: 'Confirmed', date: 'Today' },
-    { name: 'Sourav Sharma', phone: '+91 99455 05665', slot: '6:00 PM (Evening)', trainer: 'Karan Malhotra', status: 'Confirmed', date: 'Today' },
+    { name: 'Sourav Sharma', phone: '+91 96209 96689', slot: '6:00 PM (Evening)', trainer: 'Karan Malhotra', status: 'Confirmed', date: 'Today' },
     { name: 'Riya Malhotra', phone: '+91 98123 45678', slot: '8:30 AM (Morning)', trainer: 'Neha Verma', status: 'Confirmed', date: 'Tomorrow' },
     { name: 'Vikram Nair', phone: '+91 98987 65432', slot: '7:30 PM (Evening)', trainer: 'Vikram Singh', status: 'Confirmed', date: 'Tomorrow' },
     { name: 'Sana Qureshi', phone: '+91 97654 32109', slot: '5:00 PM (Evening)', trainer: 'Priya Patel', status: 'Confirmed', date: '5 Aug' }

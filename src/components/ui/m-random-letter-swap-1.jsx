@@ -8,12 +8,12 @@ import { WhatsAppConfig } from "../../utils/whatsapp";
 import logoImg from "../../assets/logo.png";
 
 const links = [
-  { label: "Home", href: "#home" },
-  { label: "About Us", href: "#about-us" },
-  { label: "Facilities", href: "#facilities" },
-  { label: "Gallery", href: "#gallery" },
-  { label: "Testimonials", href: "#testimonials" },
-  { label: "Contact", href: "#footer" },
+  { label: "Home", href: "/home", sectionId: "#home" },
+  { label: "About Us", href: "/about-us", sectionId: "#about-us" },
+  { label: "Facilities", href: "/facilities", sectionId: "#facilities" },
+  { label: "Gallery", href: "/gallery", sectionId: "#gallery" },
+  { label: "Testimonials", href: "/testimonials", sectionId: "#testimonials" },
+  { label: "Contact", href: "/contact", sectionId: "#contact" },
 ];
 
 const trackedSections = [
@@ -23,7 +23,7 @@ const trackedSections = [
   "#facilities",
   "#gallery",
   "#testimonials",
-  "#footer"
+  "#contact"
 ];
 
 export default function RandomLetterSwapNav() {
@@ -58,16 +58,31 @@ export default function RandomLetterSwapNav() {
 
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
+
+    // On page reload/refresh, reset URL back to root domain /
+    if (window.history.replaceState) {
+      window.history.replaceState(null, "", "/");
+    }
+
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  const goTo = (event, href) => {
-    event.preventDefault();
+  const goTo = (event, pathOrId) => {
+    if (event) event.preventDefault();
     setMenuOpen(false);
-    setActiveSection(href);
-    const element = document.querySelector(href);
+
+    const sectionId = pathOrId.startsWith("#") ? pathOrId : "#" + pathOrId.replace("/", "");
+    const cleanPath = pathOrId.startsWith("/") ? pathOrId : "/" + pathOrId.replace("#", "");
+
+    setActiveSection(sectionId);
+
+    if (window.history.pushState) {
+      window.history.pushState(null, "", cleanPath);
+    }
+
+    const element = document.querySelector(sectionId);
     if (element) {
-      const block = href === "#bmi-calculator" ? "center" : "start";
+      const block = sectionId === "#bmi-calculator" ? "center" : "start";
       element.scrollIntoView({ behavior: "smooth", block });
     }
   };
@@ -77,18 +92,18 @@ export default function RandomLetterSwapNav() {
       className={cn(
         "z-50 transition-all duration-300 w-full",
         scrolled
-          ? "fixed top-0 left-0 right-0 bg-slate-950/90 backdrop-blur-xl border-b border-slate-800/80 shadow-xl shadow-black/40 py-2.5"
-          : "relative bg-slate-950/60 backdrop-blur-md border-b border-slate-800/50 py-3"
+          ? "fixed top-0 left-0 right-0 bg-slate-950/90 backdrop-blur-xl border-b border-slate-800/80 shadow-xl shadow-black/40 py-1.5"
+          : "relative bg-slate-950/60 backdrop-blur-md border-b border-slate-800/50 py-2"
       )}
     >
-      <div className="mx-auto flex max-w-7xl items-center justify-between gap-6 px-6">
+      <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-6">
         <a
-          className="flex shrink-0 items-center gap-3"
-          href="#home"
-          onClick={(event) => goTo(event, "#home")}
+          className="flex shrink-0 items-center gap-2"
+          href="/home"
+          onClick={(event) => goTo(event, "/home")}
         >
-          <img alt="Body Fit" className="h-20 sm:h-24 w-auto transition-transform duration-300 hover:scale-105" src={logoImg} />
-          <span className="font-teko text-4xl sm:text-5xl leading-none tracking-wide text-white">
+          <img alt="Body Fit" className="h-12 sm:h-14 w-auto transition-transform duration-300 hover:scale-105" src={logoImg} />
+          <span className="font-teko text-3xl sm:text-4xl leading-none tracking-wide text-white">
             BODY<span className="text-orange-500">FIT</span>
           </span>
         </a>
@@ -96,7 +111,7 @@ export default function RandomLetterSwapNav() {
         {/* Desktop links */}
         <nav className="hidden items-center gap-7 lg:flex">
           {links.map((link) => {
-            const isActive = activeSection === link.href;
+            const isActive = activeSection === link.sectionId;
             return (
               <RandomLetterSwap
                 as="a"
@@ -138,7 +153,7 @@ export default function RandomLetterSwapNav() {
           <a
             aria-label="Call Bodyfit Gym"
             className="flex h-10 w-10 items-center justify-center rounded-xl border border-slate-800 bg-slate-900/60 text-slate-300 transition-all duration-300 hover:border-orange-500/50 hover:bg-orange-500 hover:text-white hover:shadow-[0_0_20px_rgba(249,115,22,0.6)] active:scale-95"
-            href="tel:+919945505665"
+            href="tel:+919620996689"
           >
             <Phone className="h-[18px] w-[18px]" />
           </a>
