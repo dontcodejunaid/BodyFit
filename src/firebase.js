@@ -133,3 +133,96 @@ export async function deleteBookingFromFirebase(docIdOrBookingId) {
   }
   return false;
 }
+
+// ----------------------------------------------------
+// TRAINERS COLLECTION FIRESTORE INTEGRATION
+// ----------------------------------------------------
+const TRAINERS_COLLECTION = 'trainers';
+
+/**
+ * Fetch all trainers from Firebase Firestore (with optional seed if empty)
+ */
+export async function getTrainersFromFirebase() {
+  try {
+    const q = query(collection(db, TRAINERS_COLLECTION));
+    const querySnapshot = await getDocs(q);
+    if (!querySnapshot.empty) {
+      return querySnapshot.docs.map((docSnap) => ({
+        docId: docSnap.id,
+        ...docSnap.data()
+      }));
+    }
+  } catch (error) {
+    console.warn('Firebase trainers read error:', error.message);
+  }
+  return [];
+}
+
+/**
+ * Add a new trainer to Firebase Firestore
+ */
+export async function addTrainerToFirebase(trainerData) {
+  try {
+    const docRef = await addDoc(collection(db, TRAINERS_COLLECTION), {
+      ...trainerData,
+      createdAt: new Date().toISOString()
+    });
+    return { docId: docRef.id, ...trainerData };
+  } catch (error) {
+    console.warn('Firebase trainer add failed:', error.message);
+    return null;
+  }
+}
+
+/**
+ * Update an existing trainer in Firebase Firestore
+ */
+export async function updateTrainerInFirebase(docIdOrTrainerId, patch) {
+  try {
+    if (docIdOrTrainerId && typeof docIdOrTrainerId === 'string' && docIdOrTrainerId.length > 15 && !docIdOrTrainerId.startsWith('tr-')) {
+      const docRef = doc(db, TRAINERS_COLLECTION, docIdOrTrainerId);
+      await updateDoc(docRef, patch);
+      return true;
+    }
+
+    const q = query(collection(db, TRAINERS_COLLECTION));
+    const snapshot = await getDocs(q);
+    const targetDoc = snapshot.docs.find((d) => d.data().id === docIdOrTrainerId || d.id === docIdOrTrainerId);
+
+    if (targetDoc) {
+      const docRef = doc(db, TRAINERS_COLLECTION, targetDoc.id);
+      await updateDoc(docRef, patch);
+      return true;
+    }
+  } catch (error) {
+    console.warn('Firebase trainer update failed:', error.message);
+  }
+  return false;
+}
+
+/**
+ * Delete a trainer from Firebase Firestore
+ */
+export async function deleteTrainerFromFirebase(docIdOrTrainerId) {
+  try {
+    if (docIdOrTrainerId && typeof docIdOrTrainerId === 'string' && docIdOrTrainerId.length > 15 && !docIdOrTrainerId.startsWith('tr-')) {
+      const docRef = doc(db, TRAINERS_COLLECTION, docIdOrTrainerId);
+      await deleteDoc(docRef);
+      return true;
+    }
+
+    const q = query(collection(db, TRAINERS_COLLECTION));
+    const snapshot = await getDocs(q);
+    const targetDoc = snapshot.docs.find((d) => d.data().id === docIdOrTrainerId || d.id === docIdOrTrainerId);
+
+    if (targetDoc) {
+      const docRef = doc(db, TRAINERS_COLLECTION, targetDoc.id);
+      await deleteDoc(docRef);
+      return true;
+    }
+  } catch (error) {
+    console.warn('Firebase trainer delete failed:', error.message);
+  }
+  return false;
+}
+

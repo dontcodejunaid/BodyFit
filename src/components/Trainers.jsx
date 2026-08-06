@@ -13,26 +13,52 @@ import {
   Clock
 } from 'lucide-react';
 import { INITIAL_TRAINERS } from '../data/trainersAndScheduleData';
+import { getTrainersFromFirebase } from '../firebase';
 
 export default function Trainers({ onSelectTrainer }) {
   const [trainers, setTrainers] = useState([]);
   const [activeFilter, setActiveFilter] = useState('All');
   const [selectedTrainerModal, setSelectedTrainerModal] = useState(null);
 
-  // Load trainers from LocalStorage if available, fallback to seed data
+  // Load trainers from Firebase Firestore database with fallback to LocalStorage/seed
   useEffect(() => {
-    try {
-      const saved = localStorage.getItem('bodyfit_trainers');
-      if (saved) {
-        setTrainers(JSON.parse(saved));
-      } else {
-        setTrainers(INITIAL_TRAINERS);
-        localStorage.setItem('bodyfit_trainers', JSON.stringify(INITIAL_TRAINERS));
+    let isMounted = true;
+    async function loadTrainers() {
+      try {
+        const fbTrainers = await getTrainersFromFirebase();
+        if (fbTrainers && fbTrainers.length > 0) {
+          if (isMounted) setTrainers(fbTrainers);
+          return;
+        }
+      } catch (err) {
+        console.warn('Firebase trainers fetch issue:', err);
       }
-    } catch (e) {
-      console.warn('LocalStorage access issue, using default trainers list:', e);
-      setTrainers(INITIAL_TRAINERS);
+
+      // Fallback to local storage or seed data if empty or offline
+      try {
+        const saved = localStorage.getItem('bodyfit_trainers');
+        if (saved && isMounted) {
+          setTrainers(JSON.parse(saved));
+        } else if (isMounted) {
+          setTrainers(INITIAL_TRAINERS);
+          localStorage.setItem('bodyfit_trainers', JSON.stringify(INITIAL_TRAINERS));
+        }
+      } catch (e) {
+        if (isMounted) setTrainers(INITIAL_TRAINERS);
+      }
     }
+
+    loadTrainers();
+
+    const handleStorageChange = () => loadTrainers();
+    window.addEventListener('storage', handleStorageChange);
+    window.addEventListener('bodyfit_trainers_updated', handleStorageChange);
+
+    return () => {
+      isMounted = false;
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('bodyfit_trainers_updated', handleStorageChange);
+    };
   }, []);
 
   const filterCategories = [

@@ -1,11 +1,17 @@
-import React, { useState } from 'react';
-import { Plus, Pencil, Trash2, Save, X } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Plus, Pencil, Trash2, Save, X, Loader2, Cloud } from 'lucide-react';
 import {
   getTrainers, saveTrainers, getClasses, saveClasses,
   getMemberships, saveMemberships, newId,
 } from '../../utils/adminStore';
 import { CLASS_CATEGORIES, DAYS_OF_WEEK } from '../../data/trainersAndScheduleData';
 import { PLAN_GRADIENTS } from '../../data/membershipPlans';
+import {
+  getTrainersFromFirebase,
+  addTrainerToFirebase,
+  updateTrainerInFirebase,
+  deleteTrainerFromFirebase,
+} from '../../firebase';
 
 // Each collection declares its own fields, so one editor renders all three.
 // `list` fields are stored as arrays but edited as comma-separated text.
@@ -38,7 +44,7 @@ const COLLECTIONS = {
     idPrefix: 'tr',
     read: getTrainers,
     write: saveTrainers,
-    note: 'Changes appear on the public Trainers section after a refresh.',
+    note: '⚡ Connected to Google Firebase Cloud Database. Changes update live across the website.',
     primary: 'name',
     fields: [
       { key: 'name', label: 'Full name', type: 'text' },
@@ -46,6 +52,7 @@ const COLLECTIONS = {
       { key: 'experience', label: 'Experience', type: 'text', placeholder: '5+ Years' },
       { key: 'rating', label: 'Rating', type: 'number', step: '0.1' },
       { key: 'specialties', label: 'Specialties (comma separated)', type: 'list', wide: true },
+      { key: 'photo', label: 'Photo Image URL', type: 'text', wide: true, placeholder: 'https://images.unsplash.com/...' },
       { key: 'bio', label: 'Short bio', type: 'textarea', wide: true },
       { key: 'available', label: 'Currently available', type: 'boolean' },
     ],
@@ -156,18 +163,49 @@ export default function ManagePanel() {
   const [rows, setRows] = useState(() => COLLECTIONS.memberships.read());
   const [editing, setEditing] = useState(null); // row id, or 'new'
   const [draft, setDraft] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   const config = COLLECTIONS[active];
 
+  // Load collection data (with Firebase Cloud sync for trainers)
+  useEffect(() => {
+    let isMounted = true;
+    async function loadData() {
+      if (active === 'trainers') {
+        setLoading(true);
+        try {
+          const fbTrainers = await getTrainersFromFirebase();
+          if (fbTrainers && fbTrainers.length > 0 && isMounted) {
+            setRows(fbTrainers);
+            saveTrainers(fbTrainers);
+            setLoading(false);
+            return;
+          }
+        } catch (err) {
+          console.warn('Firebase trainers fetch issue in admin:', err);
+        }
+        if (isMounted) {
+          setRows(getTrainers());
+          setLoading(false);
+        }
+      } else {
+        setRows(COLLECTIONS[active].read());
+      }
+    }
+
+    loadData();
+    return () => { isMounted = false; };
+  }, [active]);
+
   const switchTo = (key) => {
     setActive(key);
-    setRows(COLLECTIONS[key].read());
     setEditing(null);
     setDraft(null);
   };
 
   const startEdit = (row) => {
-    setEditing(row.id);
+    setEditing(row.id || row.docId);
     setDraft({ ...row });
   };
 
@@ -181,7 +219,7 @@ export default function ManagePanel() {
     setDraft(null);
   };
 
-  const commit = () => {
+  const commit = async () => {
     // Normalise comma-separated fields back into arrays before saving.
     const cleaned = { ...draft };
     config.fields
@@ -196,22 +234,68 @@ export default function ManagePanel() {
               .filter(Boolean);
       });
 
-    const next =
-      editing === 'new'
-        ? [...rows, cleaned]
-        : rows.map((row) => (row.id === editing ? cleaned : row));
+    setIsSaving(true);
 
-    config.write(next);
-    setRows(next);
+    if (active === 'trainers') {
+      try {
+        if (editing === 'new') {
+          const added = await addTrainerToFirebase(cleaned);
+          const next = [...rows, added || cleaned];
+          saveTrainers(next);
+          setRows(next);
+        } else {
+          const targetId = cleaned.docId || cleaned.id;
+          await updateTrainerInFirebase(targetId, cleaned);
+          const next = rows.map((row) => ((row.docId || row.id) === editing ? { ...row, ...cleaned } : row));
+          saveTrainers(next);
+          setRows(next);
+        }
+        window.dispatchEvent(new Event('bodyfit_trainers_updated'));
+      } catch (err) {
+        console.error('Failed to sync trainer with Firebase:', err);
+        const next =
+          editing === 'new'
+            ? [...rows, cleaned]
+            : rows.map((row) => (row.id === editing ? cleaned : row));
+        config.write(next);
+        setRows(next);
+      }
+    } else {
+      const next =
+        editing === 'new'
+          ? [...rows, cleaned]
+          : rows.map((row) => (row.id === editing ? cleaned : row));
+
+      config.write(next);
+      setRows(next);
+    }
+
+    setIsSaving(false);
     cancel();
   };
 
-  const remove = (row) => {
+  const remove = async (row) => {
     // eslint-disable-next-line no-alert
     if (!window.confirm(`Delete "${row[config.primary] || 'this entry'}"? This cannot be undone.`)) return;
-    const next = rows.filter((item) => item.id !== row.id);
-    config.write(next);
-    setRows(next);
+
+    if (active === 'trainers') {
+      try {
+        await deleteTrainerFromFirebase(row.docId || row.id);
+        const next = rows.filter((item) => (item.docId || item.id) !== (row.docId || row.id));
+        saveTrainers(next);
+        setRows(next);
+        window.dispatchEvent(new Event('bodyfit_trainers_updated'));
+      } catch (err) {
+        console.error('Failed to delete trainer from Firebase:', err);
+        const next = rows.filter((item) => item.id !== row.id);
+        config.write(next);
+        setRows(next);
+      }
+    } else {
+      const next = rows.filter((item) => item.id !== row.id);
+      config.write(next);
+      setRows(next);
+    }
   };
 
   return (
@@ -272,14 +356,16 @@ export default function ManagePanel() {
 
           <div className="mt-5 flex items-center gap-2">
             <button
-              className="inline-flex items-center gap-2 rounded-lg bg-gradient-to-br from-orange-500 to-amber-500 px-4 py-2 text-xs font-black uppercase tracking-wider text-white transition-all active:scale-95"
+              disabled={isSaving}
+              className="inline-flex items-center gap-2 rounded-lg bg-gradient-to-br from-orange-500 to-amber-500 px-4 py-2 text-xs font-black uppercase tracking-wider text-white transition-all active:scale-95 disabled:opacity-50"
               onClick={commit}
               type="button"
             >
-              <Save className="h-4 w-4" />
-              Save
+              {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+              {isSaving ? 'Syncing...' : 'Save'}
             </button>
             <button
+              disabled={isSaving}
               className="inline-flex items-center gap-2 rounded-lg border border-slate-800 px-4 py-2 text-xs font-bold uppercase tracking-wider text-slate-400 transition-colors hover:text-white"
               onClick={cancel}
               type="button"
@@ -293,16 +379,21 @@ export default function ManagePanel() {
 
       {/* Rows */}
       <div className="mt-4 space-y-2">
-        {rows.length === 0 && (
+        {loading ? (
+          <div className="flex items-center justify-center gap-3 rounded-2xl border border-slate-800 bg-slate-900/40 py-12 text-sm text-slate-400">
+            <Loader2 className="h-5 w-5 animate-spin text-orange-500" />
+            Loading live data from Google Firebase...
+          </div>
+        ) : rows.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-slate-800 bg-slate-900/30 py-12 text-center text-sm text-slate-500">
             Nothing here yet. Use “Add new” to create the first entry.
           </div>
-        )}
+        ) : null}
 
-        {rows.map((row) => (
+        {!loading && rows.map((row, idx) => (
           <div
             className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-800 bg-slate-900/40 px-4 py-3"
-            key={row.id}
+            key={row.docId || row.id || idx}
           >
             <div className="min-w-0">
               <div className="text-sm font-bold text-white">{row[config.primary] || 'Untitled'}</div>
