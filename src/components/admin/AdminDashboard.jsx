@@ -1,30 +1,50 @@
 import React, { useEffect, useState } from 'react';
 import {
-  CalendarCheck, Settings2, BarChart3, LogOut, ExternalLink, MonitorSmartphone,
+  CalendarCheck, Settings2, BarChart3, LogOut, ExternalLink, MonitorSmartphone, CreditCard,
 } from 'lucide-react';
 import BookingsPanel from './BookingsPanel';
+import MembershipsPanel from './MembershipsPanel';
 import ManagePanel from './ManagePanel';
 import AnalyticsPanel from './AnalyticsPanel';
-import { getBookings, bucketOf } from '../../utils/adminStore';
+import {
+  getBookings, bucketOf, getMemberSignups, saveMemberSignups, effectiveMembershipStatus,
+} from '../../utils/adminStore';
 import { getSession, logout } from '../../utils/adminAuth';
 import logoImg from '../../assets/logo.png';
 
-import { getBookingsFromFirebase } from '../../firebase';
+import { getBookingsFromFirebase, subscribeToMembershipSignups } from '../../firebase';
+import { MEMBERSHIP_SIGNUP_EVENT } from '../../utils/membershipSignups';
 
 const TABS = [
   { id: 'bookings', label: 'Bookings', icon: CalendarCheck },
+  { id: 'memberships', label: 'Memberships', icon: CreditCard },
   { id: 'manage', label: 'Manage', icon: Settings2 },
   { id: 'analytics', label: 'Analytics', icon: BarChart3 },
 ];
 
+/** Cloud rows win on conflict; local-only rows (offline signups) are kept. */
+function mergeSignups(cloudList, localList) {
+  const byId = new Map();
+  [...localList, ...cloudList].forEach((signup) => {
+    if (signup?.id) byId.set(signup.id, signup);
+  });
+  return Array.from(byId.values()).sort((a, b) =>
+    String(b.createdAt || '').localeCompare(String(a.createdAt || ''))
+  );
+}
+
 export default function AdminDashboard({ onLogout, onExit }) {
   const [tab, setTab] = useState('bookings');
   const [bookings, setBookings] = useState(() => getBookings());
+  const [memberSignups, setMemberSignups] = useState(() => getMemberSignups());
   const [loadingCloud, setLoadingCloud] = useState(true);
 
   const session = getSession();
   const todayCount = bookings.filter((booking) => bucketOf(booking) === 'today').length;
   const pendingCount = bookings.filter((booking) => (booking.status || 'Pending') === 'Pending').length;
+  const activeMembers = memberSignups.filter(
+    (signup) => effectiveMembershipStatus(signup) === 'Active'
+  ).length;
 
   // Load and subscribe to live bookings from Firebase Cloud Firestore
   useEffect(() => {
@@ -66,6 +86,38 @@ export default function AdminDashboard({ onLogout, onExit }) {
       window.removeEventListener('focus', refresh);
       document.removeEventListener('visibilitychange', refresh);
       clearInterval(interval);
+    };
+  }, []);
+
+  // Memberships stream straight from Firestore — a signup on any device shows
+  // up here without a refresh. Local rows cover anything taken while offline.
+  useEffect(() => {
+    let isMounted = true;
+
+    const applyCloud = (cloudSignups) => {
+      if (!isMounted) return;
+      const merged = mergeSignups(cloudSignups, getMemberSignups());
+      saveMemberSignups(merged);
+      setMemberSignups(merged);
+    };
+
+    const unsubscribe = subscribeToMembershipSignups(applyCloud);
+
+    // Same-tab signups and other-tab writes, for when the listener is offline.
+    const refreshLocal = () => {
+      if (isMounted) setMemberSignups(getMemberSignups());
+    };
+
+    window.addEventListener(MEMBERSHIP_SIGNUP_EVENT, refreshLocal);
+    window.addEventListener('storage', refreshLocal);
+    window.addEventListener('focus', refreshLocal);
+
+    return () => {
+      isMounted = false;
+      unsubscribe();
+      window.removeEventListener(MEMBERSHIP_SIGNUP_EVENT, refreshLocal);
+      window.removeEventListener('storage', refreshLocal);
+      window.removeEventListener('focus', refreshLocal);
     };
   }, []);
 
@@ -132,6 +184,11 @@ export default function AdminDashboard({ onLogout, onExit }) {
                   {pendingCount}
                 </span>
               )}
+              {id === 'memberships' && activeMembers > 0 && (
+                <span className="rounded-full bg-emerald-500/20 px-1.5 py-0.5 text-[10px] font-black text-emerald-400">
+                  {activeMembers}
+                </span>
+              )}
             </button>
           ))}
         </div>
@@ -155,6 +212,29 @@ export default function AdminDashboard({ onLogout, onExit }) {
               </div>
             </div>
             <BookingsPanel bookings={bookings} onChange={setBookings} />
+          </>
+        )}
+
+        {tab === 'memberships' && (
+          <>
+            <div className="mb-6">
+              <h1 className="font-teko text-3xl uppercase tracking-wide text-white">Memberships</h1>
+              <p className="mt-1 text-sm text-slate-400">
+                {memberSignups.length} total · {activeMembers} active right now
+              </p>
+            </div>
+
+            <div className="mb-6 flex items-start gap-3 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-xs leading-relaxed text-emerald-200">
+              <MonitorSmartphone className="mt-0.5 h-4 w-4 shrink-0 text-emerald-400" />
+              <div>
+                <strong className="font-bold">Live membership register.</strong>{' '}
+                Everyone who takes a plan — through checkout or the booking form — is added
+                here automatically and saved to the <code className="font-mono">membershipSignups</code>{' '}
+                collection in your Firestore cloud database.
+              </div>
+            </div>
+
+            <MembershipsPanel onChange={setMemberSignups} signups={memberSignups} />
           </>
         )}
 

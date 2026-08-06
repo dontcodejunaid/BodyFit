@@ -11,6 +11,7 @@ import {
   sendAllConfirmations, scheduleBrowserReminder, downloadCalendarInvite, openGoogleCalendar,
   emailConfigured, smsConfigured,
 } from '../utils/bookingNotifications';
+import { recordMembershipSignup } from '../utils/membershipSignups';
 import { INITIAL_TRAINERS, getTrainerPhoto } from '../data/trainersAndScheduleData';
 import OTPVerificationModal from './ui/OTPVerificationModal';
 import Component from './ui/gradient-bars-background';
@@ -147,6 +148,17 @@ export default function BookingForm({ selectedPlan = null, onClearPlan = null })
     saveBookingToFirebase(formData);
     setConfirmedBooking(newBooking);
     setStep(5);
+
+    // Booked against a chosen plan? That's a membership — send it to the
+    // owner's Memberships register alongside the booking itself.
+    if (selectedPlan) {
+      recordMembershipSignup({
+        customer: { name: formData.name, phone: formData.phone, email: formData.email },
+        plan: selectedPlan,
+        source: 'Booking Form',
+        startDate: formData.date,
+      });
+    }
 
     // Auto-trigger WhatsApp notification to active testing number
     sendWhatsAppBookingAlert(newBooking);
