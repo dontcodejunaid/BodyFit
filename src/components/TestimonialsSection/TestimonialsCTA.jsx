@@ -6,10 +6,12 @@ import { IoFitnessOutline } from "react-icons/io5";
 import ReviewModal from "./ReviewModal";
 import ReviewForm from "./ReviewForm";
 import ReviewSuccess from "./ReviewSuccess";
+import { saveReviewToFirebase } from "../../firebase";
 
 export default function TestimonialsCTA() {
   const [isReviewOpen, setIsReviewOpen] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   return (
     <>
@@ -137,16 +139,27 @@ export default function TestimonialsCTA() {
             }}
           />
         ) : (
-          <ReviewForm
-            onSubmit={(data) => {
-              console.log("Review Submitted:", data);
+         <ReviewForm
+  loading={loading}
+  onSubmit={async (data) => {
+    try {
+      setLoading(true);
 
-              // Next sprint:
-              // Save review to local storage / API
-              // Then show success screen.
-              setSubmitted(true);
-            }}
-          />
+      console.log("Submitting review:", data);
+
+await saveReviewToFirebase(data);
+
+console.log("Review saved successfully");
+
+      setSubmitted(true);
+    } catch (error) {
+      console.error(error);
+      alert("Failed to submit review. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  }}
+/>
         )}
       </ReviewModal>
     </>

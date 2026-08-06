@@ -61,6 +61,7 @@ if (isFirebaseConfigured) {
 export { app, db, analytics };
 
 const BOOKINGS_COLLECTION = 'bookings';
+const REVIEWS_COLLECTION = 'reviews';
 
 /**
  * Save booking to Firebase Firestore (with LocalStorage sync)
@@ -164,5 +165,139 @@ export async function deleteBookingFromFirebase(docIdOrBookingId) {
   } catch (error) {
     console.warn('Firebase delete unavailable:', error.message);
   }
+  return false;
+}
+
+
+/**
+ * Save review to Firebase Firestore
+ */
+export async function saveReviewToFirebase(reviewData) {
+  const randomId = Math.floor(10000 + Math.random() * 90000);
+
+  const reviewWithId = {
+    id: `RV-${randomId}`,
+    ...reviewData,
+    status: "Pending",
+    createdAt: new Date().toISOString(),
+  };
+
+  try {
+    const docRef = await addDoc(
+      collection(db, REVIEWS_COLLECTION),
+      reviewWithId
+    );
+
+    return {
+      docId: docRef.id,
+      ...reviewWithId,
+    };
+  } catch (error) {
+    console.warn("Firebase review write unavailable:", error.message);
+    throw error;
+  }
+}
+
+/**
+ * Fetch all reviews from Firebase Firestore
+ */
+export async function getReviewsFromFirebase() {
+  try {
+    let querySnapshot;
+
+    try {
+      const q = query(
+        collection(db, REVIEWS_COLLECTION),
+        orderBy("createdAt", "desc")
+      );
+
+      querySnapshot = await getDocs(q);
+    } catch {
+      querySnapshot = await getDocs(
+        collection(db, REVIEWS_COLLECTION)
+      );
+    }
+
+    return querySnapshot.docs.map((docSnap) => ({
+      docId: docSnap.id,
+      ...docSnap.data(),
+    }));
+  } catch (error) {
+    console.warn("Firebase review read unavailable:", error.message);
+    return [];
+  }
+}
+
+/**
+ * Update review in Firebase Firestore
+ */
+export async function updateReviewInFirebase(docIdOrReviewId, patch) {
+  try {
+    if (
+      docIdOrReviewId &&
+      typeof docIdOrReviewId === "string" &&
+      docIdOrReviewId.length > 15 &&
+      !docIdOrReviewId.startsWith("RV-")
+    ) {
+      const docRef = doc(db, REVIEWS_COLLECTION, docIdOrReviewId);
+      await updateDoc(docRef, patch);
+      return true;
+    }
+
+    const snapshot = await getDocs(collection(db, REVIEWS_COLLECTION));
+
+    const targetDoc = snapshot.docs.find(
+      (d) =>
+        d.data().id === docIdOrReviewId ||
+        d.id === docIdOrReviewId
+    );
+
+    if (targetDoc) {
+      await updateDoc(
+        doc(db, REVIEWS_COLLECTION, targetDoc.id),
+        patch
+      );
+      return true;
+    }
+  } catch (error) {
+    console.warn("Firebase review update unavailable:", error.message);
+  }
+
+  return false;
+}
+
+/**
+ * Delete review from Firebase Firestore
+ */
+export async function deleteReviewFromFirebase(docIdOrReviewId) {
+  try {
+    if (
+      docIdOrReviewId &&
+      typeof docIdOrReviewId === "string" &&
+      docIdOrReviewId.length > 15 &&
+      !docIdOrReviewId.startsWith("RV-")
+    ) {
+      await deleteDoc(doc(db, REVIEWS_COLLECTION, docIdOrReviewId));
+      return true;
+    }
+
+    const snapshot = await getDocs(collection(db, REVIEWS_COLLECTION));
+
+    const targetDoc = snapshot.docs.find(
+      (d) =>
+        d.data().id === docIdOrReviewId ||
+        d.id === docIdOrReviewId
+    );
+
+    if (targetDoc) {
+      await deleteDoc(
+        doc(db, REVIEWS_COLLECTION, targetDoc.id)
+      );
+      return true;
+    }
+  } catch (error) {
+    console.warn("Firebase review delete unavailable:", error.message);
+  }
+
   return false;
 }
