@@ -13,12 +13,10 @@ import {
 } from '../utils/bookingNotifications';
 import { recordMembershipSignup } from '../utils/membershipSignups';
 import { INITIAL_TRAINERS, getTrainerPhoto } from '../data/trainersAndScheduleData';
-import OTPVerificationModal from './ui/OTPVerificationModal';
 import Component from './ui/gradient-bars-background';
 
 export default function BookingForm({ selectedPlan = null, selectedClass = null, onClearPlan = null, onClearClass = null }) {
   const [step, setStep] = useState(1);
-  const [isOtpOpen, setIsOtpOpen] = useState(false);
   const [allTrainers, setAllTrainers] = useState(INITIAL_TRAINERS);
 
   useEffect(() => {
@@ -197,21 +195,7 @@ export default function BookingForm({ selectedPlan = null, selectedClass = null,
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleFormSubmit = (e) => {
-    e.preventDefault();
-    if (!validateStep4()) return;
-
-    if (isSlotTaken(formData.date, formData.time, formData.trainer)) {
-      setErrors({ slot: 'This time slot or trainer is already booked for this time. Please select another slot or trainer.' });
-      setStep(2);
-      return;
-    }
-
-    setIsOtpOpen(true);
-  };
-
-  const handleOtpVerified = () => {
-    setIsOtpOpen(false);
+  const executeBooking = () => {
     const newBooking = saveBooking(formData);
     saveBookingToFirebase(formData);
     setConfirmedBooking(newBooking);
@@ -234,6 +218,19 @@ export default function BookingForm({ selectedPlan = null, selectedClass = null,
     // Email/SMS run only if their env vars are configured
     sendAllConfirmations(newBooking).then(setNotifyResult);
     scheduleBrowserReminder(newBooking).then(setReminderResult);
+  };
+
+  const handleFormSubmit = (e) => {
+    e.preventDefault();
+    if (!validateStep4()) return;
+
+    if (isSlotTaken(formData.date, formData.time, formData.trainer)) {
+      setErrors({ slot: 'This time slot or trainer is already booked for this time. Please select another slot or trainer.' });
+      setStep(2);
+      return;
+    }
+
+    executeBooking();
   };
 
   return (
@@ -974,15 +971,6 @@ export default function BookingForm({ selectedPlan = null, selectedClass = null,
         </div>
 
       </section>
-
-      <OTPVerificationModal
-        isOpen={isOtpOpen}
-        onClose={() => setIsOtpOpen(false)}
-        phoneNumber={formData.phone || '+91 98765 43210'}
-        onVerified={handleOtpVerified}
-        title="Confirm Booking via OTP"
-        description="Verify your phone number with the 6-digit OTP sent to"
-      />
     </Component>
   );
 }
