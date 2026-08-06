@@ -133,6 +133,16 @@ function getTrainerDocId(trainerOrName) {
   return slug || `trainer-${Date.now()}`;
 }
 
+// Helper to identify legacy 20-character random hash document IDs (e.g. "0TQVg2lCU606oDgpAk0F")
+function isLegacyRandomHashDocId(docId) {
+  if (!docId || typeof docId !== 'string') return false;
+  if (docId.endsWith('-plan')) return true;
+  if (docId.length >= 18 && !docId.includes('-') && /[A-Z]/.test(docId) && /[0-9]/.test(docId)) {
+    return true;
+  }
+  return false;
+}
+
 // Helper to get exact clean document ID for membership plans (e.g. "silver" -> "silver-plan")
 function getDocIdForPlan(plan) {
   if (plan.id === 'basic-plan' || plan.id === 'standard-plan' || plan.id === 'premium-plan') {
@@ -392,6 +402,13 @@ export async function deleteMembershipSignupFromFirebase(docIdOrMemberId) {
   return false;
 }
 
+function getCleanPhotoUrl(photo) {
+  if (!photo) return '';
+  if (typeof photo === 'string') return photo;
+  if (typeof photo === 'object' && photo.default && typeof photo.default === 'string') return photo.default;
+  return '';
+}
+
 // ----------------------------------------------------
 // TRAINERS COLLECTION FIRESTORE INTEGRATION
 // ----------------------------------------------------
@@ -404,13 +421,13 @@ export async function seedInitialTrainersToFirebase() {
     const seededList = [];
     for (const trainer of INITIAL_TRAINERS) {
       const docId = getTrainerDocId(trainer);
-      const trainerToSave = {
+      const trainerToSave = sanitizeForFirestore({
         ...trainer,
         id: docId,
         docId,
-        photo: typeof trainer.photo === 'string' ? trainer.photo : '',
+        photo: getCleanPhotoUrl(trainer.photo),
         createdAt: new Date().toISOString()
-      };
+      });
       await setDoc(doc(db, TRAINERS_COLLECTION, docId), trainerToSave, { merge: true });
       seededList.push({ docId, ...trainerToSave });
     }
@@ -425,24 +442,24 @@ export async function seedInitialTrainersToFirebase() {
  * Sync all trainers list (existing + new) to Firebase Firestore
  * Purges duplicate/legacy random hash doc IDs (like "0TQVg2lCU606oDgpAk0F")
  */
-export async function syncAllTrainersToFirebase(trainersList) {
+export async function syncAllTrainersToFirebase(trainersList = []) {
+  const safeInput = Array.isArray(trainersList) && trainersList.length > 0 ? trainersList : INITIAL_TRAINERS;
   try {
     const q = query(collection(db, TRAINERS_COLLECTION));
     const snapshot = await getDocs(q);
 
-    // Purge any legacy random hash IDs from Firestore
+    // Purge only legacy 20-character random hash IDs from Firestore
     for (const docSnap of snapshot.docs) {
-      const docId = docSnap.id;
-      if (!docId.includes('-') || docId.length > 15) {
+      if (isLegacyRandomHashDocId(docSnap.id)) {
         try {
-          await deleteDoc(doc(db, TRAINERS_COLLECTION, docId));
+          await deleteDoc(doc(db, TRAINERS_COLLECTION, docSnap.id));
         } catch (e) {
-          console.warn('Could not delete random hash doc:', docId);
+          console.warn('Could not delete random hash doc:', docSnap.id);
         }
       }
     }
 
-    const combined = [...INITIAL_TRAINERS, ...trainersList];
+    const combined = [...INITIAL_TRAINERS, ...safeInput];
     const mapByKey = new Map();
     combined.forEach((item) => {
       const cleanId = getTrainerDocId(item);
@@ -453,20 +470,24 @@ export async function syncAllTrainersToFirebase(trainersList) {
 
     const updatedList = [];
     for (const [cleanId, trainer] of mapByKey.entries()) {
-      const trainerToSave = {
-        ...trainer,
-        id: cleanId,
-        docId: cleanId,
-        photo: typeof trainer.photo === 'string' ? trainer.photo : (trainer.photo || ''),
-        createdAt: trainer.createdAt || new Date().toISOString()
-      };
-      await setDoc(doc(db, TRAINERS_COLLECTION, cleanId), trainerToSave, { merge: true });
-      updatedList.push(trainerToSave);
+      try {
+        const trainerToSave = sanitizeForFirestore({
+          ...trainer,
+          id: cleanId,
+          docId: cleanId,
+          photo: getCleanPhotoUrl(trainer.photo),
+          createdAt: trainer.createdAt || new Date().toISOString()
+        });
+        await setDoc(doc(db, TRAINERS_COLLECTION, cleanId), trainerToSave, { merge: true });
+        updatedList.push(trainerToSave);
+      } catch (itemErr) {
+        console.error(`Failed to sync trainer ${cleanId} to Firestore:`, itemErr);
+      }
     }
-    return updatedList;
+    return updatedList.length > 0 ? updatedList : INITIAL_TRAINERS;
   } catch (error) {
     console.warn('Sync all trainers to Firebase failed:', error.message);
-    return trainersList;
+    return Array.isArray(trainersList) && trainersList.length > 0 ? trainersList : INITIAL_TRAINERS;
   }
 }
 
@@ -479,24 +500,22 @@ export async function getTrainersFromFirebase() {
     const querySnapshot = await getDocs(q);
 
     if (!querySnapshot.empty) {
-      // Purge any legacy random hash IDs from Firestore on fetch
+      const trainersList = [];
       for (const docSnap of querySnapshot.docs) {
-        if (!docSnap.id.includes('-') || docSnap.id.length > 15) {
+        if (isLegacyRandomHashDocId(docSnap.id)) {
           try {
             await deleteDoc(doc(db, TRAINERS_COLLECTION, docSnap.id));
           } catch (e) {
             console.warn('Could not purge legacy trainer doc:', docSnap.id);
           }
+        } else {
+          trainersList.push({
+            docId: docSnap.id,
+            ...docSnap.data()
+          });
         }
       }
-
-      const validDocs = querySnapshot.docs.filter((d) => d.id.includes('-') && !d.id.endsWith('-plan'));
-      if (validDocs.length > 0) {
-        return validDocs.map((docSnap) => ({
-          docId: docSnap.id,
-          ...docSnap.data()
-        }));
-      }
+      if (trainersList.length > 0) return trainersList;
     }
 
     const seeded = await seedInitialTrainersToFirebase();
@@ -504,7 +523,7 @@ export async function getTrainersFromFirebase() {
   } catch (error) {
     console.warn('Firebase trainers read error:', error.message);
   }
-  return [];
+  return INITIAL_TRAINERS;
 }
 
 /**
@@ -513,13 +532,13 @@ export async function getTrainersFromFirebase() {
 export async function addTrainerToFirebase(trainerData) {
   try {
     const docId = getTrainerDocId(trainerData);
-    const trainerToSave = {
+    const trainerToSave = sanitizeForFirestore({
       ...trainerData,
       id: docId,
       docId,
       photo: typeof trainerData.photo === 'string' ? trainerData.photo : '',
       createdAt: new Date().toISOString()
-    };
+    });
     await setDoc(doc(db, TRAINERS_COLLECTION, docId), trainerToSave, { merge: true });
     return trainerToSave;
   } catch (error) {
@@ -534,11 +553,12 @@ export async function addTrainerToFirebase(trainerData) {
 export async function updateTrainerInFirebase(docIdOrTrainerId, patch) {
   try {
     if (!docIdOrTrainerId) return false;
+    const cleanPatch = sanitizeForFirestore(patch);
 
     const directRef = doc(db, TRAINERS_COLLECTION, String(docIdOrTrainerId));
     const directSnap = await getDoc(directRef);
     if (directSnap.exists()) {
-      await updateDoc(directRef, patch);
+      await updateDoc(directRef, cleanPatch);
       return true;
     }
 
@@ -550,7 +570,7 @@ export async function updateTrainerInFirebase(docIdOrTrainerId, patch) {
 
     if (targetDoc) {
       const docRef = doc(db, TRAINERS_COLLECTION, targetDoc.id);
-      await updateDoc(docRef, patch);
+      await updateDoc(docRef, cleanPatch);
       return true;
     }
   } catch (error) {

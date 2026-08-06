@@ -314,6 +314,8 @@ export default function ManagePanel() {
           
           const combined = Array.from(mergedMap.values());
           if (combined.length > 0 && isMounted) {
+            // Automatically push any local trainers (e.g. sourav) to Firebase Firestore
+            syncAllTrainersToFirebase(combined).catch((err) => console.warn('Auto-sync trainers failed:', err));
             setRows(combined);
             saveTrainers(combined);
             setLoading(false);
