@@ -69,19 +69,18 @@ const REVIEWS_COLLECTION = 'reviews';
 const TRAINERS_COLLECTION = 'trainers';
 const MEMBERSHIPS_COLLECTION = 'memberships';
 
-// Helper to create clean, readable document IDs in Firestore based on names (e.g. "silver" -> "silver-plan")
-function toSlugDocId(name, fallbackPrefix = 'item') {
-  if (!name || typeof name !== 'string') return `${fallbackPrefix}-${Date.now()}`;
+// Helper to create clean, readable document IDs in Firestore for trainers (e.g. "Priya Kapoor" -> "priya-kapoor")
+function getTrainerDocId(trainerOrName) {
+  const name = typeof trainerOrName === 'string' ? trainerOrName : (trainerOrName?.name || trainerOrName?.id || 'trainer');
   const slug = name
     .toLowerCase()
     .trim()
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '');
-  if (!slug) return `${fallbackPrefix}-${Date.now()}`;
-  return slug.includes('plan') || slug.includes('trainer') ? slug : `${slug}-plan`;
+  return slug || `trainer-${Date.now()}`;
 }
 
-// Helper to get exact clean document ID for membership plans
+// Helper to get exact clean document ID for membership plans (e.g. "silver" -> "silver-plan")
 function getDocIdForPlan(plan) {
   if (plan.id === 'basic-plan' || plan.id === 'standard-plan' || plan.id === 'premium-plan') {
     return plan.id;
@@ -214,27 +213,58 @@ export async function deleteBookingFromFirebase(docIdOrBookingId) {
 // ----------------------------------------------------
 
 /**
+ * Auto-seed initial trainers into Firebase Firestore
+ */
+export async function seedInitialTrainersToFirebase() {
+  try {
+    const seededList = [];
+    for (const trainer of INITIAL_TRAINERS) {
+      const docId = getTrainerDocId(trainer);
+      const trainerToSave = {
+        ...trainer,
+        id: docId,
+        docId,
+        photo: typeof trainer.photo === 'string' ? trainer.photo : '',
+        createdAt: new Date().toISOString()
+      };
+      await setDoc(doc(db, TRAINERS_COLLECTION, docId), trainerToSave, { merge: true });
+      seededList.push({ docId, ...trainerToSave });
+    }
+    return seededList;
+  } catch (error) {
+    console.warn('Auto-seeding trainers to Firebase failed:', error.message);
+    return [];
+  }
+}
+
+/**
  * Sync all trainers list (existing + new) to Firebase Firestore
+ * Purges legacy random hash IDs (like 0TQVg2lCU606oDgpAk0F) and replaces with trainer names
  */
 export async function syncAllTrainersToFirebase(trainersList) {
   try {
+    // 1. Delete legacy random doc IDs from Firestore
     const q = query(collection(db, TRAINERS_COLLECTION));
     const snapshot = await getDocs(q);
-    
+
+    const VALID_IDS = new Set(INITIAL_TRAINERS.map((t) => getTrainerDocId(t)));
+
     for (const docSnap of snapshot.docs) {
-      const isRandomHash = docSnap.id.length > 15 && !docSnap.id.includes('trainer') && !docSnap.id.includes('-');
-      if (isRandomHash) {
+      const docId = docSnap.id;
+      const isLegacyRandomDoc = !VALID_IDS.has(docId) && (!docId.includes('-') || docId.endsWith('-plan') || docId.length > 15);
+      if (isLegacyRandomDoc) {
         try {
-          await deleteDoc(doc(db, TRAINERS_COLLECTION, docSnap.id));
+          await deleteDoc(doc(db, TRAINERS_COLLECTION, docId));
         } catch (e) {
-          console.warn('Could not delete legacy random doc:', docSnap.id);
+          console.warn('Could not delete legacy random trainer doc:', docId);
         }
       }
     }
 
+    const combined = [...INITIAL_TRAINERS, ...trainersList];
     const mapByKey = new Map();
-    trainersList.forEach((item) => {
-      const cleanId = toSlugDocId(item.name, 'trainer');
+    combined.forEach((item) => {
+      const cleanId = getTrainerDocId(item);
       if (cleanId && !mapByKey.has(cleanId)) {
         mapByKey.set(cleanId, item);
       }
@@ -267,14 +297,16 @@ export async function getTrainersFromFirebase() {
     const q = query(collection(db, TRAINERS_COLLECTION));
     const querySnapshot = await getDocs(q);
     if (!querySnapshot.empty) {
-      return querySnapshot.docs.map((docSnap) => ({
-        docId: docSnap.id,
-        ...docSnap.data()
-      }));
-    } else {
-      const seeded = await seedInitialTrainersToFirebase();
-      if (seeded.length > 0) return seeded;
+      const validDocs = querySnapshot.docs.filter((d) => d.id.includes('-') && !d.id.endsWith('-plan'));
+      if (validDocs.length > 0) {
+        return validDocs.map((docSnap) => ({
+          docId: docSnap.id,
+          ...docSnap.data()
+        }));
+      }
     }
+    const seeded = await seedInitialTrainersToFirebase();
+    if (seeded.length > 0) return seeded;
   } catch (error) {
     console.warn('Firebase trainers read error:', error.message);
   }
@@ -286,16 +318,16 @@ export async function getTrainersFromFirebase() {
  */
 export async function addTrainerToFirebase(trainerData) {
   try {
-    const rawName = trainerData.name || 'trainer';
-    const docId = toSlugDocId(rawName, 'trainer');
+    const docId = getTrainerDocId(trainerData);
     const trainerToSave = {
       ...trainerData,
       id: docId,
       docId,
+      photo: typeof trainerData.photo === 'string' ? trainerData.photo : '',
       createdAt: new Date().toISOString()
     };
     await setDoc(doc(db, TRAINERS_COLLECTION, docId), trainerToSave, { merge: true });
-    return { docId, ...trainerToSave };
+    return trainerToSave;
   } catch (error) {
     console.warn('Firebase trainer add failed:', error.message);
     return null;
