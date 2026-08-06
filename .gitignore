@@ -13,6 +13,8 @@ dist-ssr
 *.local
 .env
 .env.*
+# ...but the template must be committed, or teammates get no Firebase config.
+!.env.example
 
 # Editor directories and files
 .vscode/*
