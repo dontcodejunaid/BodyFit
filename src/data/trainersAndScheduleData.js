@@ -17,6 +17,12 @@ export const TRAINER_IMAGES = {
   'rahul-verma': rahulImg,
   'ananya-roy': ananyaImg,
   'karan-mehra': karanImg,
+  'neha-singh': nehaImg,
+  'vikram': vikramImg,
+  'priya': priyaImg,
+  'rahul': rahulImg,
+  'ananya': ananyaImg,
+  'karan': karanImg,
   'neha': nehaImg,
 };
 
@@ -132,27 +138,14 @@ export function getTrainerPhoto(trainerOrName, photoUrl) {
     name = String(trainerOrName || '');
   }
 
-  if (url && typeof url === 'string' && url.trim() && !url.includes('undefined')) {
-    return url;
-  }
-
-  const map = (typeof TRAINER_IMAGES !== 'undefined' && TRAINER_IMAGES) ? TRAINER_IMAGES : {};
-
   const nameKey = name.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-');
-  if (nameKey && map[nameKey]) return map[nameKey];
+  if (nameKey && TRAINER_IMAGES[nameKey]) return TRAINER_IMAGES[nameKey];
 
   const firstName = name.toLowerCase().trim().split(' ')[0];
-  if (firstName && map[firstName]) return map[firstName];
+  if (firstName && TRAINER_IMAGES[firstName]) return TRAINER_IMAGES[firstName];
 
-  try {
-    const stored = JSON.parse(localStorage.getItem('bodyfit_trainers') || '[]');
-    const initialList = Array.isArray(INITIAL_TRAINERS) ? INITIAL_TRAINERS : [];
-    const all = [...initialList, ...stored];
-    const match = all.find(t => t && t.name && t.name.toLowerCase().trim() === name.toLowerCase().trim());
-    if (match && match.photo) return match.photo;
-    if (match && match.imageUrl) return match.imageUrl;
-  } catch (e) {
-    // fallback
+  if (url && typeof url === 'string' && url.trim() && !url.includes('undefined') && !url.startsWith('/assets/')) {
+    return url;
   }
 
   const cleanName = (name || 'Duty Coach').trim();

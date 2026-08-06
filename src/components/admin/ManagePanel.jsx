@@ -470,15 +470,23 @@ export default function ManagePanel() {
     try {
       if (active === 'trainers') {
         try {
-          await deleteTrainerFromFirebase(row.docId || row.id);
-          const next = rows.filter((item) => (item.docId || item.id) !== (row.docId || row.id));
+          await deleteTrainerFromFirebase(row);
+          const targetName = (row.name || '').toLowerCase().trim();
+          const targetId = (row.docId || row.id || '').toLowerCase().trim();
+          const next = rows.filter((item) => {
+            const itemName = (item.name || '').toLowerCase().trim();
+            const itemId = (item.docId || item.id || '').toLowerCase().trim();
+            if (targetName && itemName === targetName) return false;
+            if (targetId && itemId === targetId) return false;
+            return true;
+          });
           saveTrainers(next);
           setRows(next);
           window.dispatchEvent(new Event('bodyfit_trainers_updated'));
         } catch (err) {
           console.error('Failed to delete trainer from Firebase:', err);
           const next = rows.filter((item) => item.id !== row.id);
-          config.write(next);
+          saveTrainers(next);
           setRows(next);
         }
       } else if (active === 'memberships') {
