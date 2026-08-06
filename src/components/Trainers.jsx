@@ -37,11 +37,25 @@ export default function Trainers({ onSelectTrainer }) {
         });
         localList.forEach(t => {
           const key = (t.name || t.id || '').toLowerCase().trim();
-          if (key) mergedMap.set(key, { ...mergedMap.get(key), ...t });
+          if (key) {
+            const existing = mergedMap.get(key) || {};
+            mergedMap.set(key, {
+              ...existing,
+              ...t,
+              photo: (t.photo && String(t.photo).trim()) ? t.photo : existing.photo
+            });
+          }
         });
         fbList.forEach(t => {
           const key = (t.name || t.id || '').toLowerCase().trim();
-          if (key) mergedMap.set(key, { ...mergedMap.get(key), ...t });
+          if (key) {
+            const existing = mergedMap.get(key) || {};
+            mergedMap.set(key, {
+              ...existing,
+              ...t,
+              photo: (t.photo && String(t.photo).trim()) ? t.photo : existing.photo
+            });
+          }
         });
 
         combined = Array.from(mergedMap.values());

@@ -5,7 +5,7 @@ import {
   Check, Flame, MessageSquare, CalendarPlus, ChevronLeft, ChevronRight, XCircle
 } from 'lucide-react';
 import { saveBooking, isSlotTaken } from '../utils/localStorage';
-import { saveBookingToFirebase } from '../firebase';
+import { saveBookingToFirebase, getTrainersFromFirebase } from '../firebase';
 import { sendWhatsAppBookingAlert, WhatsAppConfig } from '../utils/whatsapp';
 import {
   sendAllConfirmations, scheduleBrowserReminder, downloadCalendarInvite, openGoogleCalendar,
@@ -20,17 +20,56 @@ export default function BookingForm({ selectedPlan = null, selectedClass = null,
   const [allTrainers, setAllTrainers] = useState(INITIAL_TRAINERS);
 
   useEffect(() => {
-    try {
-      const stored = localStorage.getItem('bodyfit_trainers');
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          setAllTrainers(parsed);
-        }
+    let isMounted = true;
+    async function syncTrainers() {
+      let combined = INITIAL_TRAINERS;
+      try {
+        const rawLocal = localStorage.getItem('bodyfit_trainers');
+        const localList = rawLocal ? JSON.parse(rawLocal) : INITIAL_TRAINERS;
+        const fbList = (await getTrainersFromFirebase()) || [];
+
+        const mergedMap = new Map();
+        INITIAL_TRAINERS.forEach(t => {
+          const key = (t.name || t.id || '').toLowerCase().trim();
+          if (key) mergedMap.set(key, t);
+        });
+        localList.forEach(t => {
+          const key = (t.name || t.id || '').toLowerCase().trim();
+          if (key) {
+            const existing = mergedMap.get(key) || {};
+            mergedMap.set(key, { ...existing, ...t, photo: (t.photo && String(t.photo).trim()) ? t.photo : existing.photo });
+          }
+        });
+        fbList.forEach(t => {
+          const key = (t.name || t.id || '').toLowerCase().trim();
+          if (key) {
+            const existing = mergedMap.get(key) || {};
+            mergedMap.set(key, { ...existing, ...t, photo: (t.photo && String(t.photo).trim()) ? t.photo : existing.photo });
+          }
+        });
+
+        combined = Array.from(mergedMap.values());
+      } catch (e) {
+        console.warn('Error reading trainers in BookingForm:', e);
       }
-    } catch (e) {
-      console.warn('Error reading trainers in BookingForm:', e);
+      if (isMounted) {
+        setAllTrainers(combined.length > 0 ? combined : INITIAL_TRAINERS);
+      }
     }
+
+    syncTrainers();
+
+    const handleUpdate = () => syncTrainers();
+    window.addEventListener('storage', handleUpdate);
+    window.addEventListener('bodyfit-trainers-update', handleUpdate);
+    window.addEventListener('bodyfit_trainers_updated', handleUpdate);
+
+    return () => {
+      isMounted = false;
+      window.removeEventListener('storage', handleUpdate);
+      window.removeEventListener('bodyfit-trainers-update', handleUpdate);
+      window.removeEventListener('bodyfit_trainers_updated', handleUpdate);
+    };
   }, []);
 
   // Form State
@@ -558,7 +597,11 @@ export default function BookingForm({ selectedPlan = null, selectedClass = null,
                     {morningSlots.map((slot) => {
                       const isTaken = isSlotTaken(formData.date, slot);
                       const isPast = isSlotPast(formData.date, slot);
-                      const isDisabled = isTaken || isPast;
+                      const selectedTrainerObj = formData.trainer && formData.trainer !== 'No Preference (Assign Any Available)'
+                        ? allTrainers.find(t => t.name === formData.trainer)
+                        : null;
+                      const isTrainerOffDuty = selectedTrainerObj ? !isTrainerOnDuty(selectedTrainerObj, formData.date, slot) : false;
+                      const isDisabled = isTaken || isPast || isTrainerOffDuty;
                       const isSelected = formData.time === slot;
                       return (
                         <button
@@ -566,6 +609,7 @@ export default function BookingForm({ selectedPlan = null, selectedClass = null,
                           type="button"
                           disabled={isDisabled}
                           onClick={() => handleInputChange('time', slot)}
+                          title={isTrainerOffDuty ? `${formData.trainer} is off duty at ${slot}` : undefined}
                           className={`py-3 px-3 text-xs font-extrabold rounded-xl border transition-all ${
                             isDisabled
                               ? 'bg-slate-950/40 border-slate-900 text-slate-600 cursor-not-allowed line-through opacity-50'
@@ -590,7 +634,11 @@ export default function BookingForm({ selectedPlan = null, selectedClass = null,
                     {eveningSlots.map((slot) => {
                       const isTaken = isSlotTaken(formData.date, slot);
                       const isPast = isSlotPast(formData.date, slot);
-                      const isDisabled = isTaken || isPast;
+                      const selectedTrainerObj = formData.trainer && formData.trainer !== 'No Preference (Assign Any Available)'
+                        ? allTrainers.find(t => t.name === formData.trainer)
+                        : null;
+                      const isTrainerOffDuty = selectedTrainerObj ? !isTrainerOnDuty(selectedTrainerObj, formData.date, slot) : false;
+                      const isDisabled = isTaken || isPast || isTrainerOffDuty;
                       const isSelected = formData.time === slot;
                       return (
                         <button
@@ -598,6 +646,7 @@ export default function BookingForm({ selectedPlan = null, selectedClass = null,
                           type="button"
                           disabled={isDisabled}
                           onClick={() => handleInputChange('time', slot)}
+                          title={isTrainerOffDuty ? `${formData.trainer} is off duty at ${slot}` : undefined}
                           className={`py-3 px-3 text-xs font-extrabold rounded-xl border transition-all ${
                             isDisabled
                               ? 'bg-slate-950/40 border-slate-900 text-slate-600 cursor-not-allowed line-through opacity-50'

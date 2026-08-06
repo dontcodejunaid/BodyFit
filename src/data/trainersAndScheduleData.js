@@ -17,6 +17,12 @@ export const TRAINER_IMAGES = {
   'rahul-verma': rahulImg,
   'ananya-roy': ananyaImg,
   'karan-mehra': karanImg,
+  'neha-singh': nehaImg,
+  'vikram': vikramImg,
+  'priya': priyaImg,
+  'rahul': rahulImg,
+  'ananya': ananyaImg,
+  'karan': karanImg,
   'neha': nehaImg,
 };
 
@@ -126,16 +132,25 @@ export function getTrainerPhoto(trainerOrName, photoUrl) {
   let url = photoUrl;
 
   if (trainerOrName && typeof trainerOrName === 'object') {
-    name = trainerOrName.name || '';
+    name = trainerOrName.name || trainerOrName.trainer || '';
     url = trainerOrName.photo || trainerOrName.imageUrl || photoUrl;
   } else {
     name = String(trainerOrName || '');
   }
 
-  if (url && typeof url === 'string' && url.trim() && !url.includes('undefined')) {
+  // Check if url is a valid non-empty custom URL (http, https, data:image, or blob)
+  if (
+    url &&
+    typeof url === 'string' &&
+    url.trim() &&
+    !url.includes('undefined') &&
+    !url.includes('ui-avatars.com') &&
+    (url.startsWith('http') || url.startsWith('data:') || url.startsWith('/') || url.startsWith('blob:'))
+  ) {
     return url;
   }
 
+  // Direct lookup in local bundled asset map by slug / name / first name
   const map = (typeof TRAINER_IMAGES !== 'undefined' && TRAINER_IMAGES) ? TRAINER_IMAGES : {};
 
   const nameKey = name.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-');
@@ -149,8 +164,8 @@ export function getTrainerPhoto(trainerOrName, photoUrl) {
     const initialList = Array.isArray(INITIAL_TRAINERS) ? INITIAL_TRAINERS : [];
     const all = [...initialList, ...stored];
     const match = all.find(t => t && t.name && t.name.toLowerCase().trim() === name.toLowerCase().trim());
-    if (match && match.photo) return match.photo;
-    if (match && match.imageUrl) return match.imageUrl;
+    if (match && match.photo && typeof match.photo === 'string' && match.photo.trim()) return match.photo;
+    if (match && match.imageUrl && typeof match.imageUrl === 'string' && match.imageUrl.trim()) return match.imageUrl;
   } catch (e) {
     // fallback
   }
