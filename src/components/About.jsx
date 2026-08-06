@@ -7,7 +7,8 @@ import ownerImg from '../assets/owner.png';
 import Component from './ui/gradient-bars-background';
 import { TextReveal } from './ui/cascade-text';
 import { ShinyButton } from './ui/shiny-button';
-import { getAboutData, INITIAL_ABOUT_DATA } from '../utils/adminStore';
+import { getAboutData, saveAboutData, INITIAL_ABOUT_DATA } from '../utils/adminStore';
+import { getAboutFromFirebase, subscribeToAboutFromFirebase } from '../firebase';
 
 export default function About() {
   const [activeTab, setActiveTab] = useState('philosophy');
@@ -17,6 +18,27 @@ export default function About() {
   const [editForm, setEditForm] = useState(data);
 
   useEffect(() => {
+    let isMounted = true;
+
+    async function loadCloudData() {
+      try {
+        const cloudAbout = await getAboutFromFirebase();
+        if (cloudAbout && isMounted) {
+          setData(cloudAbout);
+        }
+      } catch (err) {
+        console.warn('Firebase About fetch error:', err);
+      }
+    }
+
+    loadCloudData();
+
+    const unsubscribeFirebase = subscribeToAboutFromFirebase((cloudAbout) => {
+      if (cloudAbout && isMounted) {
+        setData(cloudAbout);
+      }
+    });
+
     const handleUpdate = () => {
       setData(getAboutData());
     };
@@ -26,6 +48,8 @@ export default function About() {
     window.addEventListener('focus', handleUpdate);
 
     return () => {
+      isMounted = false;
+      if (typeof unsubscribeFirebase === 'function') unsubscribeFirebase();
       window.removeEventListener('bodyfit_about_updated', handleUpdate);
       window.removeEventListener('storage', handleUpdate);
       window.removeEventListener('focus', handleUpdate);
@@ -35,6 +59,7 @@ export default function About() {
   useEffect(() => {
     setEditForm(data);
   }, [data]);
+
 
   const handleSave = () => {
     setData(editForm);
