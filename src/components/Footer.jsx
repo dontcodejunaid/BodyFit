@@ -4,7 +4,7 @@ import logoImg from '../assets/logo.png';
 import { WhatsAppConfig } from '../utils/whatsapp';
 import { InstagramIcon, WhatsAppIcon, LinkedInIcon } from './ui/social-icons';
 import { ADMIN_HASH } from './admin/AdminPortal';
-import { ShinySheenButton } from './ui/shiny-button-sheen';
+import LocationMap from './ui/expanded-map';
 import { saveNewsletterSubscriberToFirebase } from '../firebase';
 import { sendNewsletterSubscriptionEmail } from '../utils/bookingNotifications';
 
