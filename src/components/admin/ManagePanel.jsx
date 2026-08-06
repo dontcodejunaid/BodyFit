@@ -11,6 +11,12 @@ import {
   addTrainerToFirebase,
   updateTrainerInFirebase,
   deleteTrainerFromFirebase,
+  syncAllTrainersToFirebase,
+  getMembershipsFromFirebase,
+  addMembershipToFirebase,
+  updateMembershipInFirebase,
+  deleteMembershipFromFirebase,
+  syncAllMembershipsToFirebase,
 } from '../../firebase';
 
 // Each collection declares its own fields, so one editor renders all three.
@@ -21,7 +27,7 @@ const COLLECTIONS = {
     idPrefix: 'mem',
     read: getMemberships,
     write: saveMemberships,
-    note: 'Changes appear on the public Membership Plans section after a refresh.',
+    note: '⚡ Connected to Google Firebase Cloud Database. Changes update live across the website.',
     primary: 'name',
     fields: [
       { key: 'name', label: 'Plan name', type: 'text' },
@@ -168,7 +174,7 @@ export default function ManagePanel() {
 
   const config = COLLECTIONS[active];
 
-  // Load collection data (with Firebase Cloud sync for trainers)
+  // Load collection data (with Firebase Cloud sync for trainers & memberships)
   useEffect(() => {
     let isMounted = true;
     async function loadData() {
@@ -187,6 +193,23 @@ export default function ManagePanel() {
         }
         if (isMounted) {
           setRows(getTrainers());
+          setLoading(false);
+        }
+      } else if (active === 'memberships') {
+        setLoading(true);
+        try {
+          const fbPlans = await getMembershipsFromFirebase();
+          if (fbPlans && fbPlans.length > 0 && isMounted) {
+            setRows(fbPlans);
+            saveMemberships(fbPlans);
+            setLoading(false);
+            return;
+          }
+        } catch (err) {
+          console.warn('Firebase memberships fetch issue in admin:', err);
+        }
+        if (isMounted) {
+          setRows(getMemberships());
           setLoading(false);
         }
       } else {
@@ -238,21 +261,49 @@ export default function ManagePanel() {
 
     if (active === 'trainers') {
       try {
+        let initialNext = [];
         if (editing === 'new') {
           const added = await addTrainerToFirebase(cleaned);
-          const next = [...rows, added || cleaned];
-          saveTrainers(next);
-          setRows(next);
+          initialNext = [...rows, added || cleaned];
         } else {
           const targetId = cleaned.docId || cleaned.id;
           await updateTrainerInFirebase(targetId, cleaned);
-          const next = rows.map((row) => ((row.docId || row.id) === editing ? { ...row, ...cleaned } : row));
-          saveTrainers(next);
-          setRows(next);
+          initialNext = rows.map((row) => ((row.docId || row.id) === editing ? { ...row, ...cleaned } : row));
         }
+
+        // Ensure all existing + newly added trainers exist in Firebase Firestore
+        const fullySynced = await syncAllTrainersToFirebase(initialNext);
+        saveTrainers(fullySynced);
+        setRows(fullySynced);
         window.dispatchEvent(new Event('bodyfit_trainers_updated'));
       } catch (err) {
         console.error('Failed to sync trainer with Firebase:', err);
+        const next =
+          editing === 'new'
+            ? [...rows, cleaned]
+            : rows.map((row) => (row.id === editing ? cleaned : row));
+        config.write(next);
+        setRows(next);
+      }
+    } else if (active === 'memberships') {
+      try {
+        let initialNext = [];
+        if (editing === 'new') {
+          const added = await addMembershipToFirebase(cleaned);
+          initialNext = [...rows, added || cleaned];
+        } else {
+          const targetId = cleaned.docId || cleaned.id;
+          await updateMembershipInFirebase(targetId, cleaned);
+          initialNext = rows.map((row) => ((row.docId || row.id) === editing ? { ...row, ...cleaned } : row));
+        }
+
+        // Ensure all existing + newly added membership plans exist in Firebase Firestore
+        const fullySynced = await syncAllMembershipsToFirebase(initialNext);
+        saveMemberships(fullySynced);
+        setRows(fullySynced);
+        window.dispatchEvent(new Event('bodyfit_memberships_updated'));
+      } catch (err) {
+        console.error('Failed to sync membership plan with Firebase:', err);
         const next =
           editing === 'new'
             ? [...rows, cleaned]
@@ -291,11 +342,54 @@ export default function ManagePanel() {
         config.write(next);
         setRows(next);
       }
+    } else if (active === 'memberships') {
+      try {
+        await deleteMembershipFromFirebase(row.docId || row.id);
+        const next = rows.filter((item) => (item.docId || item.id) !== (row.docId || row.id));
+        saveMemberships(next);
+        setRows(next);
+        window.dispatchEvent(new Event('bodyfit_memberships_updated'));
+      } catch (err) {
+        console.error('Failed to delete membership plan from Firebase:', err);
+        const next = rows.filter((item) => item.id !== row.id);
+        config.write(next);
+        setRows(next);
+      }
     } else {
       const next = rows.filter((item) => item.id !== row.id);
       config.write(next);
       setRows(next);
     }
+  };
+
+  const handleSyncAllTrainers = async () => {
+    setIsSaving(true);
+    try {
+      const synced = await syncAllTrainersToFirebase(rows);
+      saveTrainers(synced);
+      setRows(synced);
+      window.dispatchEvent(new Event('bodyfit_trainers_updated'));
+      alert('✅ All existing and new trainers have been successfully synced to Google Firebase Firestore!');
+    } catch (e) {
+      console.error('Failed to sync trainers to Firebase:', e);
+      alert('⚠️ Sync warning: Could not complete cloud sync.');
+    }
+    setIsSaving(false);
+  };
+
+  const handleSyncAllMemberships = async () => {
+    setIsSaving(true);
+    try {
+      const synced = await syncAllMembershipsToFirebase(rows);
+      saveMemberships(synced);
+      setRows(synced);
+      window.dispatchEvent(new Event('bodyfit_memberships_updated'));
+      alert('✅ All existing and new membership plans have been successfully synced to Google Firebase Firestore!');
+    } catch (e) {
+      console.error('Failed to sync memberships to Firebase:', e);
+      alert('⚠️ Sync warning: Could not complete cloud sync.');
+    }
+    setIsSaving(false);
   };
 
   return (
@@ -318,14 +412,40 @@ export default function ManagePanel() {
           ))}
         </div>
 
-        <button
-          className="inline-flex items-center gap-2 self-start rounded-lg bg-gradient-to-br from-orange-500 to-amber-500 px-4 py-2 text-xs font-black uppercase tracking-wider text-white transition-all active:scale-95"
-          onClick={startNew}
-          type="button"
-        >
-          <Plus className="h-4 w-4" />
-          Add new
-        </button>
+        <div className="flex flex-wrap items-center gap-2">
+          {active === 'trainers' && (
+            <button
+              disabled={isSaving}
+              className="inline-flex items-center gap-2 self-start rounded-lg border border-sky-500/50 bg-sky-500/10 px-3.5 py-2 text-xs font-bold uppercase tracking-wider text-sky-300 transition-all hover:bg-sky-500/20 active:scale-95 disabled:opacity-50"
+              onClick={handleSyncAllTrainers}
+              type="button"
+            >
+              <Cloud className="h-4 w-4 text-sky-400" />
+              Sync All Trainers to Firebase
+            </button>
+          )}
+
+          {active === 'memberships' && (
+            <button
+              disabled={isSaving}
+              className="inline-flex items-center gap-2 self-start rounded-lg border border-amber-500/50 bg-amber-500/10 px-3.5 py-2 text-xs font-bold uppercase tracking-wider text-amber-300 transition-all hover:bg-amber-500/20 active:scale-95 disabled:opacity-50"
+              onClick={handleSyncAllMemberships}
+              type="button"
+            >
+              <Cloud className="h-4 w-4 text-amber-400" />
+              Sync All Membership Plans to Firebase
+            </button>
+          )}
+
+          <button
+            className="inline-flex items-center gap-2 self-start rounded-lg bg-gradient-to-br from-orange-500 to-amber-500 px-4 py-2 text-xs font-black uppercase tracking-wider text-white transition-all active:scale-95"
+            onClick={startNew}
+            type="button"
+          >
+            <Plus className="h-4 w-4" />
+            Add new
+          </button>
+        </div>
       </div>
 
       <p className="mt-4 text-xs text-slate-500">{config.note}</p>
