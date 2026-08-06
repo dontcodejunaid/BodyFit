@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Menu, X, Phone, Calculator } from "lucide-react";
+import { Menu, X, Phone, Calculator, QrCode } from "lucide-react";
 import { RandomLetterSwap } from "./random-letter-swap";
 import { WhatsAppIcon } from "./social-icons";
 import { LiquidMetalButton } from "./liquid-metal-button";
@@ -26,7 +26,7 @@ const trackedSections = [
   "#contact"
 ];
 
-export default function RandomLetterSwapNav() {
+export default function RandomLetterSwapNav({ onOpenRecovery }) {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [activeSection, setActiveSection] = useState("#home");
@@ -133,6 +133,19 @@ export default function RandomLetterSwapNav() {
         </nav>
 
         <div className="flex items-center gap-3">
+          {/* Find Pass / Digital Pass Recovery Button */}
+          {onOpenRecovery && (
+            <button
+              aria-label="Find or Recover Digital Pass"
+              title="Find or Recover Lost Digital Pass"
+              className="flex h-10 w-10 items-center justify-center rounded-xl border border-slate-800 bg-slate-900/60 text-slate-300 transition-all duration-300 hover:border-orange-500/50 hover:bg-orange-500/20 hover:text-orange-400 active:scale-95 cursor-pointer"
+              onClick={onOpenRecovery}
+              type="button"
+            >
+              <QrCode className="h-[18px] w-[18px]" />
+            </button>
+          )}
+
           {/* BMI Calculator Quick Access Icon Button */}
           <a
             aria-label="BMI & Calorie Calculator"
