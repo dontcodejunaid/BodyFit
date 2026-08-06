@@ -491,11 +491,11 @@ export default function ManagePanel() {
           {active === 'trainers' && (
             <button
               disabled={isSaving}
-              className="inline-flex items-center gap-2 self-start rounded-lg border border-sky-500/50 bg-sky-500/10 px-3.5 py-2 text-xs font-bold uppercase tracking-wider text-sky-300 transition-all hover:bg-sky-500/20 active:scale-95 disabled:opacity-50"
+              className="inline-flex items-center gap-2 self-start rounded-lg border border-amber-500/50 bg-amber-500/10 px-3.5 py-2 text-xs font-bold uppercase tracking-wider text-amber-300 transition-all hover:bg-amber-500/20 active:scale-95 disabled:opacity-50"
               onClick={handleSyncAllTrainers}
               type="button"
             >
-              <Cloud className="h-4 w-4 text-sky-400" />
+              <Cloud className="h-4 w-4 text-amber-400" />
               Sync All Trainers to Firebase
             </button>
           )}
