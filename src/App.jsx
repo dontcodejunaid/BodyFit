@@ -137,7 +137,7 @@ function App() {
       <Gallery />
       <Testimonials />
       <ProgressTracker />
-      <BookingForm selectedPlan={selectedPlan} onClearPlan={() => setSelectedPlan(null)} />
+      <BookingForm selectedPlan={selectedPlan} selectedClass={_selectedClass} onClearPlan={() => setSelectedPlan(null)} onClearClass={() => setSelectedClass(null)} />
       <Footer />
 
       {/* Integrated Floating Action Stack */}

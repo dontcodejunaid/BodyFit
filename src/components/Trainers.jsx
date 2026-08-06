@@ -12,7 +12,7 @@ import {
   Zap,
   Clock
 } from 'lucide-react';
-import { INITIAL_TRAINERS } from '../data/trainersAndScheduleData';
+import { INITIAL_TRAINERS, getTrainerPhoto } from '../data/trainersAndScheduleData';
 
 export default function Trainers({ onSelectTrainer }) {
   const [trainers, setTrainers] = useState([]);
@@ -122,8 +122,12 @@ export default function Trainers({ onSelectTrainer }) {
               {/* Photo & Top Badges */}
               <div className="relative h-72 w-full overflow-hidden bg-slate-900">
                 <img
-                  src={trainer.photo || trainer.imageUrl}
+                  src={getTrainerPhoto(trainer.name, trainer.photo || trainer.imageUrl)}
                   alt={trainer.name}
+                  onError={(e) => {
+                    e.currentTarget.onerror = null;
+                    e.currentTarget.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(trainer.name || 'Coach')}&background=f97316&color=ffffff&bold=true&size=256`;
+                  }}
                   className="w-full h-full object-cover object-top transition-transform duration-700 ease-out group-hover:scale-105"
                 />
                 {/* Extends 1px past the bottom (clipped by overflow-hidden) so

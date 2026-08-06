@@ -40,6 +40,31 @@ export function saveBooking(bookingData) {
     if (bookingData?.phone && bookingData?.name) {
       saveUserProfile(bookingData.phone, bookingData.name, bookingData.email || '');
     }
+
+    // Real-time class seat capacity update
+    try {
+      const rawClasses = localStorage.getItem('bodyfit_classes');
+      if (rawClasses) {
+        const classes = JSON.parse(rawClasses);
+        const updatedClasses = classes.map(c => {
+          const isMatch = (bookingData.classId && c.id === bookingData.classId) ||
+            (bookingData.service && (c.className === bookingData.service || bookingData.service.includes(c.className)));
+          if (isMatch) {
+            const cap = Number(c.capacity || 20);
+            const currentBooked = Number(c.booked || 0);
+            return { ...c, booked: Math.min(cap, currentBooked + 1) };
+          }
+          return c;
+        });
+        localStorage.setItem('bodyfit_classes', JSON.stringify(updatedClasses));
+      }
+    } catch (err) {
+      console.warn('Error updating class seats in saveBooking:', err);
+    }
+
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('bodyfit-schedule-update'));
+    }
   } catch (error) {
     console.error('Error saving booking to localStorage:', error);
   }

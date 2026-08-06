@@ -9,7 +9,7 @@ import {
   LayoutGrid,
   List
 } from 'lucide-react';
-import { INITIAL_SCHEDULE, CLASS_CATEGORIES, DAYS_OF_WEEK } from '../data/trainersAndScheduleData';
+import { INITIAL_SCHEDULE, CLASS_CATEGORIES, DAYS_OF_WEEK, getTrainerPhoto } from '../data/trainersAndScheduleData';
 
 export default function ClassSchedule({ onSelectClass }) {
   const [schedule, setSchedule] = useState([]);
@@ -17,20 +17,58 @@ export default function ClassSchedule({ onSelectClass }) {
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [viewMode, setViewMode] = useState('grid'); // 'grid' or 'list'
 
-  // Load schedule from LocalStorage if present, else fallback
-  useEffect(() => {
+  // Load schedule from LocalStorage & calculate real-time seat availability
+  const loadSchedule = () => {
     try {
       const saved = localStorage.getItem('bodyfit_classes');
-      if (saved) {
-        setSchedule(JSON.parse(saved));
-      } else {
-        setSchedule(INITIAL_SCHEDULE);
+      const rawBookings = localStorage.getItem('bodyfit_bookings');
+      const bookingsList = rawBookings ? JSON.parse(rawBookings) : [];
+
+      let classesList = saved ? JSON.parse(saved) : INITIAL_SCHEDULE;
+      if (!saved) {
         localStorage.setItem('bodyfit_classes', JSON.stringify(INITIAL_SCHEDULE));
       }
+
+      // Calculate real-time seat availability by matching confirmed bookings
+      const syncedSchedule = classesList.map(item => {
+        const matchingBookingsCount = bookingsList.filter(b => {
+          if (!b || b.status === 'Cancelled') return false;
+          const serviceMatch = b.service && (b.service.includes(item.className) || item.className.includes(b.service));
+          const classIdMatch = b.classId && b.classId === item.id;
+          return serviceMatch || classIdMatch;
+        }).length;
+
+        const baseBooked = Number(item.booked || 0);
+        const totalBooked = Math.max(baseBooked, matchingBookingsCount);
+        const capacity = Number(item.capacity || 20);
+
+        return {
+          ...item,
+          booked: Math.min(capacity, totalBooked),
+          capacity: capacity
+        };
+      });
+
+      setSchedule(syncedSchedule);
     } catch (e) {
       console.warn('LocalStorage error reading bodyfit_classes:', e);
       setSchedule(INITIAL_SCHEDULE);
     }
+  };
+
+  useEffect(() => {
+    loadSchedule();
+
+    const handleUpdate = () => loadSchedule();
+    window.addEventListener('storage', handleUpdate);
+    window.addEventListener('bodyfit-schedule-update', handleUpdate);
+    window.addEventListener('booking-created', handleUpdate);
+
+    return () => {
+      window.removeEventListener('storage', handleUpdate);
+      window.removeEventListener('bodyfit-schedule-update', handleUpdate);
+      window.removeEventListener('booking-created', handleUpdate);
+    };
   }, []);
 
   const filteredSchedule = schedule.filter(item => {
@@ -61,10 +99,25 @@ export default function ClassSchedule({ onSelectClass }) {
         return 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30';
       case 'Cardio':
         return 'bg-cyan-500/10 text-cyan-400 border-cyan-500/30';
+      case 'Others':
+        return 'bg-amber-500/10 text-amber-400 border-amber-500/30';
       default:
-        return 'bg-slate-800 text-slate-300 border-slate-700';
+        return 'bg-gradient-to-r from-amber-500/20 to-orange-500/20 text-amber-300 border-amber-500/40 font-bold';
     }
   };
+
+  const allCategoryPills = Array.from(
+    new Set([
+      ...CLASS_CATEGORIES.map(c => c.id),
+      ...schedule.map(s => s.category).filter(Boolean)
+    ])
+  ).map(catId => {
+    const matched = CLASS_CATEGORIES.find(c => c.id === catId);
+    return {
+      id: catId,
+      label: matched ? matched.label : catId
+    };
+  });
 
   return (
     <section id="class-schedule" className="scroll-mt-20 relative py-20 bg-slate-950 text-slate-100 border-t border-slate-800/60 overflow-hidden">
@@ -135,7 +188,7 @@ export default function ClassSchedule({ onSelectClass }) {
               <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-1 mr-1">
                 <Filter className="w-3.5 h-3.5 text-purple-400" /> Category:
               </span>
-              {CLASS_CATEGORIES.map(cat => (
+              {allCategoryPills.map(cat => (
                 <button
                   key={cat.id}
                   onClick={() => setSelectedCategory(cat.id)}
@@ -239,9 +292,13 @@ export default function ClassSchedule({ onSelectClass }) {
                     {/* Trainer Info */}
                     <div className="flex items-center gap-3 pt-2 border-t border-slate-800/60">
                       <img
-                        src={item.trainerPhoto}
+                        src={getTrainerPhoto(item.trainer, item.trainerPhoto)}
                         alt={item.trainer}
-                        className="w-9 h-9 rounded-full object-cover border border-slate-700"
+                        onError={(e) => {
+                          e.currentTarget.onerror = null;
+                          e.currentTarget.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(item.trainer || 'Instructor')}&background=f97316&color=ffffff&bold=true&size=128`;
+                        }}
+                        className="w-9 h-9 rounded-full object-cover border border-slate-700 shrink-0"
                       />
                       <div>
                         <div className="text-xs text-slate-400">Instructor</div>
@@ -309,8 +366,12 @@ export default function ClassSchedule({ onSelectClass }) {
                 >
                   <div className="flex items-start sm:items-center gap-4">
                     <img
-                      src={item.trainerPhoto}
+                      src={getTrainerPhoto(item.trainer, item.trainerPhoto)}
                       alt={item.trainer}
+                      onError={(e) => {
+                        e.currentTarget.onerror = null;
+                        e.currentTarget.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(item.trainer || 'Instructor')}&background=f97316&color=ffffff&bold=true&size=128`;
+                      }}
                       className="w-12 h-12 rounded-2xl object-cover border border-slate-700 flex-shrink-0"
                     />
                     <div>

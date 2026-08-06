@@ -104,6 +104,25 @@ export const INITIAL_TRAINERS = [
   },
 ];
 
+export function getTrainerPhoto(trainerName, photoUrl) {
+  if (photoUrl && typeof photoUrl === 'string' && photoUrl.trim() && !photoUrl.includes('undefined')) {
+    return photoUrl;
+  }
+
+  try {
+    const stored = JSON.parse(localStorage.getItem('bodyfit_trainers') || '[]');
+    const all = [...INITIAL_TRAINERS, ...stored];
+    const match = all.find(t => t.name?.toLowerCase().trim() === trainerName?.toLowerCase().trim());
+    if (match && match.photo) return match.photo;
+    if (match && match.imageUrl) return match.imageUrl;
+  } catch (e) {
+    // fallback
+  }
+
+  const cleanName = (trainerName || 'Duty Coach').trim();
+  return `https://ui-avatars.com/api/?name=${encodeURIComponent(cleanName)}&background=f97316&color=ffffff&bold=true&size=128`;
+}
+
 export const CLASS_CATEGORIES = [
   { id: 'All', label: 'All Classes' },
   { id: 'Yoga', label: 'Yoga & Flow', color: 'purple' },
@@ -111,6 +130,7 @@ export const CLASS_CATEGORIES = [
   { id: 'CrossFit', label: 'CrossFit & HIIT', color: 'orange' },
   { id: 'Strength', label: 'Strength & Muscle', color: 'emerald' },
   { id: 'Cardio', label: 'Cardio Blast', color: 'cyan' },
+  { id: 'Others', label: 'Others / Special Class', color: 'amber' },
 ];
 
 export const DAYS_OF_WEEK = [

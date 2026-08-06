@@ -66,6 +66,7 @@ const COLLECTIONS = {
         type: 'select',
         options: CLASS_CATEGORIES.filter((item) => item.id !== 'All').map((item) => item.id),
       },
+      { key: 'customCategory', label: 'Custom Category / Special Class Name (If Category is Others)', type: 'text', placeholder: 'e.g. Gaming, Kickboxing, Pilates, Special Workshop' },
       { key: 'day', label: 'Day', type: 'select', options: DAYS_OF_WEEK },
       { key: 'time', label: 'Time', type: 'text', placeholder: '06:30 AM - 07:30 AM' },
       { key: 'trainer', label: 'Trainer', type: 'text' },
@@ -259,6 +260,9 @@ export default function ManagePanel() {
   const commit = () => {
     // Normalise comma-separated fields back into arrays before saving.
     const cleaned = { ...draft };
+    if (cleaned.category === 'Others' && cleaned.customCategory && cleaned.customCategory.trim()) {
+      cleaned.category = cleaned.customCategory.trim();
+    }
     config.fields
       .filter((field) => field.type === 'list')
       .forEach((field) => {
