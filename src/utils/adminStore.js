@@ -16,6 +16,7 @@ export const STORE_KEYS = {
   CLASSES: 'bodyfit_classes',
   MEMBERSHIPS: 'bodyfit_memberships',
   ABOUT: 'bodyfit_about_data',
+  MEMBER_SIGNUPS: 'bodyfit_member_signups',
 };
 
 export const INITIAL_ABOUT_DATA = {
@@ -95,7 +96,10 @@ export const INITIAL_ABOUT_DATA = {
   ],
 };
 
+
 export const BOOKING_STATUSES = ['Pending', 'Approved', 'Rejected'];
+
+export const MEMBERSHIP_STATUSES = ['Active', 'Expired', 'Cancelled'];
 
 // Dummy price list used only for the revenue estimate. Update these to the
 // gym's real rates — nothing else depends on them.
@@ -187,6 +191,85 @@ export function getMemberships() {
 export const saveMemberships = (list) => write(STORE_KEYS.MEMBERSHIPS, list);
 
 export const newId = (prefix) => `${prefix}-${Date.now().toString(36)}`;
+
+/* --------------------------- membership signups -------------------------- */
+// One row per person who took a plan — written by the checkout flow and the
+// booking form, managed by the admin Memberships tab, mirrored to Firestore.
+
+export const getMemberSignups = () => read(STORE_KEYS.MEMBER_SIGNUPS);
+export const saveMemberSignups = (list) => write(STORE_KEYS.MEMBER_SIGNUPS, list);
+
+/** Adds a signup, replacing any earlier row that carries the same id. */
+export function addMemberSignup(signup) {
+  const existing = getMemberSignups().filter((item) => item.id !== signup.id);
+  return saveMemberSignups([signup, ...existing]);
+}
+
+export function updateMemberSignup(id, patch) {
+  const next = getMemberSignups().map((signup) =>
+    signup.id === id ? { ...signup, ...patch, updatedAt: new Date().toISOString() } : signup
+  );
+  return saveMemberSignups(next);
+}
+
+export function deleteMemberSignup(id) {
+  return saveMemberSignups(getMemberSignups().filter((signup) => signup.id !== id));
+}
+
+/** Days left before the plan lapses. Negative once it already has. */
+export function daysUntilExpiry(signup) {
+  if (!signup?.endDate) return null;
+  const end = new Date(`${signup.endDate}T23:59:59`);
+  if (Number.isNaN(end.getTime())) return null;
+  return Math.ceil((end.getTime() - Date.now()) / 86400000);
+}
+
+/**
+ * The status to show: a stored 'Cancelled' always wins, but an 'Active' plan
+ * whose end date has passed is reported as expired without needing a write.
+ */
+export function effectiveMembershipStatus(signup) {
+  const stored = signup?.status || 'Active';
+  if (stored === 'Cancelled') return 'Cancelled';
+  const remaining = daysUntilExpiry(signup);
+  if (remaining !== null && remaining < 0) return 'Expired';
+  return stored;
+}
+
+/** Active plans lapsing within `withinDays` — the renewal call list. */
+export function isExpiringSoon(signup, withinDays = 7) {
+  if (effectiveMembershipStatus(signup) !== 'Active') return false;
+  const remaining = daysUntilExpiry(signup);
+  return remaining !== null && remaining >= 0 && remaining <= withinDays;
+}
+
+export function buildMembershipStats(signups) {
+  const active = signups.filter((signup) => effectiveMembershipStatus(signup) === 'Active');
+  const expired = signups.filter((signup) => effectiveMembershipStatus(signup) === 'Expired');
+  const cancelled = signups.filter((signup) => effectiveMembershipStatus(signup) === 'Cancelled');
+  const expiringSoon = signups.filter((signup) => isExpiringSoon(signup));
+
+  // Revenue counts money actually collected, so cancelled plans still count.
+  const revenue = signups.reduce((total, signup) => total + (Number(signup.amountPaid) || 0), 0);
+
+  const byPlan = {};
+  signups.forEach((signup) => {
+    const name = signup.planName || 'Unspecified plan';
+    byPlan[name] = (byPlan[name] || 0) + 1;
+  });
+
+  return {
+    total: signups.length,
+    active: active.length,
+    expired: expired.length,
+    cancelled: cancelled.length,
+    expiringSoon: expiringSoon.length,
+    revenue,
+    plans: Object.entries(byPlan)
+      .map(([name, count]) => ({ name, count }))
+      .sort((a, b) => b.count - a.count),
+  };
+}
 
 /* ------------------------------- analytics ------------------------------- */
 
