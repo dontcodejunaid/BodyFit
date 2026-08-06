@@ -256,13 +256,6 @@ export async function saveMembershipSignupToFirebase(signupData) {
   }
 
   try {
-    // Delete legacy "MB-47700" doc ID from Firestore if it exists
-    if (signupData.id && signupData.id !== docId && (signupData.id.startsWith('MB-') || signupData.id.length > 15)) {
-      try {
-        await deleteDoc(doc(db, MEMBER_SIGNUPS_COLLECTION, signupData.id));
-      } catch (e) {}
-    }
-
     await setDoc(doc(db, MEMBER_SIGNUPS_COLLECTION, docId), signupWithId, { merge: true });
     return signupWithId;
   } catch (error) {
@@ -272,7 +265,7 @@ export async function saveMembershipSignupToFirebase(signupData) {
 }
 
 /**
- * Fetch all membership signups from Firebase Firestore (purges legacy "MB-XXXXX" doc IDs and updates to name-based IDs)
+ * Fetch all membership signups from Firebase Firestore
  */
 export async function getMembershipSignupsFromFirebase() {
   if (!db) return [];
@@ -280,20 +273,11 @@ export async function getMembershipSignupsFromFirebase() {
     const q = query(collection(db, MEMBER_SIGNUPS_COLLECTION));
     const snapshot = await getDocs(q);
 
-    const signups = [];
-    for (const docSnap of snapshot.docs) {
-      const data = docSnap.data();
-      const cleanDocId = getMemberSignupDocId({ docId: docSnap.id, ...data });
-
-      if (docSnap.id !== cleanDocId) {
-        try {
-          await deleteDoc(doc(db, MEMBER_SIGNUPS_COLLECTION, docSnap.id));
-          await setDoc(doc(db, MEMBER_SIGNUPS_COLLECTION, cleanDocId), { ...data, id: cleanDocId, docId: cleanDocId }, { merge: true });
-        } catch (e) {}
-      }
-      signups.push({ docId: cleanDocId, ...data, id: cleanDocId });
-    }
-    return signups;
+    return snapshot.docs.map((docSnap) => ({
+      docId: docSnap.id,
+      ...docSnap.data(),
+      id: docSnap.id
+    }));
   } catch (error) {
     console.warn('Firebase membership signups fetch error:', error.message);
     return [];
@@ -311,21 +295,11 @@ export function subscribeToMembershipSignups(callback) {
   try {
     const q = query(collection(db, MEMBER_SIGNUPS_COLLECTION));
     const unsubscribe = onSnapshot(q, (snapshot) => {
-      const signups = [];
-      snapshot.docs.forEach((docSnap) => {
-        const data = docSnap.data();
-        const cleanDocId = getMemberSignupDocId({ docId: docSnap.id, ...data });
-
-        // Auto-delete legacy "MB-47700" doc IDs and re-save under name-based doc IDs ("momo-47700")
-        if (docSnap.id !== cleanDocId) {
-          try {
-            deleteDoc(doc(db, MEMBER_SIGNUPS_COLLECTION, docSnap.id));
-            setDoc(doc(db, MEMBER_SIGNUPS_COLLECTION, cleanDocId), { ...data, id: cleanDocId, docId: cleanDocId }, { merge: true });
-          } catch (e) {}
-        }
-
-        signups.push({ docId: cleanDocId, ...data, id: cleanDocId });
-      });
+      const signups = snapshot.docs.map((docSnap) => ({
+        docId: docSnap.id,
+        ...docSnap.data(),
+        id: docSnap.id
+      }));
       callback(signups);
     }, (error) => {
       console.warn('Membership signups snapshot listener error:', error.message);
@@ -464,21 +438,6 @@ export async function seedInitialTrainersToFirebase() {
 export async function syncAllTrainersToFirebase(trainersList = []) {
   const safeInput = Array.isArray(trainersList) && trainersList.length > 0 ? trainersList : [];
   try {
-    const q = query(collection(db, TRAINERS_COLLECTION));
-    const snapshot = await getDocs(q);
-
-    // Purge only legacy 20-character random hash IDs from Firestore
-    for (const docSnap of snapshot.docs) {
-      if (isLegacyRandomHashDocId(docSnap.id)) {
-        try {
-          await deleteDoc(doc(db, TRAINERS_COLLECTION, docSnap.id));
-        } catch (e) {
-          console.warn('Could not delete random hash doc:', docSnap.id);
-        }
-      }
-    }
-
-    // Put safeInput FIRST so new and custom trainers take priority!
     const combined = [...safeInput, ...INITIAL_TRAINERS];
     const mapByKey = new Map();
     combined.forEach((item) => {
@@ -514,7 +473,7 @@ export async function syncAllTrainersToFirebase(trainersList = []) {
 }
 
 /**
- * Fetch all trainers from Firebase Firestore (purges legacy random hash IDs and seeds clean trainer names)
+ * Fetch all trainers from Firebase Firestore
  */
 export async function getTrainersFromFirebase() {
   try {
@@ -522,22 +481,10 @@ export async function getTrainersFromFirebase() {
     const querySnapshot = await getDocs(q);
 
     if (!querySnapshot.empty) {
-      const trainersList = [];
-      for (const docSnap of querySnapshot.docs) {
-        if (isLegacyRandomHashDocId(docSnap.id)) {
-          try {
-            await deleteDoc(doc(db, TRAINERS_COLLECTION, docSnap.id));
-          } catch (e) {
-            console.warn('Could not purge legacy trainer doc:', docSnap.id);
-          }
-        } else {
-          trainersList.push({
-            docId: docSnap.id,
-            ...docSnap.data()
-          });
-        }
-      }
-      if (trainersList.length > 0) return trainersList;
+      return querySnapshot.docs.map((docSnap) => ({
+        docId: docSnap.id,
+        ...docSnap.data()
+      }));
     }
 
     const seeded = await seedInitialTrainersToFirebase();
@@ -802,28 +749,6 @@ export async function seedInitialMembershipsToFirebase() {
  */
 export async function syncAllMembershipsToFirebase(membershipsList) {
   try {
-    const q = query(collection(db, MEMBERSHIPS_COLLECTION));
-    const snapshot = await getDocs(q);
-
-    const VALID_IDS = new Set(['basic-plan', 'standard-plan', 'premium-plan']);
-
-    for (const docSnap of snapshot.docs) {
-      const docId = docSnap.id;
-      const isLegacyDuplicate =
-        docId === 'premium-gym-pt-diet-plan' ||
-        docId === 'standard-gym-classes-plan' ||
-        docId === 'basic-gym-only-plan' ||
-        (docId.length > 15 && !docId.includes('-plan') && !docId.includes('-'));
-
-      if (isLegacyDuplicate && !VALID_IDS.has(docId)) {
-        try {
-          await deleteDoc(doc(db, MEMBERSHIPS_COLLECTION, docId));
-        } catch (e) {
-          console.warn('Could not delete duplicate doc:', docId);
-        }
-      }
-    }
-
     const combined = [...DEFAULT_MEMBERSHIP_PLANS, ...membershipsList];
     const mapByKey = new Map();
     combined.forEach((item) => {
@@ -852,15 +777,14 @@ export async function syncAllMembershipsToFirebase(membershipsList) {
 }
 
 /**
- * Fetch all membership plans from Firebase Firestore (with auto-seed to create collection if empty)
+ * Fetch all membership plans from Firebase Firestore
  */
 export async function getMembershipsFromFirebase() {
   try {
     const q = query(collection(db, MEMBERSHIPS_COLLECTION));
     const querySnapshot = await getDocs(q);
     if (!querySnapshot.empty) {
-      const validDocs = querySnapshot.docs.filter((d) => d.id !== 'premium-gym-pt-diet-plan' && d.id !== 'standard-gym-classes-plan');
-      return validDocs.map((docSnap) => ({
+      return querySnapshot.docs.map((docSnap) => ({
         docId: docSnap.id,
         ...docSnap.data()
       }));

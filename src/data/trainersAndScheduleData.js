@@ -132,20 +132,42 @@ export function getTrainerPhoto(trainerOrName, photoUrl) {
   let url = photoUrl;
 
   if (trainerOrName && typeof trainerOrName === 'object') {
-    name = trainerOrName.name || '';
+    name = trainerOrName.name || trainerOrName.trainer || '';
     url = trainerOrName.photo || trainerOrName.imageUrl || photoUrl;
   } else {
     name = String(trainerOrName || '');
   }
 
+  // Check if url is a valid non-empty custom URL (http, https, data:image, or blob)
+  if (
+    url &&
+    typeof url === 'string' &&
+    url.trim() &&
+    !url.includes('undefined') &&
+    !url.includes('ui-avatars.com') &&
+    (url.startsWith('http') || url.startsWith('data:') || url.startsWith('blob:'))
+  ) {
+    return url;
+  }
+
+  // Direct lookup in local bundled asset map by slug / name / first name
+  const map = (typeof TRAINER_IMAGES !== 'undefined' && TRAINER_IMAGES) ? TRAINER_IMAGES : {};
+
   const nameKey = name.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-');
-  if (nameKey && TRAINER_IMAGES[nameKey]) return TRAINER_IMAGES[nameKey];
+  if (nameKey && map[nameKey]) return map[nameKey];
 
   const firstName = name.toLowerCase().trim().split(' ')[0];
-  if (firstName && TRAINER_IMAGES[firstName]) return TRAINER_IMAGES[firstName];
+  if (firstName && map[firstName]) return map[firstName];
 
-  if (url && typeof url === 'string' && url.trim() && !url.includes('undefined') && !url.startsWith('/assets/')) {
-    return url;
+  try {
+    const stored = JSON.parse(localStorage.getItem('bodyfit_trainers') || '[]');
+    const initialList = Array.isArray(INITIAL_TRAINERS) ? INITIAL_TRAINERS : [];
+    const all = [...initialList, ...stored];
+    const match = all.find(t => t && t.name && t.name.toLowerCase().trim() === name.toLowerCase().trim());
+    if (match && match.photo && typeof match.photo === 'string' && match.photo.trim() && !match.photo.startsWith('/assets/')) return match.photo;
+    if (match && match.imageUrl && typeof match.imageUrl === 'string' && match.imageUrl.trim() && !match.imageUrl.startsWith('/assets/')) return match.imageUrl;
+  } catch (e) {
+    // fallback
   }
 
   const cleanName = (name || 'Duty Coach').trim();

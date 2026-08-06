@@ -31,15 +31,30 @@ export default function Trainers({ onSelectTrainer }) {
         const fbList = (await getTrainersFromFirebase()) || [];
 
         const mergedMap = new Map();
-        localList.forEach(t => {
+        INITIAL_TRAINERS.forEach(t => {
           const key = (t.name || t.id || '').toLowerCase().trim();
           if (key) mergedMap.set(key, t);
+        });
+        localList.forEach(t => {
+          const key = (t.name || t.id || '').toLowerCase().trim();
+          if (key) {
+            const existing = mergedMap.get(key) || {};
+            mergedMap.set(key, {
+              ...existing,
+              ...t,
+              photo: (t.photo && String(t.photo).trim()) ? t.photo : existing.photo
+            });
+          }
         });
         fbList.forEach(t => {
           const key = (t.name || t.id || '').toLowerCase().trim();
           if (key) {
             const existing = mergedMap.get(key) || {};
-            mergedMap.set(key, { ...existing, ...t });
+            mergedMap.set(key, {
+              ...existing,
+              ...t,
+              photo: (t.photo && String(t.photo).trim()) ? t.photo : existing.photo
+            });
           }
         });
 
