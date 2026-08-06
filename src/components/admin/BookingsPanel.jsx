@@ -7,6 +7,7 @@ import {
 } from '../../utils/adminStore';
 
 import { updateBookingInFirebase, deleteBookingFromFirebase } from '../../firebase';
+import AdminConfirmModal from './AdminConfirmModal';
 
 function formatBookingTimestamp(createdAt, fallbackDate) {
   const ts = createdAt || fallbackDate;
@@ -89,13 +90,22 @@ export default function BookingsPanel({ bookings, onChange }) {
     setRescheduling(null);
   };
 
-  const removeBooking = async (booking) => {
-    const label = `${booking.name || 'this booking'} on ${booking.date} at ${booking.time}`;
-    // eslint-disable-next-line no-alert
-    if (!window.confirm(`Delete the booking for ${label}? This cannot be undone.`)) return;
-    const updatedLocal = deleteBooking(booking.id);
-    onChange(updatedLocal);
-    await deleteBookingFromFirebase(booking.id);
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [deleting, setDeleting] = useState(false);
+
+  const confirmDeleteBooking = async () => {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    try {
+      const updatedLocal = deleteBooking(deleteTarget.id);
+      onChange(updatedLocal);
+      await deleteBookingFromFirebase(deleteTarget.id);
+    } catch (err) {
+      console.error('Error deleting booking:', err);
+    } finally {
+      setDeleting(false);
+      setDeleteTarget(null);
+    }
   };
 
   const exportCsv = () => {
@@ -276,7 +286,7 @@ export default function BookingsPanel({ bookings, onChange }) {
                   <button
                     aria-label="Delete booking"
                     className="rounded-lg border border-slate-800 p-2 text-slate-500 transition-colors hover:border-red-500/40 hover:text-red-400"
-                    onClick={() => removeBooking(booking)}
+                    onClick={() => setDeleteTarget(booking)}
                     type="button"
                   >
                     <Trash2 className="h-3.5 w-3.5" />
@@ -347,6 +357,20 @@ export default function BookingsPanel({ bookings, onChange }) {
           );
         })}
       </div>
+
+      {/* Delete Confirmation Modal */}
+      <AdminConfirmModal
+        cancelText="Keep Booking"
+        confirmText="Delete Booking"
+        isOpen={Boolean(deleteTarget)}
+        itemName={deleteTarget ? `${deleteTarget.name || 'Client'} · ${deleteTarget.date} at ${deleteTarget.time}` : ''}
+        loading={deleting}
+        message="Are you sure you want to delete this booking request? This action cannot be undone."
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={confirmDeleteBooking}
+        title="Delete Booking"
+        type="danger"
+      />
     </div>
   );
 }

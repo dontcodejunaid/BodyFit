@@ -6,6 +6,7 @@ import {
 } from '../../utils/adminStore';
 import { CLASS_CATEGORIES, DAYS_OF_WEEK } from '../../data/trainersAndScheduleData';
 import { PLAN_GRADIENTS } from '../../data/membershipPlans';
+import AdminConfirmModal from './AdminConfirmModal';
 import {
   getTrainersFromFirebase,
   addTrainerToFirebase,
@@ -101,23 +102,23 @@ const blankRow = (config) => {
 };
 
 function FieldInput({ field, value, onChange }) {
+  const [fileError, setFileError] = useState('');
   const base =
     'w-full rounded-lg border border-slate-800 bg-slate-950/60 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-600 focus:border-orange-500/60 focus:outline-none';
 
   if (field.type === 'image' || field.key === 'imageUrl' || field.key === 'photo') {
     const handleFileChange = (e) => {
+      setFileError('');
       const file = e.target.files && e.target.files[0];
       if (!file) return;
 
       if (!file.type.startsWith('image/')) {
-        // eslint-disable-next-line no-alert
-        alert('Please select a valid image file (PNG, JPG, WEBP, etc.).');
+        setFileError('Please select a valid image file (PNG, JPG, WEBP, etc.).');
         return;
       }
 
       if (file.size > 5 * 1024 * 1024) {
-        // eslint-disable-next-line no-alert
-        alert('Image file size should be under 5MB.');
+        setFileError('Image file size should be under 5MB.');
         return;
       }
 
@@ -149,6 +150,10 @@ function FieldInput({ field, value, onChange }) {
             />
           </label>
         </div>
+
+        {fileError && (
+          <p className="text-xs font-semibold text-red-400">{fileError}</p>
+        )}
 
         {value && (
           <div className="flex items-center gap-3 rounded-lg border border-slate-800 bg-slate-950/60 p-2">
@@ -246,6 +251,8 @@ export default function ManagePanel() {
   const [draft, setDraft] = useState(null);
   const [loading, setLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const config = COLLECTIONS[active];
 
@@ -400,40 +407,46 @@ export default function ManagePanel() {
     cancel();
   };
 
-  const remove = async (row) => {
-    // eslint-disable-next-line no-alert
-    if (!window.confirm(`Delete "${row[config.primary] || 'this entry'}"? This cannot be undone.`)) return;
+  const confirmRemove = async () => {
+    if (!deleteTarget) return;
+    const row = deleteTarget;
+    setIsDeleting(true);
 
-    if (active === 'trainers') {
-      try {
-        await deleteTrainerFromFirebase(row.docId || row.id);
-        const next = rows.filter((item) => (item.docId || item.id) !== (row.docId || row.id));
-        saveTrainers(next);
-        setRows(next);
-        window.dispatchEvent(new Event('bodyfit_trainers_updated'));
-      } catch (err) {
-        console.error('Failed to delete trainer from Firebase:', err);
+    try {
+      if (active === 'trainers') {
+        try {
+          await deleteTrainerFromFirebase(row.docId || row.id);
+          const next = rows.filter((item) => (item.docId || item.id) !== (row.docId || row.id));
+          saveTrainers(next);
+          setRows(next);
+          window.dispatchEvent(new Event('bodyfit_trainers_updated'));
+        } catch (err) {
+          console.error('Failed to delete trainer from Firebase:', err);
+          const next = rows.filter((item) => item.id !== row.id);
+          config.write(next);
+          setRows(next);
+        }
+      } else if (active === 'memberships') {
+        try {
+          await deleteMembershipFromFirebase(row.docId || row.id);
+          const next = rows.filter((item) => (item.docId || item.id) !== (row.docId || row.id));
+          saveMemberships(next);
+          setRows(next);
+          window.dispatchEvent(new Event('bodyfit_memberships_updated'));
+        } catch (err) {
+          console.error('Failed to delete membership plan from Firebase:', err);
+          const next = rows.filter((item) => item.id !== row.id);
+          config.write(next);
+          setRows(next);
+        }
+      } else {
         const next = rows.filter((item) => item.id !== row.id);
         config.write(next);
         setRows(next);
       }
-    } else if (active === 'memberships') {
-      try {
-        await deleteMembershipFromFirebase(row.docId || row.id);
-        const next = rows.filter((item) => (item.docId || item.id) !== (row.docId || row.id));
-        saveMemberships(next);
-        setRows(next);
-        window.dispatchEvent(new Event('bodyfit_memberships_updated'));
-      } catch (err) {
-        console.error('Failed to delete membership plan from Firebase:', err);
-        const next = rows.filter((item) => item.id !== row.id);
-        config.write(next);
-        setRows(next);
-      }
-    } else {
-      const next = rows.filter((item) => item.id !== row.id);
-      config.write(next);
-      setRows(next);
+    } finally {
+      setIsDeleting(false);
+      setDeleteTarget(null);
     }
   };
 
@@ -618,7 +631,7 @@ export default function ManagePanel() {
               <button
                 aria-label="Delete"
                 className="rounded-lg border border-slate-800 p-2 text-slate-500 transition-colors hover:border-red-500/40 hover:text-red-400"
-                onClick={() => remove(row)}
+                onClick={() => setDeleteTarget(row)}
                 type="button"
               >
                 <Trash2 className="h-3.5 w-3.5" />
@@ -627,6 +640,20 @@ export default function ManagePanel() {
           </div>
         ))}
       </div>
+
+      {/* Custom Delete Confirmation Modal */}
+      <AdminConfirmModal
+        cancelText="Cancel"
+        confirmText="Delete Entry"
+        isOpen={Boolean(deleteTarget)}
+        itemName={deleteTarget ? deleteTarget[config.primary] || 'Selected Item' : ''}
+        loading={isDeleting}
+        message={`Are you sure you want to delete this ${config.label.replace(/s$/, '').toLowerCase()}? This action cannot be undone.`}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={confirmRemove}
+        title={`Delete ${config.label.replace(/s$/, '')}`}
+        type="danger"
+      />
     </div>
   );
 }
