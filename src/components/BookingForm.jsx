@@ -11,7 +11,7 @@ import {
   sendAllConfirmations, scheduleBrowserReminder, downloadCalendarInvite, openGoogleCalendar,
   emailConfigured, smsConfigured,
 } from '../utils/bookingNotifications';
-import { INITIAL_TRAINERS } from '../data/trainersAndScheduleData';
+import { INITIAL_TRAINERS, getTrainerPhoto } from '../data/trainersAndScheduleData';
 import OTPVerificationModal from './ui/OTPVerificationModal';
 import Component from './ui/gradient-bars-background';
 
@@ -604,17 +604,11 @@ export default function BookingForm({ selectedPlan = null, onClearPlan = null })
                             : 'border-slate-800 bg-slate-950/80 text-slate-300 hover:border-slate-700 hover:bg-slate-900/60 cursor-pointer'
                         }`}
                       >
-                        {t.photo ? (
-                          <img
-                            src={t.photo}
-                            alt={t.name}
-                            className={`w-14 h-14 rounded-2xl object-cover object-top shrink-0 border border-slate-700 shadow-md ${!isOnDuty ? 'opacity-50' : ''}`}
-                          />
-                        ) : (
-                          <div className="w-14 h-14 rounded-2xl bg-orange-500/20 text-orange-400 border border-orange-500/30 flex items-center justify-center shrink-0">
-                            <User className="w-7 h-7" />
-                          </div>
-                        )}
+                        <img
+                          src={getTrainerPhoto(t)}
+                          alt={t.name}
+                          className={`w-14 h-14 rounded-2xl object-cover object-top shrink-0 border border-slate-700 shadow-md ${!isOnDuty ? 'opacity-50' : ''}`}
+                        />
 
                         <div className="flex-1 min-w-0 space-y-1">
                           <div className="flex items-center justify-between gap-1">

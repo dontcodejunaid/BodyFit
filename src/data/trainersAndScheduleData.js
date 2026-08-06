@@ -5,6 +5,49 @@ import ananyaImg from '../assets/trainers/ananya.png';
 import karanImg from '../assets/trainers/karan.png';
 import nehaImg from '../assets/trainers/neha.png';
 
+export const TRAINER_IMAGES = {
+  'tr-1': vikramImg,
+  'tr-2': priyaImg,
+  'tr-3': rahulImg,
+  'tr-4': ananyaImg,
+  'tr-5': karanImg,
+  'tr-6': nehaImg,
+  'vikram-sharma': vikramImg,
+  'priya-kapoor': priyaImg,
+  'rahul-verma': rahulImg,
+  'ananya-roy': ananyaImg,
+  'karan-mehra': karanImg,
+  'neha-singh': nehaImg,
+  'vikram': vikramImg,
+  'priya': priyaImg,
+  'rahul': rahulImg,
+  'ananya': ananyaImg,
+  'karan': karanImg,
+  'neha': nehaImg,
+};
+
+export function getTrainerPhoto(trainer) {
+  if (!trainer) return vikramImg;
+  const photo = trainer.photo || trainer.imageUrl;
+  if (photo && typeof photo === 'string' && (photo.startsWith('http') || photo.startsWith('data:image'))) {
+    return photo;
+  }
+  const docId = trainer.docId || trainer.id;
+  if (docId && TRAINER_IMAGES[docId]) {
+    return TRAINER_IMAGES[docId];
+  }
+  const nameKey = (trainer.name || '').toLowerCase().trim().replace(/[^a-z0-9]+/g, '-');
+  if (nameKey && TRAINER_IMAGES[nameKey]) {
+    return TRAINER_IMAGES[nameKey];
+  }
+  for (const [key, img] of Object.entries(TRAINER_IMAGES)) {
+    if (nameKey.includes(key) || (docId && String(docId).includes(key))) {
+      return img;
+    }
+  }
+  return photo || vikramImg;
+}
+
 export const INITIAL_TRAINERS = [
   {
     id: 'tr-1',
