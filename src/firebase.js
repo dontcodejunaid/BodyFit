@@ -103,6 +103,46 @@ function getDocIdForPlan(plan) {
   return slug ? (slug.endsWith('-plan') ? slug : `${slug}-plan`) : `plan-${Date.now()}`;
 }
 
+// Helper to create clean, readable document IDs in Firestore for membership signups (e.g. "momo" -> "momo-47700")
+function getMemberSignupDocId(signup) {
+  const rawName = signup.memberName || signup.name || signup.customer?.name || 'member';
+  const nameSlug = rawName
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+  
+  const rawId = signup.id || signup.docId || '';
+  const numPart = rawId.replace(/[^0-9]/g, '');
+  
+  if (nameSlug && numPart) {
+    return `${nameSlug}-${numPart}`;
+  } else if (nameSlug) {
+    return `${nameSlug}-${Math.floor(10000 + Math.random() * 90000)}`;
+  }
+  return rawId || `member-${Date.now()}`;
+}
+
+// Helper to create clean, readable document IDs in Firestore for bookings (e.g. "momo" -> "momo-bf12345")
+function getBookingDocId(booking) {
+  const rawName = booking.name || booking.customerName || 'booking';
+  const nameSlug = rawName
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+  
+  const rawId = booking.id || booking.docId || '';
+  const numPart = rawId.replace(/[^0-9]/g, '');
+  
+  if (nameSlug && numPart) {
+    return `${nameSlug}-${numPart}`;
+  } else if (nameSlug) {
+    return `${nameSlug}-${Math.floor(10000 + Math.random() * 90000)}`;
+  }
+  return rawId || `booking-${Date.now()}`;
+}
+
 // ----------------------------------------------------
 // BOOKINGS COLLECTION FIRESTORE INTEGRATION
 // ----------------------------------------------------
@@ -112,11 +152,13 @@ function getDocIdForPlan(plan) {
  */
 export async function saveBookingToFirebase(bookingData) {
   const randomId = Math.floor(10000 + Math.random() * 90000);
+  const docId = getBookingDocId({ ...bookingData, id: bookingData.id || `BF-${randomId}` });
   const bookingWithId = {
-    id: `BF-${randomId}`,
+    id: docId,
+    docId,
     ...bookingData,
-    status: 'Pending',
-    createdAt: new Date().toISOString()
+    status: bookingData.status || 'Pending',
+    createdAt: bookingData.createdAt || new Date().toISOString()
   };
 
   if (!db) {
@@ -125,12 +167,180 @@ export async function saveBookingToFirebase(bookingData) {
   }
 
   try {
-    const docRef = await addDoc(collection(db, BOOKINGS_COLLECTION), bookingWithId);
-    return { docId: docRef.id, ...bookingWithId };
+    await setDoc(doc(db, BOOKINGS_COLLECTION, docId), bookingWithId, { merge: true });
+    return bookingWithId;
   } catch (error) {
     console.warn('Firebase write unavailable or fallback mode active:', error.message);
     return bookingWithId;
   }
+}
+
+// ----------------------------------------------------
+// MEMBERSHIP SIGNUPS COLLECTION FIRESTORE INTEGRATION
+// ----------------------------------------------------
+
+/**
+ * Save membership signup to Firebase Firestore with a name-based document ID (e.g. "momo-47700")
+ */
+export async function saveMembershipSignupToFirebase(signupData) {
+  const docId = getMemberSignupDocId(signupData);
+  const signupWithId = {
+    ...signupData,
+    id: docId,
+    docId,
+    createdAt: signupData.createdAt || new Date().toISOString()
+  };
+
+  if (!db) {
+    console.warn('Firebase DB is not initialized. Keeping local signup.');
+    return signupWithId;
+  }
+
+  try {
+    // Delete legacy "MB-47700" doc ID from Firestore if it exists
+    if (signupData.id && signupData.id !== docId && (signupData.id.startsWith('MB-') || signupData.id.length > 15)) {
+      try {
+        await deleteDoc(doc(db, MEMBER_SIGNUPS_COLLECTION, signupData.id));
+      } catch (e) {}
+    }
+
+    await setDoc(doc(db, MEMBER_SIGNUPS_COLLECTION, docId), signupWithId, { merge: true });
+    return signupWithId;
+  } catch (error) {
+    console.warn('Firebase membership signup write error:', error.message);
+    return signupWithId;
+  }
+}
+
+/**
+ * Fetch all membership signups from Firebase Firestore (purges legacy "MB-XXXXX" doc IDs and updates to name-based IDs)
+ */
+export async function getMembershipSignupsFromFirebase() {
+  if (!db) return [];
+  try {
+    const q = query(collection(db, MEMBER_SIGNUPS_COLLECTION));
+    const snapshot = await getDocs(q);
+
+    const signups = [];
+    for (const docSnap of snapshot.docs) {
+      const data = docSnap.data();
+      const cleanDocId = getMemberSignupDocId({ docId: docSnap.id, ...data });
+
+      if (docSnap.id !== cleanDocId) {
+        try {
+          await deleteDoc(doc(db, MEMBER_SIGNUPS_COLLECTION, docSnap.id));
+          await setDoc(doc(db, MEMBER_SIGNUPS_COLLECTION, cleanDocId), { ...data, id: cleanDocId, docId: cleanDocId }, { merge: true });
+        } catch (e) {}
+      }
+      signups.push({ docId: cleanDocId, ...data, id: cleanDocId });
+    }
+    return signups;
+  } catch (error) {
+    console.warn('Firebase membership signups fetch error:', error.message);
+    return [];
+  }
+}
+
+/**
+ * Real-time subscription to membership signups in Firebase Firestore
+ */
+export function subscribeToMembershipSignups(callback) {
+  if (!db) {
+    callback([]);
+    return () => {};
+  }
+  try {
+    const q = query(collection(db, MEMBER_SIGNUPS_COLLECTION));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const signups = [];
+      snapshot.docs.forEach((docSnap) => {
+        const data = docSnap.data();
+        const cleanDocId = getMemberSignupDocId({ docId: docSnap.id, ...data });
+
+        // Auto-delete legacy "MB-47700" doc IDs and re-save under name-based doc IDs ("momo-47700")
+        if (docSnap.id !== cleanDocId) {
+          try {
+            deleteDoc(doc(db, MEMBER_SIGNUPS_COLLECTION, docSnap.id));
+            setDoc(doc(db, MEMBER_SIGNUPS_COLLECTION, cleanDocId), { ...data, id: cleanDocId, docId: cleanDocId }, { merge: true });
+          } catch (e) {}
+        }
+
+        signups.push({ docId: cleanDocId, ...data, id: cleanDocId });
+      });
+      callback(signups);
+    }, (error) => {
+      console.warn('Membership signups snapshot listener error:', error.message);
+      callback([]);
+    });
+
+    return unsubscribe;
+  } catch (err) {
+    console.warn('Membership signups subscription failed:', err.message);
+    callback([]);
+    return () => {};
+  }
+}
+
+/**
+ * Update an existing membership signup in Firebase Firestore
+ */
+export async function updateMembershipSignupInFirebase(docIdOrMemberId, patch) {
+  try {
+    if (!docIdOrMemberId) return false;
+
+    const directRef = doc(db, MEMBER_SIGNUPS_COLLECTION, String(docIdOrMemberId));
+    const directSnap = await getDoc(directRef);
+    if (directSnap.exists()) {
+      await updateDoc(directRef, patch);
+      return true;
+    }
+
+    const q = query(collection(db, MEMBER_SIGNUPS_COLLECTION));
+    const snapshot = await getDocs(q);
+    const targetDoc = snapshot.docs.find(
+      (d) => d.id === docIdOrMemberId || d.data().id === docIdOrMemberId || d.data().docId === docIdOrMemberId
+    );
+
+    if (targetDoc) {
+      const docRef = doc(db, MEMBER_SIGNUPS_COLLECTION, targetDoc.id);
+      await updateDoc(docRef, patch);
+      return true;
+    }
+  } catch (error) {
+    console.warn('Firebase membership signup update failed:', error.message);
+  }
+  return false;
+}
+
+/**
+ * Delete a membership signup from Firebase Firestore
+ */
+export async function deleteMembershipSignupFromFirebase(docIdOrMemberId) {
+  try {
+    if (!docIdOrMemberId) return false;
+
+    const directRef = doc(db, MEMBER_SIGNUPS_COLLECTION, String(docIdOrMemberId));
+    const directSnap = await getDoc(directRef);
+    if (directSnap.exists()) {
+      await deleteDoc(directRef);
+      return true;
+    }
+
+    const q = query(collection(db, MEMBER_SIGNUPS_COLLECTION));
+    const snapshot = await getDocs(q);
+    const targetDoc = snapshot.docs.find(
+      (d) => d.id === docIdOrMemberId || d.data().id === docIdOrMemberId || d.data().docId === docIdOrMemberId
+    );
+
+    if (targetDoc) {
+      const docRef = doc(db, MEMBER_SIGNUPS_COLLECTION, targetDoc.id);
+      await deleteDoc(docRef);
+      return true;
+    }
+  } catch (error) {
+    console.warn('Firebase membership signup delete failed:', error.message);
+  }
+  return false;
 }
 
 /**
@@ -598,146 +808,8 @@ export async function deleteMembershipFromFirebase(docIdOrPlanId) {
 // MEMBERSHIP SIGNUPS COLLECTION FIRESTORE INTEGRATION
 // (every person who takes a membership lands here)
 // ----------------------------------------------------
-
-/**
- * Save a membership signup to Firestore. The document ID is the readable
- * member reference (e.g. "MB-48210") so the console stays browsable, and the
- * collection is created automatically on the first write.
- */
-export async function saveMembershipSignupToFirebase(signup) {
-  if (!db) {
-    console.warn('Firebase DB is not initialized. Membership signup kept locally only.');
-    return signup;
-  }
-
-  try {
-    const docId = signup.id || `MB-${Math.floor(10000 + Math.random() * 90000)}`;
-    const toSave = {
-      ...signup,
-      id: docId,
-      docId,
-      createdAt: signup.createdAt || new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    };
-    await setDoc(doc(db, MEMBER_SIGNUPS_COLLECTION, docId), toSave, { merge: true });
-    return toSave;
-  } catch (error) {
-    console.warn('Firebase membership signup write unavailable:', error.message);
-    return signup;
-  }
-}
-
-/**
- * Fetch every membership signup, newest first.
- */
-export async function getMembershipSignupsFromFirebase() {
-  if (!db) return [];
-
-  try {
-    let querySnapshot;
-    try {
-      const q = query(collection(db, MEMBER_SIGNUPS_COLLECTION), orderBy('createdAt', 'desc'));
-      querySnapshot = await getDocs(q);
-    } catch (e) {
-      querySnapshot = await getDocs(collection(db, MEMBER_SIGNUPS_COLLECTION));
-    }
-    return querySnapshot.docs.map((docSnap) => ({
-      docId: docSnap.id,
-      ...docSnap.data()
-    }));
-  } catch (error) {
-    console.warn('Firebase membership signups read unavailable:', error.message);
-    return [];
-  }
-}
-
-/**
- * Live listener — the admin Memberships tab updates the moment someone joins,
- * from any device. Returns an unsubscribe function (a no-op when offline).
- */
-export function subscribeToMembershipSignups(onChange, onError) {
-  if (!db) return () => {};
-
-  try {
-    return onSnapshot(
-      collection(db, MEMBER_SIGNUPS_COLLECTION),
-      (snapshot) => {
-        const list = snapshot.docs.map((docSnap) => ({
-          docId: docSnap.id,
-          ...docSnap.data()
-        }));
-        onChange(list);
-      },
-      (error) => {
-        console.warn('Firebase membership signups listener error:', error.message);
-        if (onError) onError(error);
-      }
-    );
-  } catch (error) {
-    console.warn('Could not attach membership signups listener:', error.message);
-    return () => {};
-  }
-}
-
-/**
- * Update a membership signup (status changes, renewals, notes).
- */
-export async function updateMembershipSignupInFirebase(docIdOrMemberId, patch) {
-  if (!db || !docIdOrMemberId) return false;
-
-  try {
-    const withTimestamp = { ...patch, updatedAt: new Date().toISOString() };
-
-    const directRef = doc(db, MEMBER_SIGNUPS_COLLECTION, String(docIdOrMemberId));
-    const directSnap = await getDoc(directRef);
-    if (directSnap.exists()) {
-      await updateDoc(directRef, withTimestamp);
-      return true;
-    }
-
-    const snapshot = await getDocs(collection(db, MEMBER_SIGNUPS_COLLECTION));
-    const targetDoc = snapshot.docs.find(
-      (d) => d.id === docIdOrMemberId || d.data().id === docIdOrMemberId || d.data().docId === docIdOrMemberId
-    );
-
-    if (targetDoc) {
-      await updateDoc(doc(db, MEMBER_SIGNUPS_COLLECTION, targetDoc.id), withTimestamp);
-      return true;
-    }
-  } catch (error) {
-    console.warn('Firebase membership signup update unavailable:', error.message);
-  }
-  return false;
-}
-
-/**
- * Remove a membership signup.
- */
-export async function deleteMembershipSignupFromFirebase(docIdOrMemberId) {
-  if (!db || !docIdOrMemberId) return false;
-
-  try {
-    const directRef = doc(db, MEMBER_SIGNUPS_COLLECTION, String(docIdOrMemberId));
-    const directSnap = await getDoc(directRef);
-    if (directSnap.exists()) {
-      await deleteDoc(directRef);
-      return true;
-    }
-
-    const snapshot = await getDocs(collection(db, MEMBER_SIGNUPS_COLLECTION));
-    const targetDoc = snapshot.docs.find(
-      (d) => d.id === docIdOrMemberId || d.data().id === docIdOrMemberId || d.data().docId === docIdOrMemberId
-    );
-
-    if (targetDoc) {
-      await deleteDoc(doc(db, MEMBER_SIGNUPS_COLLECTION, targetDoc.id));
-      return true;
-    }
-  } catch (error) {
-    console.warn('Firebase membership signup delete unavailable:', error.message);
-  }
-  return false;
-}
+// REVIEWS COLLECTION FIRESTORE INTEGRATION
+// ----------------------------------------------------
 
 // ----------------------------------------------------
 // REVIEWS COLLECTION FIRESTORE INTEGRATION

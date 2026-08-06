@@ -38,8 +38,14 @@ function addMonths(date, months) {
   return result;
 }
 
-export function newMemberId() {
-  return `MB-${Math.floor(10000 + Math.random() * 90000)}`;
+export function newMemberId(name = '') {
+  const nameSlug = (name || '')
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+  const num = Math.floor(10000 + Math.random() * 90000);
+  return nameSlug ? `${nameSlug}-${num}` : `MB-${num}`;
 }
 
 /**
@@ -70,11 +76,14 @@ export function buildMembershipSignup({
     ? Number(pricing.totalAmount) || 0
     : parsePriceAmount(priceLabel);
 
+  const memberName = customer.name || 'BodyFit Member';
+  const id = newMemberId(memberName);
+
   return {
-    id: newMemberId(),
+    id,
 
     // Member
-    memberName: customer.name || 'BodyFit Member',
+    memberName,
     phone: customer.phone || '',
     email: customer.email || '',
 
