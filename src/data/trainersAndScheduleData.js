@@ -145,7 +145,7 @@ export function getTrainerPhoto(trainerOrName, photoUrl) {
     url.trim() &&
     !url.includes('undefined') &&
     !url.includes('ui-avatars.com') &&
-    (url.startsWith('http') || url.startsWith('data:') || url.startsWith('/') || url.startsWith('blob:'))
+    (url.startsWith('http') || url.startsWith('data:') || url.startsWith('blob:'))
   ) {
     return url;
   }
@@ -164,8 +164,8 @@ export function getTrainerPhoto(trainerOrName, photoUrl) {
     const initialList = Array.isArray(INITIAL_TRAINERS) ? INITIAL_TRAINERS : [];
     const all = [...initialList, ...stored];
     const match = all.find(t => t && t.name && t.name.toLowerCase().trim() === name.toLowerCase().trim());
-    if (match && match.photo && typeof match.photo === 'string' && match.photo.trim()) return match.photo;
-    if (match && match.imageUrl && typeof match.imageUrl === 'string' && match.imageUrl.trim()) return match.imageUrl;
+    if (match && match.photo && typeof match.photo === 'string' && match.photo.trim() && !match.photo.startsWith('/assets/')) return match.photo;
+    if (match && match.imageUrl && typeof match.imageUrl === 'string' && match.imageUrl.trim() && !match.imageUrl.startsWith('/assets/')) return match.imageUrl;
   } catch (e) {
     // fallback
   }

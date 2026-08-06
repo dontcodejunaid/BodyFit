@@ -13,21 +13,21 @@ import {
   Clock
 } from 'lucide-react';
 import { INITIAL_TRAINERS, getTrainerPhoto } from '../data/trainersAndScheduleData';
-import { getTrainersFromFirebase } from '../firebase';
+import { getTrainersFromFirebase, subscribeTrainersFromFirebase } from '../firebase';
 
 export default function Trainers({ onSelectTrainer }) {
   const [trainers, setTrainers] = useState([]);
   const [activeFilter, setActiveFilter] = useState('All');
   const [selectedTrainerModal, setSelectedTrainerModal] = useState(null);
 
-  // Load trainers from Firebase Firestore database with fallback to LocalStorage/seed
+  // Load trainers from Firebase Firestore database with real-time sync and fallback
   useEffect(() => {
     let isMounted = true;
     async function loadTrainers() {
       let combined = [];
       try {
         const rawLocal = localStorage.getItem('bodyfit_trainers');
-        const localList = rawLocal ? JSON.parse(rawLocal) : INITIAL_TRAINERS;
+        const localList = rawLocal ? JSON.parse(rawLocal) : [];
         const fbList = (await getTrainersFromFirebase()) || [];
 
         const mergedMap = new Map();
@@ -71,16 +71,22 @@ export default function Trainers({ onSelectTrainer }) {
 
     loadTrainers();
 
+    // Subscribe to real-time updates from Firebase Cloud Database
+    const unsubscribe = subscribeTrainersFromFirebase((liveTrainers) => {
+      if (isMounted && Array.isArray(liveTrainers) && liveTrainers.length > 0) {
+        setTrainers(liveTrainers);
+      }
+    });
+
     const handleStorageChange = () => loadTrainers();
-    window.addEventListener('storage', handleStorageChange);
-    window.addEventListener('bodyfit-trainers-update', handleStorageChange);
     window.addEventListener('bodyfit_trainers_updated', handleStorageChange);
+    window.addEventListener('storage', handleStorageChange);
 
     return () => {
       isMounted = false;
-      window.removeEventListener('storage', handleStorageChange);
-      window.removeEventListener('bodyfit-trainers-update', handleStorageChange);
+      unsubscribe();
       window.removeEventListener('bodyfit_trainers_updated', handleStorageChange);
+      window.removeEventListener('storage', handleStorageChange);
     };
   }, []);
 
