@@ -16,13 +16,32 @@ import { INITIAL_TRAINERS, getTrainerPhoto } from '../data/trainersAndScheduleDa
 import OTPVerificationModal from './ui/OTPVerificationModal';
 import Component from './ui/gradient-bars-background';
 
-export default function BookingForm({ selectedPlan = null, onClearPlan = null }) {
+export default function BookingForm({ selectedPlan = null, selectedClass = null, onClearPlan = null, onClearClass = null }) {
   const [step, setStep] = useState(1);
   const [isOtpOpen, setIsOtpOpen] = useState(false);
+  const [allTrainers, setAllTrainers] = useState(INITIAL_TRAINERS);
+
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem('bodyfit_trainers');
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setAllTrainers(parsed);
+        }
+      }
+    } catch (e) {
+      console.warn('Error reading trainers in BookingForm:', e);
+    }
+  }, []);
 
   // Form State
   const [formData, setFormData] = useState({
-    service: selectedPlan ? `Membership: ${selectedPlan.name} (${selectedPlan.price})` : 'Gym Session',
+    service: selectedPlan 
+      ? `Membership: ${selectedPlan.name} (${selectedPlan.price})` 
+      : selectedClass 
+      ? `Group Class: ${selectedClass.className} (${selectedClass.category || 'Special Class'})` 
+      : 'Gym Session',
     date: new Date().toISOString().split('T')[0],
     time: '07:00 AM',
     trainer: 'No Preference (Assign Any Available)',
@@ -40,20 +59,61 @@ export default function BookingForm({ selectedPlan = null, onClearPlan = null })
     }
   }, [selectedPlan]);
 
+  useEffect(() => {
+    if (selectedClass) {
+      setFormData(prev => ({
+        ...prev,
+        service: `Group Class: ${selectedClass.className} (${selectedClass.category || 'Special Class'})`,
+        trainer: selectedClass.trainer || prev.trainer
+      }));
+      setStep(2);
+    }
+  }, [selectedClass]);
+
+  const isTrainerOnDuty = (t, selectedDate, selectedTime) => {
+    if (!t || t.name === 'No Preference (Assign Any Available)') return true;
+    
+    // 1. Check if owner unticked "Currently available" in Admin Panel
+    if (t.available === false) return false;
+
+    // 2. Check availableSlots if defined
+    if (Array.isArray(t.availableSlots) && t.availableSlots.length > 0) {
+      if (!t.availableSlots.includes(selectedTime)) return false;
+    }
+
+    // 3. Check if trainer is scheduled for a group class at this date & time
+    try {
+      const savedClasses = JSON.parse(localStorage.getItem('bodyfit_classes') || '[]');
+      const dateObj = new Date(selectedDate);
+      const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+      const dayName = dayNames[dateObj.getDay()];
+
+      const isBusyInClass = savedClasses.some(c => {
+        if (!c.trainer || c.trainer.toLowerCase().trim() !== t.name.toLowerCase().trim()) return false;
+        if (c.day !== dayName) return false;
+        return c.time && c.time.includes(selectedTime);
+      });
+
+      if (isBusyInClass) return false;
+    } catch (e) {
+      // fallback
+    }
+
+    return true;
+  };
+
   // Auto-reset trainer selection if selected trainer is off-duty for the chosen time slot
   useEffect(() => {
     if (formData.trainer && formData.trainer !== 'No Preference (Assign Any Available)') {
-      const selectedTrainerObj = INITIAL_TRAINERS.find(t => t.name === formData.trainer);
-      if (selectedTrainerObj && selectedTrainerObj.availableSlots) {
-        if (!selectedTrainerObj.availableSlots.includes(formData.time)) {
-          setFormData(prev => ({
-            ...prev,
-            trainer: 'No Preference (Assign Any Available)'
-          }));
-        }
+      const selectedTrainerObj = allTrainers.find(t => t.name === formData.trainer);
+      if (!selectedTrainerObj || !isTrainerOnDuty(selectedTrainerObj, formData.date, formData.time)) {
+        setFormData(prev => ({
+          ...prev,
+          trainer: 'No Preference (Assign Any Available)'
+        }));
       }
     }
-  }, [formData.time]);
+  }, [formData.time, formData.date, allTrainers]);
 
   const [confirmedBooking, setConfirmedBooking] = useState(null);
   const [errors, setErrors] = useState({});
@@ -81,15 +141,17 @@ export default function BookingForm({ selectedPlan = null, onClearPlan = null })
       specialties: ['Instant Matching', 'All Goals'],
       shiftHours: 'Always On Duty',
       availableSlots: null,
+      available: true
     },
-    ...INITIAL_TRAINERS.map(t => ({
+    ...allTrainers.map(t => ({
       name: t.name,
-      role: t.role,
-      desc: t.bio,
-      photo: t.photo,
-      specialties: t.specialties,
-      shiftHours: t.shiftHours,
-      availableSlots: t.availableSlots
+      role: t.role || 'Fitness Coach',
+      desc: t.bio || 'Certified fitness coach.',
+      photo: getTrainerPhoto(t.name, t.photo || t.imageUrl),
+      specialties: t.specialties || ['Fitness'],
+      shiftHours: t.shiftHours || 'Available On Duty',
+      availableSlots: t.availableSlots,
+      available: t.available !== undefined ? Boolean(t.available) : true
     }))
   ];
 
@@ -598,7 +660,7 @@ export default function BookingForm({ selectedPlan = null, onClearPlan = null })
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {trainersOptions.map((t) => {
                     const isSelected = formData.trainer === t.name;
-                    const isOnDuty = !t.availableSlots || t.availableSlots.includes(formData.time);
+                    const isOnDuty = isTrainerOnDuty(t, formData.date, formData.time);
 
                     return (
                       <div
@@ -617,8 +679,12 @@ export default function BookingForm({ selectedPlan = null, onClearPlan = null })
                         }`}
                       >
                         <img
-                          src={getTrainerPhoto(t)}
+                          src={getTrainerPhoto(t.name, t.photo || t.imageUrl)}
                           alt={t.name}
+                          onError={(e) => {
+                            e.currentTarget.onerror = null;
+                            e.currentTarget.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(t.name || 'Trainer')}&background=f97316&color=ffffff&bold=true&size=128`;
+                          }}
                           className={`w-14 h-14 rounded-2xl object-cover object-top shrink-0 border border-slate-700 shadow-md ${!isOnDuty ? 'opacity-50' : ''}`}
                         />
 

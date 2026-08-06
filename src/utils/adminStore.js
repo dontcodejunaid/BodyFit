@@ -113,7 +113,9 @@ export const SERVICE_PRICES = {
 function read(key, fallback = []) {
   try {
     const raw = localStorage.getItem(key);
-    return raw ? JSON.parse(raw) : fallback;
+    if (!raw) return fallback;
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : fallback;
   } catch (error) {
     console.error(`Error reading ${key}:`, error);
     return fallback;
@@ -165,10 +167,24 @@ export function bucketOf(booking) {
 /* ------------------------- manageable collections ------------------------ */
 
 export const getTrainers = () => readSeeded(STORE_KEYS.TRAINERS, INITIAL_TRAINERS);
-export const saveTrainers = (list) => write(STORE_KEYS.TRAINERS, list);
+export const saveTrainers = (list) => {
+  const result = write(STORE_KEYS.TRAINERS, list);
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent('bodyfit-trainers-update'));
+    window.dispatchEvent(new Event('storage'));
+  }
+  return result;
+};
 
 export const getClasses = () => readSeeded(STORE_KEYS.CLASSES, INITIAL_SCHEDULE);
-export const saveClasses = (list) => write(STORE_KEYS.CLASSES, list);
+export const saveClasses = (list) => {
+  const result = write(STORE_KEYS.CLASSES, list);
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent('bodyfit-schedule-update'));
+    window.dispatchEvent(new Event('storage'));
+  }
+  return result;
+};
 
 /**
  * Membership plans, shared by the public pricing section and the admin editor.
@@ -188,7 +204,14 @@ export function getMemberships() {
   return stored;
 }
 
-export const saveMemberships = (list) => write(STORE_KEYS.MEMBERSHIPS, list);
+export const saveMemberships = (list) => {
+  const result = write(STORE_KEYS.MEMBERSHIPS, list);
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent('bodyfit-memberships-update'));
+    window.dispatchEvent(new Event('storage'));
+  }
+  return result;
+};
 
 export const newId = (prefix) => `${prefix}-${Date.now().toString(36)}`;
 

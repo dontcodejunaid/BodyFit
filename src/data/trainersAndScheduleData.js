@@ -26,28 +26,6 @@ export const TRAINER_IMAGES = {
   'neha': nehaImg,
 };
 
-export function getTrainerPhoto(trainer) {
-  if (!trainer) return vikramImg;
-  const photo = trainer.photo || trainer.imageUrl;
-  if (photo && typeof photo === 'string' && (photo.startsWith('http') || photo.startsWith('data:image'))) {
-    return photo;
-  }
-  const docId = trainer.docId || trainer.id;
-  if (docId && TRAINER_IMAGES[docId]) {
-    return TRAINER_IMAGES[docId];
-  }
-  const nameKey = (trainer.name || '').toLowerCase().trim().replace(/[^a-z0-9]+/g, '-');
-  if (nameKey && TRAINER_IMAGES[nameKey]) {
-    return TRAINER_IMAGES[nameKey];
-  }
-  for (const [key, img] of Object.entries(TRAINER_IMAGES)) {
-    if (nameKey.includes(key) || (docId && String(docId).includes(key))) {
-      return img;
-    }
-  }
-  return photo || vikramImg;
-}
-
 export const INITIAL_TRAINERS = [
   {
     id: 'tr-1',
@@ -147,6 +125,41 @@ export const INITIAL_TRAINERS = [
   },
 ];
 
+export function getTrainerPhoto(trainerOrName, photoUrl) {
+  let name = '';
+  let url = photoUrl;
+
+  if (trainerOrName && typeof trainerOrName === 'object') {
+    name = trainerOrName.name || '';
+    url = trainerOrName.photo || trainerOrName.imageUrl || photoUrl;
+  } else {
+    name = String(trainerOrName || '');
+  }
+
+  if (url && typeof url === 'string' && url.trim() && !url.includes('undefined')) {
+    return url;
+  }
+
+  const nameKey = name.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-');
+  if (nameKey && TRAINER_PHOTO_MAP[nameKey]) return TRAINER_PHOTO_MAP[nameKey];
+
+  const firstName = name.toLowerCase().trim().split(' ')[0];
+  if (firstName && TRAINER_PHOTO_MAP[firstName]) return TRAINER_PHOTO_MAP[firstName];
+
+  try {
+    const stored = JSON.parse(localStorage.getItem('bodyfit_trainers') || '[]');
+    const all = [...INITIAL_TRAINERS, ...stored];
+    const match = all.find(t => t.name?.toLowerCase().trim() === name.toLowerCase().trim());
+    if (match && match.photo) return match.photo;
+    if (match && match.imageUrl) return match.imageUrl;
+  } catch (e) {
+    // fallback
+  }
+
+  const cleanName = (name || 'Duty Coach').trim();
+  return `https://ui-avatars.com/api/?name=${encodeURIComponent(cleanName)}&background=f97316&color=ffffff&bold=true&size=256`;
+}
+
 export const CLASS_CATEGORIES = [
   { id: 'All', label: 'All Classes' },
   { id: 'Yoga', label: 'Yoga & Flow', color: 'purple' },
@@ -154,6 +167,7 @@ export const CLASS_CATEGORIES = [
   { id: 'CrossFit', label: 'CrossFit & HIIT', color: 'orange' },
   { id: 'Strength', label: 'Strength & Muscle', color: 'emerald' },
   { id: 'Cardio', label: 'Cardio Blast', color: 'cyan' },
+  { id: 'Others', label: 'Others / Special Class', color: 'amber' },
 ];
 
 export const DAYS_OF_WEEK = [

@@ -71,9 +71,15 @@ export default function Trainers({ onSelectTrainer }) {
   ];
 
   const filteredTrainers = trainers.filter(trainer => {
+    if (!trainer) return false;
     if (activeFilter === 'All') return true;
-    return trainer.specialties.some(specialty => 
-      specialty.toLowerCase().includes(activeFilter.toLowerCase())
+    const specs = Array.isArray(trainer.specialties)
+      ? trainer.specialties
+      : typeof trainer.specialties === 'string'
+      ? trainer.specialties.split(',')
+      : [];
+    return specs.some(specialty => 
+      String(specialty).toLowerCase().includes(activeFilter.toLowerCase())
     );
   });
 
@@ -148,8 +154,12 @@ export default function Trainers({ onSelectTrainer }) {
               {/* Photo & Top Badges */}
               <div className="relative h-72 w-full overflow-hidden bg-slate-900">
                 <img
-                  src={getTrainerPhoto(trainer)}
+                  src={getTrainerPhoto(trainer.name, trainer.photo || trainer.imageUrl)}
                   alt={trainer.name}
+                  onError={(e) => {
+                    e.currentTarget.onerror = null;
+                    e.currentTarget.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(trainer.name || 'Coach')}&background=f97316&color=ffffff&bold=true&size=256`;
+                  }}
                   className="w-full h-full object-cover object-top transition-transform duration-700 ease-out group-hover:scale-105"
                 />
                 {/* Extends 1px past the bottom (clipped by overflow-hidden) so
@@ -199,19 +209,34 @@ export default function Trainers({ onSelectTrainer }) {
 
                 {/* Specialty Tags */}
                 <div className="flex flex-wrap gap-1.5">
-                  {trainer.specialties.map((spec, i) => (
-                    <span
-                      key={i}
-                      className="px-2.5 py-1 rounded-lg bg-slate-950/80 border border-slate-800 text-slate-300 text-xs font-medium"
-                    >
-                      {spec}
+                  {Array.isArray(trainer.specialties) ? (
+                    trainer.specialties.map((spec, i) => (
+                      <span
+                        key={i}
+                        className="px-2.5 py-1 rounded-lg bg-slate-950/80 border border-slate-800 text-slate-300 text-xs font-medium"
+                      >
+                        {spec}
+                      </span>
+                    ))
+                  ) : typeof trainer.specialties === 'string' && trainer.specialties.trim() ? (
+                    trainer.specialties.split(',').map((spec, i) => (
+                      <span
+                        key={i}
+                        className="px-2.5 py-1 rounded-lg bg-slate-950/80 border border-slate-800 text-slate-300 text-xs font-medium"
+                      >
+                        {spec.trim()}
+                      </span>
+                    ))
+                  ) : (
+                    <span className="px-2.5 py-1 rounded-lg bg-slate-950/80 border border-slate-800 text-slate-400 text-xs font-medium">
+                      Fitness & Personal Training
                     </span>
-                  ))}
+                  )}
                 </div>
 
                 {/* Bio text */}
                 <p className="text-xs sm:text-sm text-slate-300 leading-relaxed line-clamp-3">
-                  {trainer.bio}
+                  {trainer.bio || 'Professional BodyFit fitness transformation coach.'}
                 </p>
 
                 {/* Action Buttons */}
@@ -221,7 +246,7 @@ export default function Trainers({ onSelectTrainer }) {
                     className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-orange-600 hover:bg-orange-500 text-white font-bold text-sm shadow-md shadow-orange-600/20 transition-all duration-200 active:scale-[0.98]"
                   >
                     <Calendar className="w-4 h-4" />
-                    Book Session with {trainer.name.split(' ')[0]}
+                    Book Session with {(trainer.name || 'Trainer').split(' ')[0]}
                     <ChevronRight className="w-4 h-4 ml-auto" />
                   </button>
 
@@ -256,19 +281,23 @@ export default function Trainers({ onSelectTrainer }) {
             {/* Modal Header */}
             <div className="flex items-center gap-4">
               <img
-                src={getTrainerPhoto(selectedTrainerModal)}
+                src={getTrainerPhoto(selectedTrainerModal.name, selectedTrainerModal.photo || selectedTrainerModal.imageUrl)}
                 alt={selectedTrainerModal.name}
+                onError={(e) => {
+                  e.currentTarget.onerror = null;
+                  e.currentTarget.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(selectedTrainerModal.name || 'Coach')}&background=f97316&color=ffffff&bold=true&size=256`;
+                }}
                 className="w-20 h-20 rounded-2xl object-cover border border-slate-700 shadow-md"
               />
               <div>
                 <h3 className="text-xl font-bold text-white">{selectedTrainerModal.name}</h3>
-                <p className="text-xs text-orange-400 font-medium">{selectedTrainerModal.role}</p>
+                <p className="text-xs text-orange-400 font-medium">{selectedTrainerModal.role || 'Fitness Coach'}</p>
                 <div className="flex items-center gap-2 mt-1.5 text-xs text-amber-400">
                   <Star className="w-3.5 h-3.5 fill-amber-400" />
-                  <span className="font-bold">{selectedTrainerModal.rating}</span>
-                  <span className="text-slate-400">({selectedTrainerModal.reviewsCount} reviews)</span>
+                  <span className="font-bold">{selectedTrainerModal.rating || '4.9'}</span>
+                  <span className="text-slate-400">({selectedTrainerModal.reviewsCount || 10} reviews)</span>
                   <span className="text-slate-600">•</span>
-                  <span className="text-slate-300 font-medium">{selectedTrainerModal.experience} Exp.</span>
+                  <span className="text-slate-300 font-medium">{selectedTrainerModal.experience || '5+ Years'} Exp.</span>
                 </div>
               </div>
             </div>
@@ -284,19 +313,26 @@ export default function Trainers({ onSelectTrainer }) {
             {/* Bio */}
             <div>
               <h4 className="text-xs font-semibold uppercase text-slate-400 tracking-wider mb-2">About Trainer</h4>
-              <p className="text-sm text-slate-300 leading-relaxed">{selectedTrainerModal.bio}</p>
+              <p className="text-sm text-slate-300 leading-relaxed">{selectedTrainerModal.bio || 'Dedicated BodyFit personal transformation & strength coach.'}</p>
             </div>
 
             {/* Certifications */}
             <div>
               <h4 className="text-xs font-semibold uppercase text-slate-400 tracking-wider mb-2">Certifications & Credentials</h4>
               <ul className="space-y-2">
-                {selectedTrainerModal.certifications.map((cert, idx) => (
-                  <li key={idx} className="flex items-center gap-2 text-xs sm:text-sm text-slate-200">
+                {Array.isArray(selectedTrainerModal.certifications) && selectedTrainerModal.certifications.length > 0 ? (
+                  selectedTrainerModal.certifications.map((cert, idx) => (
+                    <li key={idx} className="flex items-center gap-2 text-xs sm:text-sm text-slate-200">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+                      <span>{cert}</span>
+                    </li>
+                  ))
+                ) : (
+                  <li className="flex items-center gap-2 text-xs sm:text-sm text-slate-200">
                     <CheckCircle2 className="w-4 h-4 text-emerald-400 flex-shrink-0" />
-                    <span>{cert}</span>
+                    <span>BodyFit Certified Fitness & Transformation Specialist</span>
                   </li>
-                ))}
+                )}
               </ul>
             </div>
 
