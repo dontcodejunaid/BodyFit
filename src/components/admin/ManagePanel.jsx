@@ -6,6 +6,7 @@ import {
 } from '../../utils/adminStore';
 import { CLASS_CATEGORIES, DAYS_OF_WEEK } from '../../data/trainersAndScheduleData';
 import { PLAN_GRADIENTS } from '../../data/membershipPlans';
+import AdminConfirmModal from './AdminConfirmModal';
 
 // Each collection declares its own fields, so one editor renders all three.
 // `list` fields are stored as arrays but edited as comma-separated text.
@@ -88,23 +89,23 @@ const blankRow = (config) => {
 };
 
 function FieldInput({ field, value, onChange }) {
+  const [fileError, setFileError] = useState('');
   const base =
     'w-full rounded-lg border border-slate-800 bg-slate-950/60 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-600 focus:border-orange-500/60 focus:outline-none';
 
   if (field.type === 'image' || field.key === 'imageUrl' || field.key === 'photo') {
     const handleFileChange = (e) => {
+      setFileError('');
       const file = e.target.files && e.target.files[0];
       if (!file) return;
 
       if (!file.type.startsWith('image/')) {
-        // eslint-disable-next-line no-alert
-        alert('Please select a valid image file (PNG, JPG, WEBP, etc.).');
+        setFileError('Please select a valid image file (PNG, JPG, WEBP, etc.).');
         return;
       }
 
       if (file.size > 5 * 1024 * 1024) {
-        // eslint-disable-next-line no-alert
-        alert('Image file size should be under 5MB.');
+        setFileError('Image file size should be under 5MB.');
         return;
       }
 
@@ -136,6 +137,10 @@ function FieldInput({ field, value, onChange }) {
             />
           </label>
         </div>
+
+        {fileError && (
+          <p className="text-xs font-semibold text-red-400">{fileError}</p>
+        )}
 
         {value && (
           <div className="flex items-center gap-3 rounded-lg border border-slate-800 bg-slate-950/60 p-2">
@@ -281,12 +286,14 @@ export default function ManagePanel() {
     cancel();
   };
 
-  const remove = (row) => {
-    // eslint-disable-next-line no-alert
-    if (!window.confirm(`Delete "${row[config.primary] || 'this entry'}"? This cannot be undone.`)) return;
-    const next = rows.filter((item) => item.id !== row.id);
+  const [deleteTarget, setDeleteTarget] = useState(null);
+
+  const confirmRemove = () => {
+    if (!deleteTarget) return;
+    const next = rows.filter((item) => item.id !== deleteTarget.id);
     config.write(next);
     setRows(next);
+    setDeleteTarget(null);
   };
 
   return (
@@ -407,7 +414,7 @@ export default function ManagePanel() {
               <button
                 aria-label="Delete"
                 className="rounded-lg border border-slate-800 p-2 text-slate-500 transition-colors hover:border-red-500/40 hover:text-red-400"
-                onClick={() => remove(row)}
+                onClick={() => setDeleteTarget(row)}
                 type="button"
               >
                 <Trash2 className="h-3.5 w-3.5" />
@@ -416,6 +423,20 @@ export default function ManagePanel() {
           </div>
         ))}
       </div>
+
+      {/* Custom Delete Confirmation Modal */}
+      <AdminConfirmModal
+        cancelText="Cancel"
+        confirmText="Delete Entry"
+        isOpen={Boolean(deleteTarget)}
+        itemName={deleteTarget ? deleteTarget[config.primary] || 'Selected Item' : ''}
+        message={`Are you sure you want to delete this ${config.label.replace(/s$/, '').toLowerCase()}? This action cannot be undone.`}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={confirmRemove}
+        title={`Delete ${config.label.replace(/s$/, '')}`}
+        type="danger"
+      />
     </div>
   );
 }
+
