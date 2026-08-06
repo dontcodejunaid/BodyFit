@@ -290,21 +290,27 @@ export async function syncAllTrainersToFirebase(trainersList) {
 }
 
 /**
- * Fetch all trainers from Firebase Firestore (with auto-seed to create collection if empty)
+ * Fetch all trainers from Firebase Firestore (purges legacy random hash IDs and seeds clean trainer names)
  */
 export async function getTrainersFromFirebase() {
   try {
     const q = query(collection(db, TRAINERS_COLLECTION));
     const querySnapshot = await getDocs(q);
+    
     if (!querySnapshot.empty) {
-      const validDocs = querySnapshot.docs.filter((d) => d.id.includes('-') && !d.id.endsWith('-plan'));
-      if (validDocs.length > 0) {
-        return validDocs.map((docSnap) => ({
-          docId: docSnap.id,
-          ...docSnap.data()
-        }));
+      // Purge any legacy random hash IDs from Firestore on fetch
+      for (const docSnap of querySnapshot.docs) {
+        if (!docSnap.id.includes('-') || docSnap.id.length > 15) {
+          try {
+            await deleteDoc(doc(db, TRAINERS_COLLECTION, docSnap.id));
+          } catch (e) {
+            console.warn('Could not purge legacy trainer doc:', docSnap.id);
+          }
+        }
       }
     }
+    
+    // Seed and ensure clean trainer name document IDs exist in Firestore
     const seeded = await seedInitialTrainersToFirebase();
     if (seeded.length > 0) return seeded;
   } catch (error) {
