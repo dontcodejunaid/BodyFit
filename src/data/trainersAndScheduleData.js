@@ -17,14 +17,10 @@ export const TRAINER_IMAGES = {
   'rahul-verma': rahulImg,
   'ananya-roy': ananyaImg,
   'karan-mehra': karanImg,
-  'neha-singh': nehaImg,
-  'vikram': vikramImg,
-  'priya': priyaImg,
-  'rahul': rahulImg,
-  'ananya': ananyaImg,
-  'karan': karanImg,
   'neha': nehaImg,
 };
+
+export const TRAINER_PHOTO_MAP = TRAINER_IMAGES;
 
 export const INITIAL_TRAINERS = [
   {
